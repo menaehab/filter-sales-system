@@ -7,8 +7,8 @@
             </svg>
         </div>
 
-        <h2 class="mt-6 text-2xl font-bold tracking-tight text-gray-900">Sign in to POS System</h2>
-        <p class="mt-2 text-sm text-gray-500">Enter your credentials to access your account</p>
+        <h2 class="mt-6 text-2xl font-bold tracking-tight text-gray-900">{{ __('keywords.sign_in') }}</h2>
+        <p class="mt-2 text-sm text-gray-500">{{ __('keywords.enter_credentials') }}</p>
     </div>
 
     {{-- Session status --}}
@@ -19,30 +19,23 @@
     @endif
 
     <div class="mt-8 rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
-        <x-form action="{{ route('login') }}" method="POST" submitText="Sign in">
+        <x-form action="{{ route('login') }}" method="POST" submitText="{{ __('keywords.sign_in') }}">
             <x-input
                 name="email"
-                label="Email address"
+                label="{{ __('keywords.email') }}"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="{{ __('keywords.enter_your_email') }}"
                 required
                 autofocus
                 autocomplete="email"
             />
 
             <div>
-                <div class="flex items-center justify-between">
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                    @if(Route::has('password.request'))
-                        <a href="{{ route('password.request') }}" class="text-sm font-medium text-emerald-600 hover:text-emerald-500">
-                            Forgot password?
-                        </a>
-                    @endif
-                </div>
                 <div class="mt-1.5">
                     <x-input
                         name="password"
                         type="password"
+                        label="{{ __('keywords.password') }}"
                         placeholder="••••••••"
                         required
                         autocomplete="current-password"
@@ -50,14 +43,7 @@
                 </div>
             </div>
 
-            <x-checkbox name="remember" label="Remember me" />
+            <x-checkbox name="remember" label="{{ __('keywords.remember_me') }}" />
         </x-form>
     </div>
-
-    @if(Route::has('register'))
-        <p class="mt-6 text-center text-sm text-gray-500">
-            Don't have an account?
-            <a href="{{ route('register') }}" class="font-medium text-emerald-600 hover:text-emerald-500">Sign up</a>
-        </p>
-    @endif
 </x-layouts.auth>

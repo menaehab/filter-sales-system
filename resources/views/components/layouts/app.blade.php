@@ -10,7 +10,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title }} — {{ config('app.name', 'POS System') }}</title>
+    <title>{{  __('keywords.' . $title) }} — {{ config('app.name', __('keywords.app')) }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -43,7 +43,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a.75.75 0 0 1 .352-.642l7.5-4.5a.75.75 0 0 1 .796 0l7.5 4.5a.75.75 0 0 1 .352.642" />
                     </svg>
                 </div>
-                <span class="text-lg font-semibold text-white">POS System</span>
+                <span class="text-lg font-semibold text-white">{{ __('keywords.app') }}</span>
                 <button @click="sidebarOpen = false" class="ms-auto text-gray-400 hover:text-white lg:hidden">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -53,13 +53,10 @@
 
             {{-- Navigation --}}
             <nav class="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-                <x-sidebar-link href="#" icon="home" :active="request()->routeIs('home')">Dashboard</x-sidebar-link>
-                <x-sidebar-link href="#" icon="shopping-cart" :active="request()->routeIs('pos.*')">POS Sales</x-sidebar-link>
-                <x-sidebar-link href="#" icon="cube" :active="request()->routeIs('products.*')">Products</x-sidebar-link>
-                <x-sidebar-link href="#" icon="tag" :active="request()->routeIs('categories.*')">Categories</x-sidebar-link>
-                <x-sidebar-link href="#" icon="users" :active="request()->routeIs('users.*')">Users</x-sidebar-link>
-                <x-sidebar-link href="#" icon="chart-bar" :active="request()->routeIs('reports.*')">Reports</x-sidebar-link>
-                <x-sidebar-link href="#" icon="cog" :active="request()->routeIs('settings.*')">Settings</x-sidebar-link>
+                <x-sidebar-link href="{{ route('home') }}" icon="home" :active="request()->routeIs('home')">{{ __('keywords.home') }}</x-sidebar-link>
+                <x-sidebar-link href="#" icon="cube" :active="request()->routeIs('products.*')">{{ __('keywords.products') }}</x-sidebar-link>
+                <x-sidebar-link href="{{ route('categories') }}" icon="tag" :active="request()->routeIs('categories.*')">{{ __('keywords.categories') }}</x-sidebar-link>
+                <x-sidebar-link href="#" icon="users" :active="request()->routeIs('users.*')">{{ __('keywords.users') }}</x-sidebar-link>
             </nav>
 
             {{-- Sidebar footer --}}
@@ -88,26 +85,26 @@
                 </button>
 
                 {{-- Page title --}}
-                <h1 class="text-lg font-semibold text-gray-900">{{ $title }}</h1>
+                <h1 class="text-lg font-semibold text-gray-900">{{ __('keywords.' . $title) }}</h1>
 
                 {{-- Spacer --}}
                 <div class="flex-1"></div>
 
                 {{-- Search --}}
-                <div class="hidden sm:block">
+                {{-- <div class="hidden sm:block">
                     <div class="relative">
                         <svg class="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                         </svg>
                         <input type="text" placeholder="Search..." class="w-64 rounded-lg border border-gray-300 bg-gray-50 py-2 ps-10 pe-4 text-sm text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                     </div>
-                </div>
+                </div> --}}
 
                 {{-- Language / Direction Toggle --}}
-                <x-lang-toggle />
+                {{-- <x-lang-toggle /> --}}
 
                 {{-- Notifications --}}
-                <button class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+                {{-- <button class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                     </svg>
@@ -115,7 +112,7 @@
                         <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
                         <span class="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
                     </span>
-                </button>
+                </button> --}}
 
                 {{-- User avatar dropdown --}}
                 <div class="relative" x-data="{ open: false }">
@@ -138,12 +135,12 @@
                         x-transition:leave-end="transform opacity-0 scale-95"
                         class="absolute end-0 mt-2 w-48 ltr:origin-top-right rtl:origin-top-left rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5"
                     >
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</a>
-                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-                        <hr class="my-1 border-gray-100">
+                        {{-- <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</a> --}}
+                        {{-- <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a> --}}
+                        {{-- <hr class="my-1 border-gray-100"> --}}
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="block w-full px-4 py-2 text-start text-sm text-gray-700 hover:bg-gray-100">Sign out</button>
+                            <button type="submit" class="block w-full px-4 py-2 text-start text-sm text-gray-700 hover:bg-gray-100">{{ __('keywords.log_out') }}</button>
                         </form>
                     </div>
                 </div>

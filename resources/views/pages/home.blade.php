@@ -17,7 +17,7 @@
     $categories = collect($products)->pluck('category')->unique()->values()->all();
 @endphp
 
-<x-layouts.app title="POS Sales">
+<x-layouts.app title="app">
     <div
         x-data="{
             cart: [],
