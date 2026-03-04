@@ -7,18 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
-class Category extends Model
+class Product extends Model
 {
-    use HasSlug, HasFactory;
-
+    use HasFactory,HasSlug;
     protected $fillable = [
         'name',
         'slug',
+        'description',
+        'cost_price',
+        'quantity',
+        'category_id',
     ];
 
-    public function products()
+    public function category()
     {
-        return $this->hasMany(Product::class);
+        return $this->belongsTo(Category::class);
     }
 
     public function getSlugOptions(): SlugOptions
