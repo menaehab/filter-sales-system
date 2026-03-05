@@ -2,11 +2,10 @@
 
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    actAsAdmin($this);
 });
 
 it('creates a product', function () {

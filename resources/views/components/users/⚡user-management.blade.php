@@ -6,6 +6,7 @@ use Livewire\Attributes\Layout;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Spatie\Permission\Models\Permission;
 
 new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Component {
     use WithPagination;
@@ -17,6 +18,8 @@ new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Comp
         'phone' => '',
         'password' => '',
         'password_confirmation' => '',
+        // permissions will be stored as array of names
+        'permissions' => [],
     ];
 
     public $editId = null;
@@ -38,6 +41,8 @@ new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Comp
             'form.email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->editId), 'required_without:form.phone'],
             'form.phone' => ['nullable', 'string', 'max:11', 'regex:/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}$/', Rule::unique('users', 'phone')->ignore($this->editId), 'required_without:form.email'],
             'form.password' => $this->editId ? ['nullable', 'string', 'min:8', 'confirmed'] : ['required', 'string', 'min:8', 'confirmed'],
+            'form.permissions' => ['array'],
+            'form.permissions.*' => ['string', 'exists:permissions,name'],
         ];
     }
 
@@ -50,7 +55,16 @@ new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Comp
             'form.phone'                 => __('keywords.phone'),
             'form.password'              => __('keywords.password'),
             'form.password_confirmation' => __('keywords.confirm_password'),
+            'form.permissions'           => __('keywords.permissions'),
         ];
+    }
+
+    // return checkbox options for all available permissions
+    public function getPermissionOptionsProperty()
+    {
+        return Permission::pluck('name','name')
+            ->mapWithKeys(fn($name) => [$name => __('keywords.' . $name)])
+            ->toArray();
     }
 
     public function updatingSearch()
@@ -71,6 +85,7 @@ new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Comp
             'phone' => '',
             'password' => '',
             'password_confirmation' => '',
+            'permissions' => [],
         ];
     }
 
@@ -80,13 +95,18 @@ new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Comp
 
         $this->validate();
 
-        User::create([
+        $user = User::create([
             'name' => $this->form['name'],
             'email' => $this->form['email'],
             // store null when the value is empty string so database nullability works
             'phone' => $this->form['phone'] ?: null,
             'password' => Hash::make($this->form['password']),
         ]);
+
+        // assign permissions if any
+        if (!empty($this->form['permissions'])) {
+            $user->syncPermissions($this->form['permissions']);
+        }
 
         $this->resetForm();
 
@@ -107,6 +127,7 @@ new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Comp
             'phone' => $user->phone,
             'password' => '',
             'password_confirmation' => '',
+            'permissions' => $user->getPermissionNames()->toArray(),
         ];
 
         $this->dispatch('open-modal-edit-user');
@@ -122,11 +143,20 @@ new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Comp
             'phone' => $this->form['phone'] ?: null,
         ];
 
+
         if ($this->form['password']) {
             $data['password'] = Hash::make($this->form['password']);
         }
 
-        User::findOrFail($this->editId)->update($data);
+        $user = User::findOrFail($this->editId);
+        $user->update($data);
+
+        if (!empty($this->form['permissions'])) {
+            $user->syncPermissions($this->form['permissions']);
+        } else {
+            // clear permissions if none selected
+            $user->syncPermissions([]);
+        }
 
         $this->resetForm();
         $this->editId = null;
@@ -234,6 +264,7 @@ new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Comp
                         <span class="text-sm font-medium text-gray-900">{{ $user->phone }}</span>
                     </div>
                 </td>
+
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                     <div class="flex items-center justify-end gap-2">
                         <button class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-emerald-600"
@@ -291,6 +322,13 @@ new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Comp
                 <x-input name="form.password_confirmation" label="{{ __('keywords.confirm_password') }}"
                     type="password" placeholder="{{ __('keywords.confirm_password') }}"
                     wire:model.live="form.password_confirmation" required />
+
+                <x-checkbox-group
+                    label="{{ __('keywords.permissions') }}"
+                    name="form.permissions"
+                    :options="$this->permissionOptions"
+                    :selected="$form['permissions']"
+                />
             </div>
         </x-slot:body>
         <x-slot:footer>
@@ -315,6 +353,13 @@ new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Comp
                 <x-input name="form.password_confirmation" label="{{ __('keywords.confirm_password') }}"
                     type="password" placeholder="{{ __('keywords.confirm_password') }}"
                     wire:model.live="form.password_confirmation" />
+
+                <x-checkbox-group
+                    label="{{ __('keywords.permissions') }}"
+                    name="form.permissions"
+                    :options="$this->permissionOptions"
+                    :selected="$form['permissions']"
+                />
             </div>
         </x-slot:body>
         <x-slot:footer>

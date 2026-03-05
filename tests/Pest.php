@@ -1,5 +1,7 @@
 <?php
 
+use Spatie\Permission\Models\Permission;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -44,4 +46,14 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function actAsAdmin($test)
+{
+    (new \Database\Seeders\PermissionSeeder())->run();
+
+    $admin = \App\Models\User::factory()->create();
+    $permissions = Permission::all();
+    $admin->givePermissionTo($permissions);
+    $test->actingAs($admin);
 }

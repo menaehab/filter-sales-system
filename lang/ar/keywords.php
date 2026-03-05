@@ -64,5 +64,10 @@ return [
     "enter_description" => 'أدخل الوصف',
     "description" => 'الوصف',
     "select_category" => 'اختر الفئة',
+    "manage_users" => 'إدارة المستخدمين',
+    "manage_categories" => 'إدارة الفئات',
+    "permissions" => 'الأذونات',
+    "permission" => 'صلاحية',
+    "manage_products" => 'إدارة المنتجات',
     "create_product" => 'إنشاء منتج',
 ];
