@@ -29,6 +29,7 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        $this->authenticatingUsingEmailOrPhone();
     }
 
     /**
@@ -45,13 +46,13 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn () => view('pages::auth.login'));
-        Fortify::verifyEmailView(fn () => abort(404));
-        Fortify::twoFactorChallengeView(fn () => abort(404));
-        Fortify::confirmPasswordView(fn () => abort(404));
-        Fortify::registerView(fn () => abort(404));
-        Fortify::resetPasswordView(fn () => abort(404));
-        Fortify::requestPasswordResetLinkView(fn () => abort(404));
+        Fortify::loginView(fn() => view('pages::auth.login'));
+        Fortify::verifyEmailView(fn() => abort(404));
+        Fortify::twoFactorChallengeView(fn() => abort(404));
+        Fortify::confirmPasswordView(fn() => abort(404));
+        Fortify::registerView(fn() => abort(404));
+        Fortify::resetPasswordView(fn() => abort(404));
+        Fortify::requestPasswordResetLinkView(fn() => abort(404));
     }
 
     /**
@@ -64,9 +65,31 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())) . '|' . $request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
+        });
+    }
+
+    /**
+     * configure authentication using email or phone
+     */
+    public function authenticatingUsingEmailOrPhone()
+    {
+        Fortify::authenticateUsing(function (Request $request) {
+
+            $login = $request->input('login');
+            $password = $request->input('password');
+
+            $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+
+            $user = \App\Models\User::where($fieldType, $login)->first();
+
+            if ($user && \Illuminate\Support\Facades\Hash::check($password, $user->password)) {
+                return $user;
+            }
+
+            return null;
         });
     }
 }

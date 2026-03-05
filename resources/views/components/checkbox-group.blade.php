@@ -16,7 +16,7 @@
         <legend class="mb-2 text-sm font-medium text-gray-700">{{ $label }}</legend>
     @endif
 
-    <div class="space-y-2">
+    <div class="grid grid-cols-2 gap-x-4 gap-y-2">
         @foreach($options as $value => $optionLabel)
             <div class="relative flex items-start">
                 <div class="flex h-6 items-center">

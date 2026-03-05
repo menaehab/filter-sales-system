@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
-    Route::livewire('/categories','categories.category-management')->name('categories');
-    Route::livewire('/products','products.product-management')->name('products');
+    Route::livewire('/categories','categories.category-management')->name('categories')->middleware('permission:manage_categories');
+    Route::livewire('/products','products.product-management')->name('products')->middleware('permission:manage_products');
+    Route::livewire('/users','users.user-management')->name('users')->middleware('permission:manage_users');
 });

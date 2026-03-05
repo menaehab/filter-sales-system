@@ -34,6 +34,14 @@ new #[Layout('layouts.app', ['title' => 'categories_management'])] class extends
         ];
     }
 
+    // validation attribute names (translated)
+    protected function getValidationAttributes()
+    {
+        return [
+            'form.name' => __('keywords.name'),
+        ];
+    }
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -212,7 +220,7 @@ new #[Layout('layouts.app', ['title' => 'categories_management'])] class extends
     <x-modal name="create-category" title="{{ __('keywords.create_category') }}" maxWidth="lg">
         <x-slot:body>
             <div class="space-y-5">
-                <x-input name="name" label="{{ __('keywords.name') }}"
+                <x-input name="form.name" label="{{ __('keywords.name') }}"
                     placeholder="{{ __('keywords.enter_name') }}" wire:model.live="form.name" required />
             </div>
         </x-slot:body>
@@ -227,7 +235,7 @@ new #[Layout('layouts.app', ['title' => 'categories_management'])] class extends
     <x-modal name="edit-category" title="{{ __('keywords.edit_category') }}" maxWidth="lg">
         <x-slot:body>
             <div class="space-y-5">
-                <x-input name="name" label="{{ __('keywords.name') }}"
+                <x-input name="form.name" label="{{ __('keywords.name') }}"
                     placeholder="{{ __('keywords.enter_name') }}" wire:model.live="form.name" required />
             </div>
         </x-slot:body>

@@ -43,6 +43,18 @@ new #[Layout('layouts.app')] class extends Component {
         ];
     }
 
+    // validation attribute names (translated)
+    protected function getValidationAttributes()
+    {
+        return [
+            'form.name' => __('keywords.name'),
+            'form.cost_price' => __('keywords.cost_price'),
+            'form.quantity' => __('keywords.quantity'),
+            'form.description' => __('keywords.description'),
+            'form.category_id' => __('keywords.category'),
+        ];
+    }
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -184,7 +196,7 @@ new #[Layout('layouts.app')] class extends Component {
     ]">
         <x-slot:filters>
             <x-select name="categorySlug" wire:model.live="categorySlug" :options="$this->categories->pluck('name', 'slug')->toArray()"
-                placeholder="{{ __('keywords.categories') }}" class="min-w-[150px]" />
+                placeholder="{{ __('keywords.categories') }}" class="min-w-37.5" />
         </x-slot:filters>
         @forelse ($this->products as $product)
             <tr class="hover:bg-gray-50">
@@ -252,15 +264,15 @@ new #[Layout('layouts.app')] class extends Component {
     <x-modal name="create-product" title="{{ __('keywords.create_product') }}" maxWidth="lg">
         <x-slot:body>
             <div class="space-y-5">
-                <x-input name="name" label="{{ __('keywords.name') }}"
+                <x-input name="form.name" label="{{ __('keywords.name') }}"
                     placeholder="{{ __('keywords.enter_name') }}" wire:model.live="form.name" required />
-                <x-input type="number" name="cost_price" label="{{ __('keywords.cost_price') }}"
+                <x-input type="number" name="form.cost_price" label="{{ __('keywords.cost_price') }}"
                     placeholder="{{ __('keywords.enter_cost_price') }}" wire:model.live="form.cost_price" required />
-                <x-input type="number" name="quantity" label="{{ __('keywords.quantity') }}"
+                <x-input type="number" name="form.quantity" label="{{ __('keywords.quantity') }}"
                     placeholder="{{ __('keywords.enter_quantity') }}" wire:model.live="form.quantity" required />
-                <x-textarea name="description" label="{{ __('keywords.description') }}"
+                <x-textarea name="form.description" label="{{ __('keywords.description') }}"
                     wire:model.live="form.description" />
-                <x-select name="category_id" label="{{ __('keywords.category') }}" wire:model.live="form.category_id"
+                <x-select name="form.category_id" label="{{ __('keywords.category') }}" wire:model.live="form.category_id"
                     :options="$this->categories->pluck('name', 'id')->toArray()" placeholder="{{ __('keywords.select_category') }}" required />
             </div>
         </x-slot:body>
@@ -275,15 +287,15 @@ new #[Layout('layouts.app')] class extends Component {
     <x-modal name="edit-product" title="{{ __('keywords.edit_product') }}" maxWidth="lg">
         <x-slot:body>
             <div class="space-y-5">
-                <x-input name="name" label="{{ __('keywords.name') }}"
+                <x-input name="form.name" label="{{ __('keywords.name') }}"
                     placeholder="{{ __('keywords.enter_name') }}" wire:model.live="form.name" required />
-                <x-input type="number" name="cost_price" label="{{ __('keywords.cost_price') }}"
+                <x-input type="number" name="form.cost_price" label="{{ __('keywords.cost_price') }}"
                     placeholder="{{ __('keywords.enter_cost_price') }}" wire:model.live="form.cost_price" required />
-                <x-input type="number" name="quantity" label="{{ __('keywords.quantity') }}"
+                <x-input type="number" name="form.quantity" label="{{ __('keywords.quantity') }}"
                     placeholder="{{ __('keywords.enter_quantity') }}" wire:model.live="form.quantity" required />
-                <x-textarea name="description" label="{{ __('keywords.description') }}"
+                <x-textarea name="form.description" label="{{ __('keywords.description') }}"
                     wire:model.live="form.description" />
-                <x-select name="category_id" label="{{ __('keywords.category') }}"
+                <x-select name="form.category_id" label="{{ __('keywords.category') }}"
                     wire:model.live="form.category_id" :options="$this->categories->pluck('name', 'id')->toArray()"
                     placeholder="{{ __('keywords.select_category') }}" required />
             </div>
