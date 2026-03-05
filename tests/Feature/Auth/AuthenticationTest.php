@@ -8,11 +8,26 @@ test('login screen can be rendered', function () {
     $response->assertOk();
 });
 
-test('users can authenticate using the login screen', function () {
+test('users can authenticate using the login screen with email', function () {
     $user = User::factory()->create();
 
     $response = $this->post(route('login.store'), [
-        'email' => $user->email,
+        'login' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $response
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('home'));
+
+    $this->assertAuthenticated();
+});
+
+it('users can authenticate using phone instead of email', function () {
+    $user = User::factory()->create(['phone' => '1234567890']);
+
+    $response = $this->post(route('login.store'), [
+        'login' => $user->phone,
         'password' => 'password',
     ]);
 
@@ -27,11 +42,11 @@ test('users can not authenticate with invalid password', function () {
     $user = User::factory()->create();
 
     $response = $this->post(route('login.store'), [
-        'email' => $user->email,
+        'login' => $user->email,
         'password' => 'wrong-password',
     ]);
 
-    $response->assertSessionHasErrorsIn('email');
+    $response->assertSessionHasErrorsIn('login');
 
     $this->assertGuest();
 });

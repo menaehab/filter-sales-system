@@ -45,8 +45,11 @@ return [
     |
     */
 
-    'username' => 'email',
+    'username' => 'login',
 
+    // when resetting passwords etc we still need to know which field holds the
+    // user's email address. keep this set to "email" so the built-in
+    // features continue to function correctly.
     'email' => 'email',
 
     /*

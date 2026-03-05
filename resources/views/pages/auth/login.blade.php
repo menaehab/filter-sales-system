@@ -21,10 +21,10 @@
     <div class="mt-8 rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
         <x-form action="{{ route('login') }}" method="POST" submitText="{{ __('keywords.sign_in') }}">
             <x-input
-                name="email"
-                label="{{ __('keywords.email') }}"
-                type="email"
-                placeholder="{{ __('keywords.enter_your_email') }}"
+                name="login"
+                label="{{ __('keywords.email_or_phone') }}"
+                type="text"
+                placeholder="{{ __('keywords.enter_your_email_or_phone') }}"
                 required
                 autofocus
                 autocomplete="email"
