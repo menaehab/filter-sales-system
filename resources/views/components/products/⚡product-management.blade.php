@@ -184,7 +184,7 @@ new #[Layout('layouts.app')] class extends Component {
     ]">
         <x-slot:filters>
             <x-select name="categorySlug" wire:model.live="categorySlug" :options="$this->categories->pluck('name', 'slug')->toArray()"
-                placeholder="{{ __('keywords.categories') }}" class="min-w-[150px]" />
+                placeholder="{{ __('keywords.categories') }}" class="min-w-37.5" />
         </x-slot:filters>
         @forelse ($this->products as $product)
             <tr class="hover:bg-gray-50">
