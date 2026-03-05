@@ -1,36 +1,45 @@
 <?php
 
-use App\Models\Category;
-use Illuminate\Validation\Rule;
 use Livewire\Component;
-use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
+use Livewire\WithPagination;
+use App\Models\Product;
+use App\Models\Category;
 
-new #[Layout('layouts.app', ['title' => 'categories_management'])] class extends Component {
+new #[Layout('layouts.app')] class extends Component {
     use WithPagination;
 
     protected $paginationTheme = 'tailwind';
 
     public $form = [
         'name' => '',
+        'cost_price' => null,
+        'quantity' => null,
+        'description' => '',
+        'category_id' => null,
     ];
-
-    public $editId = null;
-    public $deleteId = null;
 
     public $search = '';
     public $perPage = 10;
+    public $editId = null;
+    public $deleteId = null;
+    public $categorySlug = '';
 
     protected $queryString = [
         'search' => ['except' => ''],
         'perPage' => ['except' => 10],
         'page' => ['except' => 1],
+        'categorySlug' => ['as' => 'category', 'except' => ''],
     ];
 
     protected function rules()
     {
         return [
-            'form.name' => ['required', 'string', 'max:255', Rule::unique('categories', 'name')->ignore($this->editId)],
+            'form.name' => ['required', 'string', 'max:255'],
+            'form.cost_price' => ['required', 'numeric', 'min:0'],
+            'form.quantity' => ['required', 'integer', 'min:0'],
+            'form.description' => ['nullable', 'string'],
+            'form.category_id' => ['required', 'exists:categories,id'],
         ];
     }
 
@@ -44,90 +53,105 @@ new #[Layout('layouts.app', ['title' => 'categories_management'])] class extends
         $this->resetPage();
     }
 
+    public function updatingCategorySlug()
+    {
+        $this->resetPage();
+    }
+
     public function resetForm()
     {
         $this->form = [
             'name' => '',
+            'cost_price' => null,
+            'quantity' => null,
+            'description' => '',
+            'category_id' => null,
         ];
     }
 
     public function create()
     {
-        $this->editId = null;
-
         $this->validate();
 
-        Category::create($this->form);
+        Product::create($this->form);
 
         $this->resetForm();
-
-        $this->dispatch('close-modal-create-category');
-
+        $this->dispatch('close-modal-create-product');
         $this->resetPage();
     }
 
     public function openEdit($id)
+
     {
-        $category = Category::findOrFail($id);
+        $product = Product::findOrFail($id);
 
-        $this->editId = $category->id;
+        $this->editId = $product->id;
 
-        $this->form['name'] = $category->name;
+        $this->form = [
+            'name' => $product->name,
+            'cost_price' => $product->cost_price,
+            'quantity' => $product->quantity,
+            'description' => $product->description,
+            'category_id' => $product->category_id,
+        ];
 
-        $this->dispatch('open-modal-edit-category');
+        $this->dispatch('open-modal-edit-product');
     }
 
-    public function updateCategory()
+    public function updateProduct()
     {
         $this->validate();
 
-        Category::findOrFail($this->editId)->update($this->form);
+        Product::findOrFail($this->editId)->update($this->form);
 
         $this->resetForm();
         $this->editId = null;
 
-        $this->dispatch('close-modal-edit-category');
-
+        $this->dispatch('close-modal-edit-product');
         $this->resetPage();
     }
 
     public function setDelete($id)
     {
         $this->deleteId = $id;
-
-        $this->dispatch('open-modal-delete-category');
+        $this->dispatch('open-modal-delete-product');
     }
 
     public function delete()
     {
-        Category::find($this->deleteId)?->delete();
+        Product::find($this->deleteId)?->delete();
 
         $this->deleteId = null;
 
-        $this->dispatch('close-modal-delete-category');
-
+        $this->dispatch('close-modal-delete-product');
         $this->resetPage();
+    }
+
+    public function getProductsProperty()
+    {
+        return Product::query()->with('category')->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))->when($this->categorySlug, fn($q) => $q->whereHas('category', fn($q) => $q->where('slug', $this->categorySlug)))->latest()->paginate($this->perPage);
     }
 
     public function getCategoriesProperty()
     {
-        return Category::query()->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))->latest()->paginate($this->perPage);
+        return Category::orderBy('name')->get();
     }
 };
 ?>
 
-<div x-on:confirmed-delete-category.window="$wire.delete()">
+<div x-on:confirmed-delete-product.window="$wire.delete()">
+
     {{-- Page header --}}
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h2 class="text-xl font-bold text-gray-900">{{ __('keywords.categories') }}</h2>
-            <p class="mt-1 text-sm text-gray-500">{{ __('keywords.categories_management') }}</p>
+            <h2 class="text-xl font-bold text-gray-900">{{ __('keywords.products') }}</h2>
+            <p class="mt-1 text-sm text-gray-500">{{ __('keywords.products_management') }}</p>
         </div>
-        <x-button variant="primary" @click="$dispatch('open-modal-create-category')">
+        <x-button variant="primary" @click="$dispatch('open-modal-create-product')">
             <svg class="-ms-0.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            {{ __('keywords.add_category') }}
+            {{ __('keywords.add_product') }}
         </x-button>
     </div>
 
@@ -154,21 +178,36 @@ new #[Layout('layouts.app', ['title' => 'categories_management'])] class extends
     {{-- Categories table --}}
     <x-data-table :searchable="false" :paginated="false" :headers="[
         ['key' => 'name', 'label' => __('keywords.name')],
+        ['key' => 'category', 'label' => __('keywords.category')],
+        ['key' => 'quantity', 'label' => __('keywords.quantity')],
         ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
     ]">
-
-        @forelse ($this->categories as $category)
+        <x-slot:filters>
+            <x-select name="categorySlug" wire:model.live="categorySlug" :options="$this->categories->pluck('name', 'slug')->toArray()"
+                placeholder="{{ __('keywords.categories') }}" class="min-w-[150px]" />
+        </x-slot:filters>
+        @forelse ($this->products as $product)
             <tr class="hover:bg-gray-50">
                 {{-- Category info --}}
                 <td class="whitespace-nowrap px-4 py-3">
                     <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-gray-900">{{ $category->name }}</span>
+                        <span class="text-sm font-medium text-gray-900">{{ $product->name }}</span>
+                    </div>
+                </td>
+                <td class="whitespace-nowrap px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-medium text-gray-900">{{ $product->category->name }}</span>
+                    </div>
+                </td>
+                <td class="whitespace-nowrap px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-medium text-gray-900">{{ $product->quantity }}</span>
                     </div>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                     <div class="flex items-center justify-end gap-2">
                         <button class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-emerald-600"
-                            title="Edit" wire:click="openEdit({{ $category->id }})">
+                            title="Edit" wire:click="openEdit({{ $product->id }})">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -176,7 +215,7 @@ new #[Layout('layouts.app', ['title' => 'categories_management'])] class extends
                             </svg>
                         </button>
                         <button class="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600" title="Delete"
-                            wire:click="setDelete({{ $category->id }})">
+                            wire:click="setDelete({{ $product->id }})">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -188,8 +227,9 @@ new #[Layout('layouts.app', ['title' => 'categories_management'])] class extends
             </tr>
         @empty
             <tr>
-                <td colspan="2" class="px-4 py-8 text-center text-sm text-gray-500">
-                    {{ __('keywords.no_categories_found') }}</td>
+                <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500">
+                    {{ __('keywords.no_products_found') }}
+                </td>
             </tr>
         @endforelse
     </x-data-table>
@@ -197,49 +237,66 @@ new #[Layout('layouts.app', ['title' => 'categories_management'])] class extends
     <div class="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
         <p class="text-sm text-gray-500">
             {{ __('keywords.showing') }} <span
-                class="font-medium text-gray-700">{{ $this->categories->firstItem() ?? 0 }}</span>
+                class="font-medium text-gray-700">{{ $this->products->firstItem() ?? 0 }}</span>
             {{ __('keywords.to') }} <span
-                class="font-medium text-gray-700">{{ $this->categories->lastItem() ?? 0 }}</span>
-            {{ __('keywords.of') }} <span class="font-medium text-gray-700">{{ $this->categories->total() }}</span>
+                class="font-medium text-gray-700">{{ $this->products->lastItem() ?? 0 }}</span>
+            {{ __('keywords.of') }} <span class="font-medium text-gray-700">{{ $this->products->total() }}</span>
             {{ __('keywords.results') }}
         </p>
         <div>
-            {{ $this->categories->links() }}
+            {{ $this->products->links() }}
         </div>
     </div>
 
-    {{-- Create Category Modal --}}
-    <x-modal name="create-category" title="{{ __('keywords.create_category') }}" maxWidth="lg">
+    {{-- Create Product Modal --}}
+    <x-modal name="create-product" title="{{ __('keywords.create_product') }}" maxWidth="lg">
         <x-slot:body>
             <div class="space-y-5">
                 <x-input name="name" label="{{ __('keywords.name') }}"
                     placeholder="{{ __('keywords.enter_name') }}" wire:model.live="form.name" required />
+                <x-input type="number" name="cost_price" label="{{ __('keywords.cost_price') }}"
+                    placeholder="{{ __('keywords.enter_cost_price') }}" wire:model.live="form.cost_price" required />
+                <x-input type="number" name="quantity" label="{{ __('keywords.quantity') }}"
+                    placeholder="{{ __('keywords.enter_quantity') }}" wire:model.live="form.quantity" required />
+                <x-textarea name="description" label="{{ __('keywords.description') }}"
+                    wire:model.live="form.description" />
+                <x-select name="category_id" label="{{ __('keywords.category') }}" wire:model.live="form.category_id"
+                    :options="$this->categories->pluck('name', 'id')->toArray()" placeholder="{{ __('keywords.select_category') }}" required />
             </div>
         </x-slot:body>
         <x-slot:footer>
             <x-button variant="secondary"
-                @click="$dispatch('close-modal-create-category')">{{ __('keywords.cancel') }}</x-button>
+                @click="$dispatch('close-modal-create-product')">{{ __('keywords.cancel') }}</x-button>
             <x-button variant="primary" wire:click="create">{{ __('keywords.add') }}</x-button>
         </x-slot:footer>
     </x-modal>
 
-    {{-- Edit Category Modal --}}
-    <x-modal name="edit-category" title="{{ __('keywords.edit_category') }}" maxWidth="lg">
+    {{-- Edit Product Modal --}}
+    <x-modal name="edit-product" title="{{ __('keywords.edit_product') }}" maxWidth="lg">
         <x-slot:body>
             <div class="space-y-5">
                 <x-input name="name" label="{{ __('keywords.name') }}"
                     placeholder="{{ __('keywords.enter_name') }}" wire:model.live="form.name" required />
+                <x-input type="number" name="cost_price" label="{{ __('keywords.cost_price') }}"
+                    placeholder="{{ __('keywords.enter_cost_price') }}" wire:model.live="form.cost_price" required />
+                <x-input type="number" name="quantity" label="{{ __('keywords.quantity') }}"
+                    placeholder="{{ __('keywords.enter_quantity') }}" wire:model.live="form.quantity" required />
+                <x-textarea name="description" label="{{ __('keywords.description') }}"
+                    wire:model.live="form.description" />
+                <x-select name="category_id" label="{{ __('keywords.category') }}"
+                    wire:model.live="form.category_id" :options="$this->categories->pluck('name', 'id')->toArray()"
+                    placeholder="{{ __('keywords.select_category') }}" required />
             </div>
         </x-slot:body>
         <x-slot:footer>
             <x-button variant="secondary"
-                @click="$dispatch('close-modal-edit-category')">{{ __('keywords.cancel') }}</x-button>
-            <x-button variant="primary" wire:click="updateCategory">{{ __('keywords.update') }}</x-button>
+                @click="$dispatch('close-modal-edit-product')">{{ __('keywords.cancel') }}</x-button>
+            <x-button variant="primary" wire:click="updateProduct">{{ __('keywords.update') }}</x-button>
         </x-slot:footer>
     </x-modal>
 
     {{-- Delete Confirmation Modal --}}
-    <x-confirm-modal name="delete-category" title="{{ __('keywords.delete_category') }}"
-        message="{{ __('keywords.delete_category_confirmation') }}" confirmText="{{ __('keywords.delete') }}"
+    <x-confirm-modal name="delete-product" title="{{ __('keywords.delete_product') }}"
+        message="{{ __('keywords.delete_product_confirmation') }}" confirmText="{{ __('keywords.delete') }}"
         variant="danger" />
 </div>
