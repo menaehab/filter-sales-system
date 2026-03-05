@@ -1,57 +1,55 @@
 <?php
 
 use Livewire\Component;
-use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
-use App\Models\Product;
-use App\Models\Category;
+use Livewire\Attributes\Layout;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
-new #[Layout('layouts.app')] class extends Component {
+new #[Layout('layouts.app', ['title' => 'users_management'])] class extends Component {
     use WithPagination;
-
     protected $paginationTheme = 'tailwind';
 
     public $form = [
         'name' => '',
-        'cost_price' => null,
-        'quantity' => null,
-        'description' => '',
-        'category_id' => null,
+        'email' => '',
+        'phone' => '',
+        'password' => '',
+        'password_confirmation' => '',
     ];
+
+    public $editId = null;
+    public $deleteId = null;
 
     public $search = '';
     public $perPage = 10;
-    public $editId = null;
-    public $deleteId = null;
-    public $categorySlug = '';
 
-    protected $queryString = [
+    public $queryString = [
         'search' => ['except' => ''],
         'perPage' => ['except' => 10],
         'page' => ['except' => 1],
-        'categorySlug' => ['as' => 'category', 'except' => ''],
     ];
 
     protected function rules()
     {
         return [
             'form.name' => ['required', 'string', 'max:255'],
-            'form.cost_price' => ['required', 'numeric', 'min:0'],
-            'form.quantity' => ['required', 'integer', 'min:0'],
-            'form.description' => ['nullable', 'string'],
-            'form.category_id' => ['required', 'exists:categories,id'],
+            'form.email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->editId), 'required_without:form.phone'],
+            'form.phone' => ['nullable', 'string', 'max:11', 'regex:/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}$/', Rule::unique('users', 'phone')->ignore($this->editId), 'required_without:form.email'],
+            'form.password' => $this->editId ? ['nullable', 'string', 'min:8', 'confirmed'] : ['required', 'string', 'min:8', 'confirmed'],
         ];
     }
 
-    // validation attribute names (translated)
+    // custom attribute names for validation errors
     protected function getValidationAttributes()
     {
         return [
-            'form.name' => __('keywords.name'),
-            'form.cost_price' => __('keywords.cost_price'),
-            'form.quantity' => __('keywords.quantity'),
-            'form.description' => __('keywords.description'),
-            'form.category_id' => __('keywords.category'),
+            'form.name'                  => __('keywords.name'),
+            'form.email'                 => __('keywords.email'),
+            'form.phone'                 => __('keywords.phone'),
+            'form.password'              => __('keywords.password'),
+            'form.password_confirmation' => __('keywords.confirm_password'),
         ];
     }
 
@@ -65,105 +63,128 @@ new #[Layout('layouts.app')] class extends Component {
         $this->resetPage();
     }
 
-    public function updatingCategorySlug()
-    {
-        $this->resetPage();
-    }
-
     public function resetForm()
     {
         $this->form = [
             'name' => '',
-            'cost_price' => null,
-            'quantity' => null,
-            'description' => '',
-            'category_id' => null,
+            'email' => '',
+            'phone' => '',
+            'password' => '',
+            'password_confirmation' => '',
         ];
     }
 
     public function create()
     {
+        $this->editId = null;
+
         $this->validate();
 
-        Product::create($this->form);
+        User::create([
+            'name' => $this->form['name'],
+            'email' => $this->form['email'],
+            // store null when the value is empty string so database nullability works
+            'phone' => $this->form['phone'] ?: null,
+            'password' => Hash::make($this->form['password']),
+        ]);
 
         $this->resetForm();
-        $this->dispatch('close-modal-create-product');
+
+        $this->dispatch('close-modal-create-user');
+
         $this->resetPage();
     }
 
     public function openEdit($id)
-
     {
-        $product = Product::findOrFail($id);
+        $user = User::findOrFail($id);
 
-        $this->editId = $product->id;
+        $this->editId = $id;
 
         $this->form = [
-            'name' => $product->name,
-            'cost_price' => $product->cost_price,
-            'quantity' => $product->quantity,
-            'description' => $product->description,
-            'category_id' => $product->category_id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'password' => '',
+            'password_confirmation' => '',
         ];
 
-        $this->dispatch('open-modal-edit-product');
+        $this->dispatch('open-modal-edit-user');
     }
 
-    public function updateProduct()
+    public function updateUser()
     {
         $this->validate();
 
-        Product::findOrFail($this->editId)->update($this->form);
+        $data = [
+            'name' => $this->form['name'],
+            'email' => $this->form['email'],
+            'phone' => $this->form['phone'] ?: null,
+        ];
+
+        if ($this->form['password']) {
+            $data['password'] = Hash::make($this->form['password']);
+        }
+
+        User::findOrFail($this->editId)->update($data);
 
         $this->resetForm();
         $this->editId = null;
 
-        $this->dispatch('close-modal-edit-product');
+        $this->dispatch('close-modal-edit-user');
+
         $this->resetPage();
+    }
+
+    public function openDelete($id)
+    {
+        $this->deleteId = $id;
+
+        $this->dispatch('open-modal-delete-user');
     }
 
     public function setDelete($id)
     {
         $this->deleteId = $id;
-        $this->dispatch('open-modal-delete-product');
+
+        $this->dispatch('open-modal-delete-user');
     }
 
     public function delete()
     {
-        Product::find($this->deleteId)?->delete();
+        User::findOrFail($this->deleteId)->delete();
 
         $this->deleteId = null;
 
-        $this->dispatch('close-modal-delete-product');
+        $this->dispatch('close-modal-delete-user');
+
         $this->resetPage();
     }
 
-    public function getProductsProperty()
+    public function getUsersProperty()
     {
-        return Product::query()->with('category')->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))->when($this->categorySlug, fn($q) => $q->whereHas('category', fn($q) => $q->where('slug', $this->categorySlug)))->latest()->paginate($this->perPage);
-    }
-
-    public function getCategoriesProperty()
-    {
-        return Category::orderBy('name')->get();
+        return User::where('name', 'like', '%' . $this->search . '%')
+            ->orWhere('email', 'like', '%' . $this->search . '%')
+            ->orWhere('phone', 'like', '%' . $this->search . '%')
+            ->orderBy('created_at', 'desc')
+            ->paginate($this->perPage);
     }
 };
 ?>
 
-<div x-on:confirmed-delete-product.window="$wire.delete()">
 
+<div x-on:confirmed-delete-user.window="$wire.delete()">
     {{-- Page header --}}
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h2 class="text-xl font-bold text-gray-900">{{ __('keywords.products') }}</h2>
-            <p class="mt-1 text-sm text-gray-500">{{ __('keywords.products_management') }}</p>
+            <h2 class="text-xl font-bold text-gray-900">{{ __('keywords.users') }}</h2>
+            <p class="mt-1 text-sm text-gray-500">{{ __('keywords.users_management') }}</p>
         </div>
-        <x-button variant="primary" @click="$dispatch('open-modal-create-product')">
+        <x-button variant="primary" @click="$dispatch('open-modal-create-user')">
             <svg class="-ms-0.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            {{ __('keywords.add_product') }}
+            {{ __('keywords.add_user') }}
         </x-button>
     </div>
 
@@ -187,39 +208,36 @@ new #[Layout('layouts.app')] class extends Component {
         </select>
     </div>
 
-    {{-- Categories table --}}
+    {{-- users table --}}
     <x-data-table :searchable="false" :paginated="false" :headers="[
         ['key' => 'name', 'label' => __('keywords.name')],
-        ['key' => 'category', 'label' => __('keywords.category')],
-        ['key' => 'quantity', 'label' => __('keywords.quantity')],
+        ['key' => 'email', 'label' => __('keywords.email')],
+        ['key' => 'phone', 'label' => __('keywords.phone')],
         ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
     ]">
-        <x-slot:filters>
-            <x-select name="categorySlug" wire:model.live="categorySlug" :options="$this->categories->pluck('name', 'slug')->toArray()"
-                placeholder="{{ __('keywords.categories') }}" class="min-w-37.5" />
-        </x-slot:filters>
-        @forelse ($this->products as $product)
+
+        @forelse ($this->users as $user)
             <tr class="hover:bg-gray-50">
-                {{-- Category info --}}
+                {{-- user info --}}
                 <td class="whitespace-nowrap px-4 py-3">
                     <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-gray-900">{{ $product->name }}</span>
+                        <span class="text-sm font-medium text-gray-900">{{ $user->name }}</span>
                     </div>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-gray-900">{{ $product->category->name }}</span>
+                        <span class="text-sm font-medium text-gray-900">{{ $user->email }}</span>
                     </div>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-gray-900">{{ $product->quantity }}</span>
+                        <span class="text-sm font-medium text-gray-900">{{ $user->phone }}</span>
                     </div>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                     <div class="flex items-center justify-end gap-2">
                         <button class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-emerald-600"
-                            title="Edit" wire:click="openEdit({{ $product->id }})">
+                            title="Edit" wire:click="openEdit({{ $user->id }})">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -227,7 +245,7 @@ new #[Layout('layouts.app')] class extends Component {
                             </svg>
                         </button>
                         <button class="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600" title="Delete"
-                            wire:click="setDelete({{ $product->id }})">
+                            wire:click="setDelete({{ $user->id }})">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -240,8 +258,7 @@ new #[Layout('layouts.app')] class extends Component {
         @empty
             <tr>
                 <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500">
-                    {{ __('keywords.no_products_found') }}
-                </td>
+                    {{ __('keywords.no_users_found') }}</td>
             </tr>
         @endforelse
     </x-data-table>
@@ -249,66 +266,66 @@ new #[Layout('layouts.app')] class extends Component {
     <div class="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
         <p class="text-sm text-gray-500">
             {{ __('keywords.showing') }} <span
-                class="font-medium text-gray-700">{{ $this->products->firstItem() ?? 0 }}</span>
-            {{ __('keywords.to') }} <span
-                class="font-medium text-gray-700">{{ $this->products->lastItem() ?? 0 }}</span>
-            {{ __('keywords.of') }} <span class="font-medium text-gray-700">{{ $this->products->total() }}</span>
+                class="font-medium text-gray-700">{{ $this->users->firstItem() ?? 0 }}</span>
+            {{ __('keywords.to') }} <span class="font-medium text-gray-700">{{ $this->users->lastItem() ?? 0 }}</span>
+            {{ __('keywords.of') }} <span class="font-medium text-gray-700">{{ $this->users->total() }}</span>
             {{ __('keywords.results') }}
         </p>
         <div>
-            {{ $this->products->links() }}
+            {{ $this->users->links() }}
         </div>
     </div>
 
-    {{-- Create Product Modal --}}
-    <x-modal name="create-product" title="{{ __('keywords.create_product') }}" maxWidth="lg">
+    {{-- Create User Modal --}}
+    <x-modal name="create-user" title="{{ __('keywords.create_user') }}" maxWidth="lg">
         <x-slot:body>
             <div class="space-y-5">
                 <x-input name="form.name" label="{{ __('keywords.name') }}"
                     placeholder="{{ __('keywords.enter_name') }}" wire:model.live="form.name" required />
-                <x-input type="number" name="form.cost_price" label="{{ __('keywords.cost_price') }}"
-                    placeholder="{{ __('keywords.enter_cost_price') }}" wire:model.live="form.cost_price" required />
-                <x-input type="number" name="form.quantity" label="{{ __('keywords.quantity') }}"
-                    placeholder="{{ __('keywords.enter_quantity') }}" wire:model.live="form.quantity" required />
-                <x-textarea name="form.description" label="{{ __('keywords.description') }}"
-                    wire:model.live="form.description" />
-                <x-select name="form.category_id" label="{{ __('keywords.category') }}" wire:model.live="form.category_id"
-                    :options="$this->categories->pluck('name', 'id')->toArray()" placeholder="{{ __('keywords.select_category') }}" required />
+                <x-input name="form.email" label="{{ __('keywords.email') }}" type="email"
+                    placeholder="{{ __('keywords.enter_your_email') }}" wire:model.live="form.email" />
+                <x-input name="form.phone" label="{{ __('keywords.phone') }}"
+                    placeholder="{{ __('keywords.enter_your_phone') }}" wire:model.live="form.phone" />
+                <x-input name="form.password" label="{{ __('keywords.password') }}" type="password"
+                    placeholder="{{ __('keywords.enter_password') }}" wire:model.live="form.password" required />
+                <x-input name="form.password_confirmation" label="{{ __('keywords.confirm_password') }}"
+                    type="password" placeholder="{{ __('keywords.confirm_password') }}"
+                    wire:model.live="form.password_confirmation" required />
             </div>
         </x-slot:body>
         <x-slot:footer>
             <x-button variant="secondary"
-                @click="$dispatch('close-modal-create-product')">{{ __('keywords.cancel') }}</x-button>
+                @click="$dispatch('close-modal-create-user')">{{ __('keywords.cancel') }}</x-button>
             <x-button variant="primary" wire:click="create">{{ __('keywords.add') }}</x-button>
         </x-slot:footer>
     </x-modal>
 
-    {{-- Edit Product Modal --}}
-    <x-modal name="edit-product" title="{{ __('keywords.edit_product') }}" maxWidth="lg">
+    {{-- Edit User Modal --}}
+    <x-modal name="edit-user" title="{{ __('keywords.edit_user') }}" maxWidth="lg">
         <x-slot:body>
             <div class="space-y-5">
                 <x-input name="form.name" label="{{ __('keywords.name') }}"
                     placeholder="{{ __('keywords.enter_name') }}" wire:model.live="form.name" required />
-                <x-input type="number" name="form.cost_price" label="{{ __('keywords.cost_price') }}"
-                    placeholder="{{ __('keywords.enter_cost_price') }}" wire:model.live="form.cost_price" required />
-                <x-input type="number" name="form.quantity" label="{{ __('keywords.quantity') }}"
-                    placeholder="{{ __('keywords.enter_quantity') }}" wire:model.live="form.quantity" required />
-                <x-textarea name="form.description" label="{{ __('keywords.description') }}"
-                    wire:model.live="form.description" />
-                <x-select name="form.category_id" label="{{ __('keywords.category') }}"
-                    wire:model.live="form.category_id" :options="$this->categories->pluck('name', 'id')->toArray()"
-                    placeholder="{{ __('keywords.select_category') }}" required />
+                <x-input name="form.email" label="{{ __('keywords.email') }}" type="email"
+                    placeholder="{{ __('keywords.enter_your_email') }}" wire:model.live="form.email" />
+                <x-input name="form.phone" label="{{ __('keywords.phone') }}"
+                    placeholder="{{ __('keywords.enter_your_phone') }}" wire:model.live="form.phone" />
+                <x-input name="form.password" label="{{ __('keywords.password') }}" type="password"
+                    placeholder="{{ __('keywords.enter_password') }}" wire:model.live="form.password" />
+                <x-input name="form.password_confirmation" label="{{ __('keywords.confirm_password') }}"
+                    type="password" placeholder="{{ __('keywords.confirm_password') }}"
+                    wire:model.live="form.password_confirmation" />
             </div>
         </x-slot:body>
         <x-slot:footer>
             <x-button variant="secondary"
-                @click="$dispatch('close-modal-edit-product')">{{ __('keywords.cancel') }}</x-button>
-            <x-button variant="primary" wire:click="updateProduct">{{ __('keywords.update') }}</x-button>
+                @click="$dispatch('close-modal-edit-user')">{{ __('keywords.cancel') }}</x-button>
+            <x-button variant="primary" wire:click="updateUser">{{ __('keywords.update') }}</x-button>
         </x-slot:footer>
     </x-modal>
 
     {{-- Delete Confirmation Modal --}}
-    <x-confirm-modal name="delete-product" title="{{ __('keywords.delete_product') }}"
-        message="{{ __('keywords.delete_product_confirmation') }}" confirmText="{{ __('keywords.delete') }}"
+    <x-confirm-modal name="delete-user" title="{{ __('keywords.delete_user') }}"
+        message="{{ __('keywords.delete_user_confirmation') }}" confirmText="{{ __('keywords.delete') }}"
         variant="danger" />
 </div>

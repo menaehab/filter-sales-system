@@ -56,7 +56,7 @@
                 <x-sidebar-link href="{{ route('home') }}" icon="home" :active="request()->routeIs('home')">{{ __('keywords.home') }}</x-sidebar-link>
                 <x-sidebar-link href="{{ route('products') }}" icon="cube" :active="request()->routeIs('products.*')">{{ __('keywords.products') }}</x-sidebar-link>
                 <x-sidebar-link href="{{ route('categories') }}" icon="tag" :active="request()->routeIs('categories.*')">{{ __('keywords.categories') }}</x-sidebar-link>
-                <x-sidebar-link href="#" icon="users" :active="request()->routeIs('users.*')">{{ __('keywords.users') }}</x-sidebar-link>
+                <x-sidebar-link href="{{ route('users') }}" icon="users" :active="request()->routeIs('users.*')">{{ __('keywords.users') }}</x-sidebar-link>
             </nav>
 
             {{-- Sidebar footer --}}
