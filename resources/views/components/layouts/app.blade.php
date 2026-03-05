@@ -1,4 +1,4 @@
-@props(['title' => 'Dashboard'])
+@props(['title' => 'dashboard'])
 
 @php
     $isRtl = in_array(app()->getLocale(), ['ar', 'he', 'fa', 'ur']);
@@ -54,7 +54,7 @@
             {{-- Navigation --}}
             <nav class="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
                 <x-sidebar-link href="{{ route('home') }}" icon="home" :active="request()->routeIs('home')">{{ __('keywords.home') }}</x-sidebar-link>
-                <x-sidebar-link href="#" icon="cube" :active="request()->routeIs('products.*')">{{ __('keywords.products') }}</x-sidebar-link>
+                <x-sidebar-link href="{{ route('products') }}" icon="cube" :active="request()->routeIs('products.*')">{{ __('keywords.products') }}</x-sidebar-link>
                 <x-sidebar-link href="{{ route('categories') }}" icon="tag" :active="request()->routeIs('categories.*')">{{ __('keywords.categories') }}</x-sidebar-link>
                 <x-sidebar-link href="#" icon="users" :active="request()->routeIs('users.*')">{{ __('keywords.users') }}</x-sidebar-link>
             </nav>
