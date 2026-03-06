@@ -2,37 +2,29 @@
 
 namespace App\Livewire\Products;
 
+use App\Livewire\Traits\HasCrudModals;
+use App\Livewire\Traits\HasForm;
+use App\Livewire\Traits\HasValidationAttributes;
+use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Category;
 use App\Models\Product;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class ProductManagement extends Component
 {
-    use WithPagination;
+    use WithSearchAndPagination;
+    use HasForm;
+    use HasCrudModals;
+    use HasValidationAttributes;
 
-    public $form = [
-        'name' => '',
-        'cost_price' => null,
-        'quantity' => null,
-        'description' => '',
-        'category_id' => null,
-    ];
-
-    public $search = '';
-    public $perPage = 10;
-    public $editId = null;
-    public $deleteId = null;
     public $categorySlug = '';
 
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'perPage' => ['except' => 10],
-        'page' => ['except' => 1],
-        'categorySlug' => ['as' => 'category', 'except' => ''],
-    ];
+    public function mount()
+    {
+        $this->resetForm();
+    }
 
     protected function rules()
     {
@@ -45,7 +37,7 @@ class ProductManagement extends Component
         ];
     }
 
-    protected function getValidationAttributes()
+    protected function validationAttributes(): array
     {
         return [
             'form.name' => __('keywords.name'),
@@ -56,30 +48,27 @@ class ProductManagement extends Component
         ];
     }
 
-    public function updatingSearch()
+    protected function getDefaultForm(): array
     {
-        $this->resetPage();
-    }
-
-    public function updatingPerPage()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingCategorySlug()
-    {
-        $this->resetPage();
-    }
-
-    public function resetForm()
-    {
-        $this->form = [
+        return [
             'name' => '',
             'cost_price' => null,
             'quantity' => null,
             'description' => '',
             'category_id' => null,
         ];
+    }
+
+    protected function additionalQueryString(): array
+    {
+        return [
+            'categorySlug' => ['as' => 'category', 'except' => ''],
+        ];
+    }
+
+    public function updatingCategorySlug()
+    {
+        $this->resetPage();
     }
 
     public function create()
@@ -125,8 +114,7 @@ class ProductManagement extends Component
 
     public function setDelete($id)
     {
-        $this->deleteId = $id;
-        $this->dispatch('open-modal-delete-product');
+        $this->openDeleteModal($id, 'open-modal-delete-product');
     }
 
     public function delete()
