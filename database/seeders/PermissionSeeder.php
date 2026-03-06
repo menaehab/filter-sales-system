@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PermissionSeeder extends Seeder
@@ -16,6 +15,8 @@ class PermissionSeeder extends Seeder
             'manage_users',
             'manage_categories',
             'manage_products',
+            'manage_suppliers',
+            'view_suppliers',
         ];
 
         foreach ($permissions as $permission) {
