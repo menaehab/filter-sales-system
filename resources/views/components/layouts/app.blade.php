@@ -65,6 +65,10 @@
                     <x-sidebar-link href="{{ route('users') }}" icon="users"
                         :active="request()->routeIs('users.*')">{{ __('keywords.users') }}</x-sidebar-link>
                 @endcan
+                @can(['manage_suppliers', 'view_suppliers'])
+                    <x-sidebar-link href="{{ route('suppliers') }}" icon="truck"
+                        :active="request()->routeIs('suppliers.*')">{{ __('keywords.suppliers') }}</x-sidebar-link>
+                @endcan
             </nav>
 
             {{-- Sidebar footer --}}
