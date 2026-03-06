@@ -2,31 +2,28 @@
 
 namespace App\Livewire\Suppliers;
 
+use App\Livewire\Traits\HasCrudModals;
+use App\Livewire\Traits\HasCrudQuery;
+use App\Livewire\Traits\HasForm;
+use App\Livewire\Traits\HasValidationAttributes;
+use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Supplier;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class SupplierManagement extends Component
 {
-    use WithPagination;
+    use WithSearchAndPagination;
+    use HasForm;
+    use HasCrudModals;
+    use HasCrudQuery;
+    use HasValidationAttributes;
 
-    public $form = [
-        'name' => '',
-        'phone' => '',
-    ];
-
-    public $search = '';
-    public $perPage = 10;
-    public $editId = null;
-    public $deleteId = null;
-
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'perPage' => ['except' => 10],
-        'page' => ['except' => 1],
-    ];
+    public function mount()
+    {
+        $this->resetForm();
+    }
 
     protected function rules()
     {
@@ -41,7 +38,7 @@ class SupplierManagement extends Component
         ];
     }
 
-    protected function getValidationAttributes()
+    protected function validationAttributes(): array
     {
         return [
             'form.name' => __('keywords.name'),
@@ -49,22 +46,22 @@ class SupplierManagement extends Component
         ];
     }
 
-    public function updatingSearch()
+    protected function getDefaultForm(): array
     {
-        $this->resetPage();
-    }
-
-    public function updatingPerPage()
-    {
-        $this->resetPage();
-    }
-
-    public function resetForm()
-    {
-        $this->form = [
+        return [
             'name' => '',
             'phone' => '',
         ];
+    }
+
+    protected function getModelClass(): string
+    {
+        return Supplier::class;
+    }
+
+    protected function getSearchableFields(): array
+    {
+        return ['name', 'phone'];
     }
 
     public function create()
@@ -77,7 +74,6 @@ class SupplierManagement extends Component
 
     public function updateSupplier()
     {
-        // do not reset editId until after update, otherwise we have no id to look up
         $this->validate();
         Supplier::findOrFail($this->editId)->update($this->form);
         $this->resetForm();
@@ -87,20 +83,19 @@ class SupplierManagement extends Component
 
     public function setDelete($id)
     {
-        $this->deleteId = $id;
-        $this->dispatch('open-modal-delete-supplier');
+        $this->openDeleteModal($id, 'open-modal-delete-supplier');
     }
+
     public function openEdit($id)
     {
         $supplier = Supplier::findOrFail($id);
 
-        $this->editId = $supplier->id;
+        $this->openEditModal($supplier->id, 'open-modal-edit-supplier');
 
         $this->form = [
             'name' => $supplier->name,
             'phone' => $supplier->phone,
         ];
-        $this->dispatch('open-modal-edit-supplier');
     }
 
     public function delete()
@@ -113,10 +108,7 @@ class SupplierManagement extends Component
 
     public function getSuppliersProperty()
     {
-        return Supplier::where('name', 'like', '%' . $this->search . '%')
-            ->orWhere('phone', 'like', '%' . $this->search . '%')
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->perPage);
+        return $this->items;
     }
 
     public function render()

@@ -87,6 +87,7 @@ return [
     "back_to_suppliers" => 'العودة إلى الموردين',
     "back" => 'رجوع',
     "created_at" => 'تاريخ الإنشاء',
+    "current_invoice" => 'الفاتورة الحالية',
     "slug" => 'المعرف',
     "not_available" => 'غير متوفر',
     "contact_available" => 'بيانات التواصل متوفرة',

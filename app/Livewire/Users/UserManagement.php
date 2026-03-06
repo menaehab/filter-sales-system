@@ -2,41 +2,33 @@
 
 namespace App\Livewire\Users;
 
+use App\Livewire\Traits\HasCrudModals;
+use App\Livewire\Traits\HasCrudQuery;
+use App\Livewire\Traits\HasForm;
+use App\Livewire\Traits\HasValidationAttributes;
+use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\WithPagination;
 use Spatie\Permission\Models\Permission;
 
 #[Layout('layouts.app', ['title' => 'users_management'])]
 class UserManagement extends Component
 {
-    use WithPagination;
+    use WithSearchAndPagination;
+    use HasForm;
+    use HasCrudModals;
+    use HasCrudQuery;
+    use HasValidationAttributes;
 
     protected $paginationTheme = 'tailwind';
 
-    public $form = [
-        'name' => '',
-        'email' => '',
-        'phone' => '',
-        'password' => '',
-        'password_confirmation' => '',
-        'permissions' => [],
-    ];
-
-    public $editId = null;
-    public $deleteId = null;
-
-    public $search = '';
-    public $perPage = 10;
-
-    public $queryString = [
-        'search' => ['except' => ''],
-        'perPage' => ['except' => 10],
-        'page' => ['except' => 1],
-    ];
+    public function mount()
+    {
+        $this->resetForm();
+    }
 
     protected function rules()
     {
@@ -50,7 +42,7 @@ class UserManagement extends Component
         ];
     }
 
-    protected function getValidationAttributes()
+    protected function validationAttributes(): array
     {
         return [
             'form.name' => __('keywords.name'),
@@ -62,26 +54,9 @@ class UserManagement extends Component
         ];
     }
 
-    public function getPermissionOptionsProperty()
+    protected function getDefaultForm(): array
     {
-        return Permission::pluck('name', 'name')
-            ->mapWithKeys(fn($name) => [$name => __('keywords.' . $name)])
-            ->toArray();
-    }
-
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingPerPage()
-    {
-        $this->resetPage();
-    }
-
-    public function resetForm()
-    {
-        $this->form = [
+        return [
             'name' => '',
             'email' => '',
             'phone' => '',
@@ -89,6 +64,23 @@ class UserManagement extends Component
             'password_confirmation' => '',
             'permissions' => [],
         ];
+    }
+
+    protected function getModelClass(): string
+    {
+        return User::class;
+    }
+
+    protected function getSearchableFields(): array
+    {
+        return ['name', 'email', 'phone'];
+    }
+
+    public function getPermissionOptionsProperty()
+    {
+        return Permission::pluck('name', 'name')
+            ->mapWithKeys(fn($name) => [$name => __('keywords.' . $name)])
+            ->toArray();
     }
 
     public function create()
@@ -166,16 +158,12 @@ class UserManagement extends Component
 
     public function openDelete($id)
     {
-        $this->deleteId = $id;
-
-        $this->dispatch('open-modal-delete-user');
+        $this->openDeleteModal($id, 'open-modal-delete-user');
     }
 
     public function setDelete($id)
     {
-        $this->deleteId = $id;
-
-        $this->dispatch('open-modal-delete-user');
+        $this->openDeleteModal($id, 'open-modal-delete-user');
     }
 
     public function delete()
@@ -191,11 +179,7 @@ class UserManagement extends Component
 
     public function getUsersProperty()
     {
-        return User::where('name', 'like', '%' . $this->search . '%')
-            ->orWhere('email', 'like', '%' . $this->search . '%')
-            ->orWhere('phone', 'like', '%' . $this->search . '%')
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->perPage);
+        return $this->items;
     }
 
     public function render()

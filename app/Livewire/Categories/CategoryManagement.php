@@ -2,32 +2,29 @@
 
 namespace App\Livewire\Categories;
 
+use App\Livewire\Traits\HasCrudModals;
+use App\Livewire\Traits\HasCrudQuery;
+use App\Livewire\Traits\HasForm;
+use App\Livewire\Traits\HasValidationAttributes;
+use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Category;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 #[Layout('layouts.app', ['title' => 'categories_management'])]
 class CategoryManagement extends Component
 {
-    use WithPagination;
+    use WithSearchAndPagination;
+    use HasForm;
+    use HasCrudModals;
+    use HasCrudQuery;
+    use HasValidationAttributes;
 
-    public $form = [
-        'name' => '',
-    ];
-
-    public $editId = null;
-    public $deleteId = null;
-
-    public $search = '';
-    public $perPage = 10;
-
-    protected $queryString = [
-        'search' => ['except' => ''],
-        'perPage' => ['except' => 10],
-        'page' => ['except' => 1],
-    ];
+    public function mount()
+    {
+        $this->resetForm();
+    }
 
     protected function rules()
     {
@@ -36,28 +33,28 @@ class CategoryManagement extends Component
         ];
     }
 
-    protected function getValidationAttributes()
+    protected function validationAttributes(): array
     {
         return [
             'form.name' => __('keywords.name'),
         ];
     }
 
-    public function updatingSearch()
+    protected function getDefaultForm(): array
     {
-        $this->resetPage();
-    }
-
-    public function updatingPerPage()
-    {
-        $this->resetPage();
-    }
-
-    public function resetForm()
-    {
-        $this->form = [
+        return [
             'name' => '',
         ];
+    }
+
+    protected function getModelClass(): string
+    {
+        return Category::class;
+    }
+
+    protected function getSearchableFields(): array
+    {
+        return ['name'];
     }
 
     public function create()
@@ -102,9 +99,7 @@ class CategoryManagement extends Component
 
     public function setDelete($id)
     {
-        $this->deleteId = $id;
-
-        $this->dispatch('open-modal-delete-category');
+        $this->openDeleteModal($id, 'open-modal-delete-category');
     }
 
     public function delete()
@@ -120,10 +115,7 @@ class CategoryManagement extends Component
 
     public function getCategoriesProperty()
     {
-        return Category::query()
-            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
-            ->latest()
-            ->paginate($this->perPage);
+        return $this->items;
     }
 
     public function render()
