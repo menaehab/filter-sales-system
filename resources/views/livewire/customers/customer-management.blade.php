@@ -67,7 +67,7 @@
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                     <div class="flex items-center justify-end gap-2">
-                        <a href="#" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-blue-600"
+                        <a href="{{ route('customers.show', $customer->slug) }}" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-blue-600"
                             title="View">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor">

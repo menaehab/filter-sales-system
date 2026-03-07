@@ -104,5 +104,9 @@ return [
     "address" => 'العنوان',
     "enter_national_number" => 'أدخل الرقم القومي',
     "enter_address" => 'أدخل العنوان',
+    "customer_details" => 'تفاصيل العميل',
+    "customer_details_description" => 'عرض معلومات العميل بشكل منظم وسريع.',
+    "back_to_customers" => 'العودة إلى العملاء',
+    "customer" => 'العميل',
     "contact_missing" => 'بيانات التواصل غير مكتملة',
 ];
