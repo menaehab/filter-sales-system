@@ -62,6 +62,8 @@ class SupplierManagement extends Component
 
     public function create()
     {
+        $this->authorizeManageSuppliers();
+
         $this->validate();
         Supplier::create($this->form);
         $this->resetForm();
@@ -70,6 +72,8 @@ class SupplierManagement extends Component
 
     public function updateSupplier()
     {
+        $this->authorizeManageSuppliers();
+
         $this->validate();
         Supplier::findOrFail($this->editId)->update($this->form);
         $this->resetForm();
@@ -79,11 +83,15 @@ class SupplierManagement extends Component
 
     public function setDelete($id)
     {
+        $this->authorizeManageSuppliers();
+
         $this->openDeleteModal($id, 'open-modal-delete-supplier');
     }
 
     public function openEdit($id)
     {
+        $this->authorizeManageSuppliers();
+
         $supplier = Supplier::findOrFail($id);
 
         $this->openEditModal($supplier->id, 'open-modal-edit-supplier');
@@ -96,6 +104,8 @@ class SupplierManagement extends Component
 
     public function delete()
     {
+        $this->authorizeManageSuppliers();
+
         Supplier::findOrFail($this->deleteId)->delete();
         $this->deleteId = null;
         $this->dispatch('close-modal-delete-supplier');
@@ -110,5 +120,10 @@ class SupplierManagement extends Component
     public function render()
     {
         return view('livewire.suppliers.supplier-management');
+    }
+
+    protected function authorizeManageSuppliers(): void
+    {
+        abort_unless(auth()->user()?->can('manage_suppliers'), 403);
     }
 }

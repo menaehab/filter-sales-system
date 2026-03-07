@@ -15,6 +15,7 @@ class PermissionSeeder extends Seeder
             'manage_users',
             'manage_categories',
             'manage_products',
+            'view_products',
             'manage_suppliers',
             'view_suppliers',
             'manage_customers',
