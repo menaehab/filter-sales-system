@@ -25,6 +25,7 @@
                         name="{{ $name }}[]"
                         type="checkbox"
                         value="{{ $value }}"
+                        wire:model="{{ $name }}"
                         {{ in_array($value, $selectedValues) ? 'checked' : '' }}
                         {{ $disabled ? 'disabled' : '' }}
                         class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"

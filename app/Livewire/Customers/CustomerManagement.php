@@ -61,6 +61,8 @@ class CustomerManagement extends Component
 
     public function create()
     {
+        $this->authorizeManageCustomers();
+
         $this->validate();
         Customer::create($this->form);
         $this->resetForm();
@@ -68,6 +70,8 @@ class CustomerManagement extends Component
     }
     public function updateCustomer()
     {
+        $this->authorizeManageCustomers();
+
         $this->validate();
         Customer::findOrFail($this->editId)->update($this->form);
         $this->editId = null;
@@ -76,11 +80,15 @@ class CustomerManagement extends Component
 
     public function setDelete($id)
     {
+        $this->authorizeManageCustomers();
+
         $this->openDeleteModal($id, 'open-modal-delete-customer');
     }
 
     public function openEdit($id)
     {
+        $this->authorizeManageCustomers();
+
         $customer = Customer::findOrFail($id);
 
         $this->openEditModal($customer->id, 'open-modal-edit-customer');
@@ -95,6 +103,8 @@ class CustomerManagement extends Component
 
     public function delete()
     {
+        $this->authorizeManageCustomers();
+
         Customer::findOrFail($this->deleteId)->delete();
         $this->deleteId = null;
         $this->dispatch('close-modal-delete-customer');
@@ -109,5 +119,10 @@ class CustomerManagement extends Component
     public function render()
     {
         return view('livewire.customers.customer-management');
+    }
+
+    protected function authorizeManageCustomers(): void
+    {
+        abort_unless(auth()->user()?->can('manage_customers'), 403);
     }
 }
