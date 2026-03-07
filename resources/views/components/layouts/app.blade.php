@@ -12,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('keywords.' . $title) }} — {{ config('app.name', __('keywords.app')) }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -51,23 +52,27 @@
 
             {{-- Navigation --}}
             <nav class="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-                <x-sidebar-link href="{{ route('home') }}" icon="home"
+                <x-sidebar-link href="{{ route('home') }}" icon="fas fa-house-user"
                     :active="request()->routeIs('home')">{{ __('keywords.home') }}</x-sidebar-link>
                 @can('manage_categories')
-                    <x-sidebar-link href="{{ route('categories') }}" icon="tag"
+                    <x-sidebar-link href="{{ route('categories') }}" icon="fas fa-tag"
                         :active="request()->routeIs('categories.*')">{{ __('keywords.categories') }}</x-sidebar-link>
                 @endcan
                 @can('manage_products')
-                    <x-sidebar-link href="{{ route('products') }}" icon="cube"
+                    <x-sidebar-link href="{{ route('products') }}" icon="fas fa-cube"
                         :active="request()->routeIs('products.*')">{{ __('keywords.products') }}</x-sidebar-link>
                 @endcan
                 @can('manage_users')
-                    <x-sidebar-link href="{{ route('users') }}" icon="users"
+                    <x-sidebar-link href="{{ route('users') }}" icon="fas fa-cog"
                         :active="request()->routeIs('users.*')">{{ __('keywords.users') }}</x-sidebar-link>
                 @endcan
                 @can(['manage_suppliers', 'view_suppliers'])
-                    <x-sidebar-link href="{{ route('suppliers') }}" icon="truck"
+                    <x-sidebar-link href="{{ route('suppliers') }}" icon="fas fa-truck"
                         :active="request()->routeIs('suppliers.*')">{{ __('keywords.suppliers') }}</x-sidebar-link>
+                @endcan
+                @can(['manage_customers', 'view_customers'])
+                    <x-sidebar-link href="{{ route('customers') }}" icon="fas fa-users"
+                        :active="request()->routeIs('customers.*')">{{ __('keywords.customers') }}</x-sidebar-link>
                 @endcan
             </nav>
 

@@ -3,27 +3,31 @@
 namespace App\Livewire\Products;
 
 use App\Livewire\Traits\HasCrudModals;
+use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
 use App\Livewire\Traits\HasValidationAttributes;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class ProductManagement extends Component
 {
-    use WithSearchAndPagination;
-    use HasForm;
-    use HasCrudModals;
-    use HasValidationAttributes;
+    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery, HasValidationAttributes;
 
     public $categorySlug = '';
 
     public function mount()
     {
         $this->resetForm();
+    }
+
+    protected function getModelClass(): string
+    {
+        return Product::class;
     }
 
     protected function rules()
@@ -127,14 +131,24 @@ class ProductManagement extends Component
         $this->resetPage();
     }
 
+    protected function getSearchableFields(): array
+    {
+        return ['name', 'category.name'];
+    }
+
+    protected function getWithRelations(): array
+    {
+        return ['category'];
+    }
+
+    protected function applyAdditionalFilters(Builder $query): void
+    {
+        $query->when($this->categorySlug, fn(Builder $builder) => $builder->whereHas('category', fn(Builder $categoryQuery) => $categoryQuery->where('slug', $this->categorySlug)));
+    }
+
     public function getProductsProperty()
     {
-        return Product::query()
-            ->with('category')
-            ->when($this->search, fn($q) => $q->where('name', 'like', "%{$this->search}%"))
-            ->when($this->categorySlug, fn($q) => $q->whereHas('category', fn($q) => $q->where('slug', $this->categorySlug)))
-            ->latest()
-            ->paginate($this->perPage);
+        return $this->items;
     }
 
     public function getCategoriesProperty()

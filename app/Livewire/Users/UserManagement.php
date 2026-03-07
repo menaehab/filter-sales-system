@@ -17,13 +17,7 @@ use Spatie\Permission\Models\Permission;
 #[Layout('layouts.app', ['title' => 'users_management'])]
 class UserManagement extends Component
 {
-    use WithSearchAndPagination;
-    use HasForm;
-    use HasCrudModals;
-    use HasCrudQuery;
-    use HasValidationAttributes;
-
-    protected $paginationTheme = 'tailwind';
+    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery, HasValidationAttributes;
 
     public function mount()
     {
