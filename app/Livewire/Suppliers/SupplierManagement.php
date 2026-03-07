@@ -14,11 +14,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class SupplierManagement extends Component
 {
-    use WithSearchAndPagination;
-    use HasForm;
-    use HasCrudModals;
-    use HasCrudQuery;
-    use HasValidationAttributes;
+    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery, HasValidationAttributes;
 
     public function mount()
     {
