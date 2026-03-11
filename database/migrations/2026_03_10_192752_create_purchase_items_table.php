@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('cost_price', 10, 2);
             $table->decimal('quantity', 10, 2);
             $table->foreignId('purchase_id')->constrained('purchases')->cascadeOnDelete();
-            $table->foreignId('product_id')->constrained('products')->nullOnDelete();
+            $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
             $table->timestamps();
         });
     }

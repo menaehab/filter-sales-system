@@ -19,8 +19,8 @@ return new class extends Migration
             $table->string('payment_type')->default('cash');
             $table->decimal('installment_amount',10, 2)->nullable();
             $table->unsignedInteger('installment_months')->nullable();
-            $table->foreignId('user_id')->constrained('users')->nullOnDelete();
-            $table->foreignId('supplier_id')->constrained('suppliers')->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();
             $table->timestamps();
         });
     }

@@ -16,4 +16,9 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/suppliers/{supplier:slug}', 'suppliers.supplier-details')->name('suppliers.show')->middleware('permission:view_suppliers|manage_suppliers');
     Route::livewire('/customers','customers.customer-management')->name('customers')->middleware('permission:view_customers|manage_customers');
     Route::livewire('/customers/{customer:slug}', 'customers.customer-details')->name('customers.show')->middleware('permission:view_customers|manage_customers');
+
+    Route::livewire('/purchases','purchases.purchase-management')->name('purchases')->middleware('permission:view_purchases|manage_purchases');
+    Route::livewire('/purchases/create','purchases.purchase-create')->name('purchases.create')->middleware('permission:manage_purchases');
+    Route::livewire('/purchases/{purchase}','purchases.purchase-show')->name('purchases.show')->middleware('permission:view_purchases|manage_purchases');
+    Route::livewire('/purchases/{purchase}/edit','purchases.purchase-edit')->name('purchases.edit')->middleware('permission:manage_purchases');
 });

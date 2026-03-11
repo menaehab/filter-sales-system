@@ -20,6 +20,8 @@ class PermissionSeeder extends Seeder
             'view_suppliers',
             'manage_customers',
             'view_customers',
+            'manage_purchases',
+            'view_purchases',
         ];
 
         foreach ($permissions as $permission) {

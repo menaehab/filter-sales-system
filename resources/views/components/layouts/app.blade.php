@@ -2,6 +2,9 @@
 
 @php
     $isRtl = in_array(app()->getLocale(), ['ar', 'he', 'fa', 'ur']);
+    $authUser = auth()->user();
+    $unreadNotificationsCount = $authUser?->unreadNotifications()?->count() ?? 0;
+    $latestNotifications = $authUser?->notifications()?->latest()->limit(8)->get() ?? collect();
 @endphp
 
 <!DOCTYPE html>
@@ -74,6 +77,10 @@
                     <x-sidebar-link href="{{ route('customers') }}" icon="fas fa-users"
                         :active="request()->routeIs('customers.*')">{{ __('keywords.customers') }}</x-sidebar-link>
                 @endcan
+                @can(['manage_purchases', 'view_purchases'])
+                    <x-sidebar-link href="{{ route('purchases') }}" icon="fas fa-file-invoice"
+                        :active="request()->routeIs('purchases.*')">{{ __('keywords.purchases') }}</x-sidebar-link>
+                @endcan
             </nav>
 
             {{-- Sidebar footer --}}
@@ -126,15 +133,51 @@
                 {{-- <x-lang-toggle /> --}}
 
                 {{-- Notifications --}}
-                {{-- <button class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                    </svg>
-                    <span class="absolute end-1.5 top-1.5 flex h-2 w-2">
-                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                        <span class="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
-                    </span>
-                </button> --}}
+                <div class="relative" x-data="{ openNotifications: false }">
+                    <button @click="openNotifications = !openNotifications"
+                        class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                        title="{{ __('Notifications') }}">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                        </svg>
+
+                        @if($unreadNotificationsCount > 0)
+                            <span class="absolute -top-1 -end-1 min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-bold text-white">
+                                {{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}
+                            </span>
+                        @endif
+                    </button>
+
+                    <div x-show="openNotifications" @click.outside="openNotifications = false"
+                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="transform opacity-0 scale-95"
+                        x-transition:enter-end="transform opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="transform opacity-100 scale-100"
+                        x-transition:leave-end="transform opacity-0 scale-95"
+                        class="absolute end-0 mt-2 w-80 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5">
+                        <div class="border-b border-gray-100 px-4 py-3">
+                            <p class="text-sm font-semibold text-gray-800">{{ __('keywords.notifications') }}</p>
+                        </div>
+
+                        <div class="max-h-80 overflow-y-auto">
+                            @forelse($latestNotifications as $notification)
+                                @php
+                                    $notificationMessage = data_get($notification->data, 'message', __('Notification'));
+                                    $notificationDate = optional($notification->created_at)->diffForHumans();
+                                @endphp
+                                <div class="border-b border-gray-50 px-4 py-3 {{ is_null($notification->read_at) ? 'bg-emerald-50/40' : '' }}">
+                                    <p class="text-sm text-gray-700">{{ $notificationMessage }}</p>
+                                    <p class="mt-1 text-xs text-gray-400">{{ $notificationDate }}</p>
+                                </div>
+                            @empty
+                                <div class="px-4 py-6 text-center text-sm text-gray-500">
+                                    {{ __('keywords.no_notifications') }}
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
 
                 {{-- User avatar dropdown --}}
                 <div class="relative" x-data="{ open: false }">
