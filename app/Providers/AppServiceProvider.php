@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
-        $this->installmentReminder();
+        // $this->installmentReminder();
     }
 
     /**
