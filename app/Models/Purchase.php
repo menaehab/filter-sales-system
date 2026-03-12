@@ -1,0 +1,94 @@
+<?php
+
+namespace App\Models;
+
+use App\Observers\PurchaseObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+#[ObservedBy(PurchaseObserver::class)]
+class Purchase extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'number',
+        'supplier_name',
+        'user_name',
+        'total_price',
+        'payment_type',
+        'installment_amount',
+        'installment_months',
+        'user_id',
+        'supplier_id',
+    ];
+
+    public function items()
+    {
+        return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function paymentAllocations()
+    {
+        return $this->hasMany(SupplierPaymentAllocation::class);
+    }
+
+    public function getPaidAmountAttribute(): float
+    {
+        return (float) $this->paymentAllocations->sum('amount');
+    }
+
+    public function getRemainingAmountAttribute(): float
+    {
+        return max(0, (float) $this->total_price - $this->paid_amount);
+    }
+
+    public function getDownPaymentAttribute(): float
+    {
+        // Get the payment allocation from the first supplier payment (created at purchase time)
+        return (float) $this->paymentAllocations()
+            ->orderBy('created_at', 'asc')
+            ->first()
+            ?->amount ?? 0;
+    }
+
+    public function getNextInstallmentDateAttribute()
+    {
+        if (!$this->isInstallment() || $this->isFullyPaid()) {
+            return null;
+        }
+
+        return $this->created_at?->addMonth();
+    }
+
+    public function isInstallment(): bool
+    {
+        return $this->installment_months > 0;
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return $this->remaining_amount <= 0;
+    }
+
+    public function getPaidInstallmentsCountAttribute(): int
+    {
+        return $this->paymentAllocations()->count();
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'number';
+    }
+}

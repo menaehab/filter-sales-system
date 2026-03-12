@@ -31,4 +31,19 @@ class Product extends Model
             ->generateSlugsFrom('name')
             ->saveSlugsTo('slug');
     }
+
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    public function purchaseItems()
+    {
+        return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function movements()
+    {
+        return $this->hasMany(ProductMovement::class);
+    }
 }

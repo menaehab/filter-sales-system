@@ -15,6 +15,7 @@ it('creates a product', function () {
         ->set('form.name', 'Laptop')
         ->set('form.cost_price', 1500)
         ->set('form.quantity', 5)
+        ->set('form.min_quantity', 1)
         ->set('form.description', 'Gaming laptop')
         ->set('form.category_id', $category->id)
         ->call('create')
@@ -24,6 +25,7 @@ it('creates a product', function () {
     $this->assertDatabaseHas('products', [
         'name' => 'Laptop',
         'category_id' => $category->id,
+        'min_quantity' => 1,
     ]);
 });
 
@@ -32,12 +34,14 @@ it('validates required product fields', function () {
         ->set('form.name', '')
         ->set('form.cost_price', null)
         ->set('form.quantity', null)
+        ->set('form.min_quantity', null)
         ->set('form.category_id', null)
         ->call('create')
         ->assertHasErrors([
             'form.name' => 'required',
             'form.cost_price' => 'required',
             'form.quantity' => 'required',
+            'form.min_quantity' => 'required',
             'form.category_id' => 'required',
         ]);
 });
@@ -47,6 +51,7 @@ it('validates category existence when creating a product', function () {
         ->set('form.name', 'Mouse')
         ->set('form.cost_price', 100)
         ->set('form.quantity', 10)
+        ->set('form.min_quantity', 2)
         ->set('form.category_id', 99999)
         ->call('create')
         ->assertHasErrors(['form.category_id' => 'exists']);
@@ -60,6 +65,7 @@ it('updates a product', function () {
         'category_id' => $oldCategory->id,
         'cost_price' => 100,
         'quantity' => 1,
+        'min_quantity' => 1,
     ]);
 
     Livewire::test('products.product-management')
@@ -67,6 +73,7 @@ it('updates a product', function () {
         ->set('form.name', 'Updated Product')
         ->set('form.cost_price', 250)
         ->set('form.quantity', 3)
+        ->set('form.min_quantity', 2)
         ->set('form.description', 'Updated description')
         ->set('form.category_id', $newCategory->id)
         ->call('updateProduct')
@@ -78,6 +85,7 @@ it('updates a product', function () {
         'name' => 'Updated Product',
         'category_id' => $newCategory->id,
         'quantity' => 3,
+        'min_quantity' => 2,
     ]);
 });
 
