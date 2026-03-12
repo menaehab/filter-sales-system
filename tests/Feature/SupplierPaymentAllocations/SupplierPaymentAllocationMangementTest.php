@@ -1,74 +1,79 @@
 <?php
 
-use App\Models\SupplierPaymentAllocation;
+use App\Models\SupplierPayment;
 use Livewire\Livewire;
 
 beforeEach(function () {
     actAsAdmin($this);
 });
 
-it('deletes a supplier payment allocation', function () {
-    $supplierPaymentAllocation = SupplierPaymentAllocation::factory()->create();
+it('deletes a supplier payment and cascades its allocations', function () {
+    $supplierPayment = SupplierPayment::factory()->hasAllocations(2)->create();
+    $allocationIds = $supplierPayment->allocations()->pluck('id');
 
-    Livewire::test('supplier-payment-allocations.supplier-payment-allocation-management')
-        ->call('setDelete', $supplierPaymentAllocation->id)
+    Livewire::test('supplier-payments.supplier-payment-management')
+        ->call('setDelete', $supplierPayment->id)
         ->call('delete')
-        ->assertDispatched('close-modal-delete-supplier-payment-allocation');
+        ->assertDispatched('close-modal-delete-supplier-payment');
 
-    $this->assertDatabaseMissing('supplier_payment_allocations', [
-        'id' => $supplierPaymentAllocation->id,
+    $this->assertDatabaseMissing('supplier_payments', [
+        'id' => $supplierPayment->id,
     ]);
+
+    foreach ($allocationIds as $allocationId) {
+        $this->assertDatabaseMissing('supplier_payment_allocations', [
+            'id' => $allocationId,
+        ]);
+    }
 });
 
-it('filters supplier payment allocations by search term', function () {
-    $supplierPaymentAllocation1 = SupplierPaymentAllocation::factory()->create([
+it('filters supplier payments by search term', function () {
+    $supplierPayment1 = SupplierPayment::factory()->create([
         'amount' => 100,
     ]);
-    $supplierPaymentAllocation2 = SupplierPaymentAllocation::factory()->create([
+    $supplierPayment2 = SupplierPayment::factory()->create([
         'amount' => 200,
     ]);
 
-    $component = Livewire::test('supplier-payment-allocations.supplier-payment-allocation-management')
-        ->set('search', $supplierPaymentAllocation1->supplierPayment->user->name);
+    $component = Livewire::test('supplier-payments.supplier-payment-management')
+        ->set('search', $supplierPayment1->user->name);
 
-    $allocations = $component->get('supplierPaymentAllocations');
+    $payments = $component->get('supplierPayments');
 
-    $this->assertSame(1, $allocations->total());
-    // database returns formatted numbers as strings, cast to float for comparison
-    $this->assertSame([100.0], collect($allocations->items())->pluck('amount')->map(fn($a) => (float) $a)->all());
+    $this->assertSame(1, $payments->total());
+    $this->assertSame([100.0], collect($payments->items())->pluck('amount')->map(fn ($a) => (float) $a)->all());
 });
 
-it('paginates supplier payment allocations using per page selection', function () {
-    SupplierPaymentAllocation::factory()->count(15)->create();
+it('paginates supplier payments using per page selection', function () {
+    SupplierPayment::factory()->count(15)->create();
 
-    $component = Livewire::test('supplier-payment-allocations.supplier-payment-allocation-management')
+    $component = Livewire::test('supplier-payments.supplier-payment-management')
         ->set('perPage', 10);
 
-    $this->assertCount(10, $component->get('supplierPaymentAllocations'));
+    $this->assertCount(10, $component->get('supplierPayments'));
 
     $component->call('setPage', 2);
 
-    $this->assertCount(5, $component->get('supplierPaymentAllocations'));
+    $this->assertCount(5, $component->get('supplierPayments'));
 });
 
-it('resets page when search, per page, or category filter changes', function () {
-    SupplierPaymentAllocation::factory()->count(30)->create();
+it('resets page when search or per page changes', function () {
+    SupplierPayment::factory()->count(30)->create();
 
-    $component = Livewire::test('supplier-payment-allocations.supplier-payment-allocation-management');
+    $component = Livewire::test('supplier-payments.supplier-payment-management');
 
     $component->call('setPage', 2);
-    $this->assertSame(2, $component->get('supplierPaymentAllocations')->currentPage());
+    $this->assertSame(2, $component->get('supplierPayments')->currentPage());
 
     $component->set('search', 'a');
-    $this->assertSame(1, $component->get('supplierPaymentAllocations')->currentPage());
+    $this->assertSame(1, $component->get('supplierPayments')->currentPage());
 
     $component->call('setPage', 2);
-    $this->assertSame(2, $component->get('supplierPaymentAllocations')->currentPage());
+    $this->assertSame(2, $component->get('supplierPayments')->currentPage());
 
     $component->set('perPage', 25);
-    $this->assertSame(1, $component->get('supplierPaymentAllocations')->currentPage());
+    $this->assertSame(1, $component->get('supplierPayments')->currentPage());
 
     $component->call('setPage', 2);
-    $this->assertSame(2, $component->get('supplierPaymentAllocations')->currentPage());
-
+    $this->assertSame(2, $component->get('supplierPayments')->currentPage());
 });

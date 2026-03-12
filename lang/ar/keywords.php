@@ -147,6 +147,11 @@ return [
     'no_supplier_payment_allocations_found' => 'لم يتم العثور على صرف نقدية مسجلة.',
     'delete_supplier_payment_allocation' => 'حذف اذن صرف نقدية للموردين',
     'delete_supplier_payment_allocation_confirmation' => 'هل أنت متأكد أنك تريد حذف هذا الإذن؟.',
+    'supplier_payments' => 'مدفوعات الموردين',
+    'supplier_payments_management' => 'عرض وإدارة مدفوعات الموردين.',
+    'no_supplier_payments_found' => 'لم يتم العثور على مدفوعات موردين.',
+    'delete_supplier_payment' => 'حذف مدفوعة المورد',
+    'delete_supplier_payment_confirmation' => 'هل أنت متأكد أنك تريد حذف هذه المدفوعة؟ سيتم حذف التوزيعات المرتبطة بها أيضاً.',
 
     // Purchases
     'purchases' => 'المشتريات',
@@ -256,4 +261,22 @@ return [
     'edit_purchase_return_description' => 'تعديل بيانات مرتجع فاتورة الشراء.',
     'update_purchase_return' => 'تحديث المرتجع',
     'purchase_return_updated' => 'تم تحديث مرتجع الشراء بنجاح.',
+
+    // Supplier Balance
+    'balance' => 'الرصيد',
+    'supplier_balance' => 'رصيد المورد',
+    'total_purchases' => 'إجمالي المشتريات',
+    'total_payments' => 'إجمالي الدفعات',
+    'total_returns_without_cash' => 'إجمالي المرتجعات بدون نقدي',
+    'available_supplier_credit' => 'الرصيد المتاح للخصم',
+    'applied_supplier_credit' => 'رصيد مطبّق على الفاتورة',
+    'cash_due_now' => 'المطلوب سداده الآن',
+    'items_count' => 'عدد الأصناف',
+    'view' => 'عرض',
+    'edit' => 'تعديل',
+    'not_specified' => 'غير محدد',
+    'purchases' => 'المشتريات',
+    'payments' => 'الدفعات',
+    'action' => 'الإجراء',
+    'supplier_credit' => 'رصيد مورد',
 ];

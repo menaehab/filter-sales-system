@@ -39,6 +39,11 @@ class Purchase extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function returns()
+    {
+        return $this->hasMany(PurchaseReturn::class);
+    }
+
     public function paymentAllocations()
     {
         return $this->hasMany(SupplierPaymentAllocation::class);
@@ -56,8 +61,10 @@ class Purchase extends Model
 
     public function getDownPaymentAttribute(): float
     {
-        // Get the payment allocation from the first supplier payment (created at purchase time)
         return (float) $this->paymentAllocations()
+            ->whereHas('supplierPayment', function ($query) {
+                $query->where('payment_method', '!=', 'supplier_credit');
+            })
             ->orderBy('created_at', 'asc')
             ->first()
             ?->amount ?? 0;

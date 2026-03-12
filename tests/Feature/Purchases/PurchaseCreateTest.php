@@ -143,3 +143,66 @@ it('validates purchase fields before saving', function () {
             'items.0.quantity' => 'required',
         ]);
 });
+
+it('applies available supplier credit to a new purchase before cash payment', function () {
+    $supplier = Supplier::factory()->create();
+    $product = Product::factory()->create([
+        'cost_price' => 25,
+        'quantity' => 1,
+    ]);
+
+    $oldPurchase = Purchase::create([
+        'supplier_name' => $supplier->name,
+        'user_name' => auth()->user()->name,
+        'total_price' => 300,
+        'payment_type' => 'cash',
+        'user_id' => auth()->id(),
+        'supplier_id' => $supplier->id,
+    ]);
+
+    $oldPurchase->returns()->create([
+        'total_price' => 150,
+        'reason' => 'Credit kept for next invoice',
+        'cash_refund' => false,
+        'user_id' => auth()->id(),
+    ]);
+
+    Livewire::test('purchases.purchase-create')
+        ->set('supplier_id', $supplier->id)
+        ->set('payment_type', 'cash')
+        ->set('items', [[
+            'product_id' => (string) $product->id,
+            'product_name' => $product->name,
+            'cost_price' => '50',
+            'quantity' => '10',
+        ]])
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('purchases'));
+
+    $purchase = Purchase::latest()->first();
+    $supplier->refresh();
+
+    $this->assertEquals(500.0, (float) $purchase->total_price);
+    $this->assertEquals(500.0, (float) $purchase->paid_amount);
+    $this->assertEquals(0.0, (float) $purchase->remaining_amount);
+    $this->assertEquals(0.0, (float) $supplier->available_credit);
+    $this->assertEquals(0.0, (float) $supplier->balance);
+
+    $this->assertDatabaseHas('supplier_payments', [
+        'supplier_id' => $supplier->id,
+        'amount' => '350.00',
+        'payment_method' => 'cash',
+    ]);
+
+    $this->assertDatabaseHas('supplier_payments', [
+        'supplier_id' => $supplier->id,
+        'amount' => '150.00',
+        'payment_method' => 'supplier_credit',
+    ]);
+
+    $this->assertDatabaseHas('supplier_payment_allocations', [
+        'purchase_id' => $purchase->id,
+        'amount' => '150.00',
+    ]);
+});

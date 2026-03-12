@@ -223,7 +223,17 @@ class PurchaseManagement extends Component
 
     public function delete()
     {
-        Purchase::findOrFail($this->deleteId)->delete();
+        $purchase = Purchase::with('paymentAllocations')->findOrFail($this->deleteId);
+        $relatedPaymentIds = $purchase->paymentAllocations->pluck('supplier_payment_id')->unique()->all();
+
+        $purchase->delete();
+
+        if (! empty($relatedPaymentIds)) {
+            SupplierPayment::whereIn('id', $relatedPaymentIds)
+                ->doesntHave('allocations')
+                ->delete();
+        }
+
         $this->deleteId = null;
         $this->dispatch('close-modal-delete-purchase');
         $this->resetPage();
