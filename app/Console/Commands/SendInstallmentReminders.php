@@ -31,8 +31,7 @@ class SendInstallmentReminders extends Command
         $purchases = Purchase::with('paymentAllocations')
             ->whereNotNull('installment_months')
             ->where('installment_months', '>', 0)
-            ->whereNotNull('next_installment_date')
-            ->where('next_installment_date', '<=', now()->addDays(3))
+            ->whereRaw('DATE_ADD(created_at, INTERVAL 1 MONTH) <= ?', [now()->addDays(3)])
             ->get()
             ->filter(fn($p) => !$p->isFullyPaid());
 

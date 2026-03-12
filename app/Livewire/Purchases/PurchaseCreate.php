@@ -247,10 +247,8 @@ class PurchaseCreate extends Component
                 'user_name' => auth()->user()->name,
                 'total_price' => $totalPrice,
                 'payment_type' => $isInstallment ? 'installment' : 'cash',
-                'down_payment' => $downPayment,
                 'installment_amount' => $installmentAmount,
                 'installment_months' => $months,
-                'next_installment_date' => $isInstallment ? now()->addMonth() : null,
                 'user_id' => auth()->id(),
                 'supplier_id' => $supplier->id,
             ]);

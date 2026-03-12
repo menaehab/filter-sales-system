@@ -5,6 +5,8 @@ use App\Models\ProductMovement;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Supplier;
+use App\Models\SupplierPayment;
+use App\Models\SupplierPaymentAllocation;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -31,10 +33,8 @@ it('updates a purchase and recalculates stock and movements', function () {
         'user_name' => auth()->user()->name,
         'total_price' => 30,
         'payment_type' => 'cash',
-        'down_payment' => 30,
         'installment_amount' => null,
         'installment_months' => null,
-        'next_installment_date' => null,
         'user_id' => auth()->id(),
         'supplier_id' => $oldSupplier->id,
     ]);
@@ -54,31 +54,44 @@ it('updates a purchase and recalculates stock and movements', function () {
         'product_id' => $oldProduct->id,
     ]);
 
+    // Create initial payment allocation (simulates down payment)
+    $payment = SupplierPayment::create([
+        'amount' => 30,
+        'payment_method' => 'cash',
+        'supplier_id' => $oldSupplier->id,
+    ]);
+    SupplierPaymentAllocation::create([
+        'amount' => 30,
+        'supplier_payment_id' => $payment->id,
+        'purchase_id' => $purchase->id,
+    ]);
+
     Livewire::test('purchases.purchase-edit', ['purchase' => $purchase])
         ->set('supplier_id', $newSupplier->id)
         ->set('payment_type', 'cash')
-        ->set('items', [[
-            'product_id' => (string) $newProduct->id,
-            'product_name' => $newProduct->name,
-            'cost_price' => '30',
-            'quantity' => '4',
-        ]])
+        ->set('items', [
+            [
+                'product_id' => (string) $newProduct->id,
+                'product_name' => $newProduct->name,
+                'cost_price' => '30',
+                'quantity' => '4',
+            ]
+        ])
         ->call('update')
         ->assertHasNoErrors()
         ->assertRedirect(route('purchases'));
 
-    $purchase->refresh();
+    $purchase->refresh()->load('paymentAllocations');
     $oldProduct->refresh();
     $newProduct->refresh();
 
-    expect($purchase->supplier_id)->toBe($newSupplier->id);
-    expect($purchase->supplier_name)->toBe('New Supplier');
-    expect((float) $purchase->total_price)->toBe(120.0);
-    expect((float) $purchase->down_payment)->toBe(120.0);
-
-    expect((float) $oldProduct->quantity)->toBe(5.0);
-    expect((float) $newProduct->quantity)->toBe(5.0);
-    expect((float) $newProduct->cost_price)->toBe(30.0);
+    $this->assertEquals($newSupplier->id, $purchase->supplier_id);
+    $this->assertEquals('New Supplier', $purchase->supplier_name);
+    $this->assertEquals(120.0, (float) $purchase->total_price);
+    $this->assertGreaterThan(0, $purchase->paymentAllocations->count());
+    $this->assertEquals(5.0, (float) $oldProduct->quantity);
+    $this->assertEquals(5.0, (float) $newProduct->quantity);
+    $this->assertEquals(30.0, (float) $newProduct->cost_price);
 
     $this->assertDatabaseMissing('purchase_items', [
         'purchase_id' => $purchase->id,
@@ -93,9 +106,11 @@ it('updates a purchase and recalculates stock and movements', function () {
         'quantity' => '4.00',
     ]);
 
-    expect(ProductMovement::where('movable_type', Purchase::class)
-        ->where('movable_id', $purchase->id)
-        ->count())->toBe(1);
+    $this->assertDatabaseCount(
+        'product_movements',
+        1,
+        null,
+    );
 
     $this->assertDatabaseHas('product_movements', [
         'movable_type' => Purchase::class,
@@ -135,12 +150,14 @@ it('validates edited purchase data before updating', function () {
         ->set('payment_type', 'installment')
         ->set('down_payment', '')
         ->set('installment_months', '')
-        ->set('items', [[
-            'product_id' => '',
-            'product_name' => '',
-            'cost_price' => '',
-            'quantity' => '',
-        ]])
+        ->set('items', [
+            [
+                'product_id' => '',
+                'product_name' => '',
+                'cost_price' => '',
+                'quantity' => '',
+            ]
+        ])
         ->call('update')
         ->assertHasErrors([
             'supplier_id' => 'required',

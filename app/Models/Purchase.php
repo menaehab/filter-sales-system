@@ -2,29 +2,24 @@
 
 namespace App\Models;
 
+use App\Observers\PurchaseObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 
+#[ObservedBy(PurchaseObserver::class)]
 class Purchase extends Model
 {
     protected $fillable = [
+        'number',
         'supplier_name',
         'user_name',
         'total_price',
         'payment_type',
-        'down_payment',
         'installment_amount',
         'installment_months',
-        'next_installment_date',
         'user_id',
         'supplier_id',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'next_installment_date' => 'date',
-        ];
-    }
 
     public function items()
     {
@@ -48,12 +43,30 @@ class Purchase extends Model
 
     public function getPaidAmountAttribute(): float
     {
-        return (float) $this->down_payment + $this->paymentAllocations->sum('amount');
+        return (float) $this->paymentAllocations->sum('amount');
     }
 
     public function getRemainingAmountAttribute(): float
     {
         return max(0, (float) $this->total_price - $this->paid_amount);
+    }
+
+    public function getDownPaymentAttribute(): float
+    {
+        // Get the payment allocation from the first supplier payment (created at purchase time)
+        return (float) $this->paymentAllocations()
+            ->orderBy('created_at', 'asc')
+            ->first()
+            ?->amount ?? 0;
+    }
+
+    public function getNextInstallmentDateAttribute()
+    {
+        if (!$this->isInstallment() || $this->isFullyPaid()) {
+            return null;
+        }
+
+        return $this->created_at?->addMonth();
     }
 
     public function isInstallment(): bool

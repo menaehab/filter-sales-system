@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('payment_method')->default('cash');
             $table->text('note')->nullable();
             $table->foreignId('supplier_id')->constrained('suppliers')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });
     }

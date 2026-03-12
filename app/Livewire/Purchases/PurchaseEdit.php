@@ -275,10 +275,8 @@ class PurchaseEdit extends Component
                 'supplier_name' => $supplier->name,
                 'total_price' => $totalPrice,
                 'payment_type' => $isInstallment ? 'installment' : 'cash',
-                'down_payment' => $downPayment,
                 'installment_amount' => $installmentAmount,
                 'installment_months' => $months,
-                'next_installment_date' => $isInstallment && !$this->purchase->isFullyPaid() ? ($this->purchase->next_installment_date ?? now()->addMonth()) : null,
                 'supplier_id' => $supplier->id,
             ]);
 

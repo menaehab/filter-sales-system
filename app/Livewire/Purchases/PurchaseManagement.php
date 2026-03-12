@@ -50,7 +50,7 @@ class PurchaseManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['supplier_name', 'user_name'];
+        return ['supplier_name', 'user_name','number'];
     }
 
     protected function getWithRelations(): array
@@ -65,15 +65,15 @@ class PurchaseManagement extends Component
         }
 
         if ($this->filterStatus === 'paid') {
-            $query->whereRaw('total_price <= down_payment + COALESCE((SELECT SUM(amount) FROM supplier_payment_allocations WHERE supplier_payment_allocations.purchase_id = purchases.id), 0)');
+            $query->whereRaw('total_price <= COALESCE((SELECT SUM(amount) FROM supplier_payment_allocations WHERE supplier_payment_allocations.purchase_id = purchases.id), 0)');
         } elseif ($this->filterStatus === 'partial') {
             $query->where('installment_months', '>', 0)
-                ->whereRaw('total_price > down_payment + COALESCE((SELECT SUM(amount) FROM supplier_payment_allocations WHERE supplier_payment_allocations.purchase_id = purchases.id), 0)');
+                ->whereRaw('COALESCE((SELECT SUM(amount) FROM supplier_payment_allocations WHERE supplier_payment_allocations.purchase_id = purchases.id), 0) > 0')
+                ->whereRaw('total_price > COALESCE((SELECT SUM(amount) FROM supplier_payment_allocations WHERE supplier_payment_allocations.purchase_id = purchases.id), 0)');
         } elseif ($this->filterStatus === 'unpaid') {
             $query->where(function ($q) {
                 $q->where('installment_months', '>', 0);
-            })->whereRaw('COALESCE((SELECT SUM(amount) FROM supplier_payment_allocations WHERE supplier_payment_allocations.purchase_id = purchases.id), 0) = 0')
-                ->where('down_payment', 0);
+            })->whereRaw('COALESCE((SELECT SUM(amount) FROM supplier_payment_allocations WHERE supplier_payment_allocations.purchase_id = purchases.id), 0) = 0');
         }
     }
 
@@ -189,18 +189,6 @@ class PurchaseManagement extends Component
                 'supplier_payment_id' => $payment->id,
                 'purchase_id' => $allocation['purchase_id'],
             ]);
-
-            $paidPurchase = Purchase::with('paymentAllocations')->findOrFail($allocation['purchase_id']);
-
-            if ($paidPurchase->isInstallment() && !$paidPurchase->isFullyPaid()) {
-                $paidPurchase->update([
-                    'next_installment_date' => now()->addMonth(),
-                ]);
-            } elseif ($paidPurchase->isFullyPaid()) {
-                $paidPurchase->update([
-                    'next_installment_date' => null,
-                ]);
-            }
         }
 
         $this->resetPayForm();

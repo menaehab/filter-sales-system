@@ -20,12 +20,22 @@ it('shows purchase details including items and payment history', function () {
         'user_name' => auth()->user()->name,
         'total_price' => 120,
         'payment_type' => 'installment',
-        'down_payment' => 20,
         'installment_amount' => 50,
         'installment_months' => 2,
-        'next_installment_date' => now()->addMonth(),
         'user_id' => auth()->id(),
         'supplier_id' => $supplier->id,
+    ]);
+
+    // Create initial payment allocation (simulates down payment)
+    $initialPayment = SupplierPayment::create([
+        'amount' => 20,
+        'payment_method' => 'cash',
+        'supplier_id' => $supplier->id,
+    ]);
+    SupplierPaymentAllocation::create([
+        'amount' => 20,
+        'supplier_payment_id' => $initialPayment->id,
+        'purchase_id' => $purchase->id,
     ]);
 
     PurchaseItem::create([

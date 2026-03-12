@@ -34,15 +34,15 @@ it('creates a cash purchase and syncs inventory and payment records', function (
 
     $purchase = Purchase::with(['items', 'paymentAllocations'])->sole();
 
-    expect($purchase->payment_type)->toBe('cash');
-    expect((float) $purchase->total_price)->toBe(120.0);
-    expect((float) $purchase->down_payment)->toBe(120.0);
-    expect($purchase->installment_months)->toBeNull();
+        $this->assertEquals('cash', $purchase->payment_type);
+        $this->assertEquals(120.0, (float) $purchase->total_price);
+        $this->assertEquals(120.0, (float) $purchase->down_payment);
+        $this->assertNull($purchase->installment_months);
 
     $product->refresh();
 
-    expect((float) $product->cost_price)->toBe(60.0);
-    expect((float) $product->quantity)->toBe(5.0);
+        $this->assertEquals(60.0, (float) $product->cost_price);
+        $this->assertEquals(5.0, (float) $product->quantity);
 
     $this->assertDatabaseHas('purchase_items', [
         'purchase_id' => $purchase->id,
@@ -101,12 +101,12 @@ it('creates an installment purchase with down payment and next installment date'
 
     $purchase = Purchase::sole();
 
-    expect($purchase->payment_type)->toBe('installment');
-    expect((float) $purchase->total_price)->toBe(180.0);
-    expect((float) $purchase->down_payment)->toBe(30.0);
-    expect((float) $purchase->installment_amount)->toBe(50.0);
-    expect($purchase->installment_months)->toBe(3);
-    expect($purchase->next_installment_date?->toDateString())->toBe('2026-04-11');
+    $this->assertEquals('installment', $purchase->payment_type);
+    $this->assertEquals(180.0, (float) $purchase->total_price);
+    $this->assertEquals(30.0, (float) $purchase->down_payment);
+    $this->assertEquals(50.0, (float) $purchase->installment_amount);
+    $this->assertEquals(3, $purchase->installment_months);
+    $this->assertEquals('2026-04-11', $purchase->next_installment_date?->toDateString());
 
     $this->assertDatabaseHas('supplier_payments', [
         'supplier_id' => $supplier->id,

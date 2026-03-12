@@ -19,10 +19,8 @@ it('filters purchases by search, payment type, and status', function () {
         'user_name' => auth()->user()->name,
         'total_price' => 100,
         'payment_type' => 'cash',
-        'down_payment' => 100,
         'installment_amount' => null,
         'installment_months' => null,
-        'next_installment_date' => null,
         'user_id' => auth()->id(),
         'supplier_id' => $supplier->id,
     ]);
@@ -32,10 +30,8 @@ it('filters purchases by search, payment type, and status', function () {
         'user_name' => auth()->user()->name,
         'total_price' => 200,
         'payment_type' => 'installment',
-        'down_payment' => 50,
         'installment_amount' => 50,
         'installment_months' => 3,
-        'next_installment_date' => now()->addMonth(),
         'user_id' => auth()->id(),
         'supplier_id' => $supplier->id,
     ]);
@@ -45,10 +41,8 @@ it('filters purchases by search, payment type, and status', function () {
         'user_name' => auth()->user()->name,
         'total_price' => 250,
         'payment_type' => 'installment',
-        'down_payment' => 0,
         'installment_amount' => 50,
         'installment_months' => 5,
-        'next_installment_date' => now()->addMonth(),
         'user_id' => auth()->id(),
         'supplier_id' => $supplier->id,
     ]);
@@ -57,6 +51,18 @@ it('filters purchases by search, payment type, and status', function () {
         'amount' => 25,
         'payment_method' => 'cash',
         'supplier_id' => $supplier->id,
+    ]);
+
+    $paidPayment = SupplierPayment::create([
+        'amount' => 100,
+        'payment_method' => 'cash',
+        'supplier_id' => $supplier->id,
+    ]);
+
+    SupplierPaymentAllocation::create([
+        'amount' => 100,
+        'supplier_payment_id' => $paidPayment->id,
+        'purchase_id' => $paidPurchase->id,
     ]);
 
     SupplierPaymentAllocation::create([
@@ -103,10 +109,8 @@ it('allocates supplier payments to the oldest unpaid installment purchases first
         'user_name' => auth()->user()->name,
         'total_price' => 300,
         'payment_type' => 'installment',
-        'down_payment' => 0,
         'installment_amount' => 100,
         'installment_months' => 3,
-        'next_installment_date' => Carbon::parse('2026-03-20'),
         'user_id' => auth()->id(),
         'supplier_id' => $supplier->id,
         'created_at' => Carbon::parse('2026-03-01 08:00:00'),
@@ -118,10 +122,8 @@ it('allocates supplier payments to the oldest unpaid installment purchases first
         'user_name' => auth()->user()->name,
         'total_price' => 200,
         'payment_type' => 'installment',
-        'down_payment' => 50,
         'installment_amount' => 50,
         'installment_months' => 3,
-        'next_installment_date' => Carbon::parse('2026-03-25'),
         'user_id' => auth()->id(),
         'supplier_id' => $supplier->id,
         'created_at' => Carbon::parse('2026-03-02 08:00:00'),
@@ -131,9 +133,9 @@ it('allocates supplier payments to the oldest unpaid installment purchases first
     $component = Livewire::test('purchases.purchase-management')
         ->call('openPayModal', $newerPurchase->id);
 
-    expect($component->get('payPurchaseId'))->toBe($newerPurchase->id);
-    expect($component->get('payFromPurchaseId'))->toBe($oldestPurchase->id);
-    expect((float) $component->get('payAmount'))->toBe(100.0);
+    $this->assertEquals($newerPurchase->id, $component->get('payPurchaseId'));
+    $this->assertEquals($oldestPurchase->id, $component->get('payFromPurchaseId'));
+    $this->assertEquals(100.0, (float) $component->get('payAmount'));
 
     $component->set('payAmount', '330')
         ->set('payMethod', 'bank_transfer')
@@ -167,10 +169,10 @@ it('allocates supplier payments to the oldest unpaid installment purchases first
     $oldestPurchase->refresh();
     $newerPurchase->refresh();
 
-    expect($oldestPurchase->isFullyPaid())->toBeTrue();
-    expect($oldestPurchase->next_installment_date)->toBeNull();
-    expect($newerPurchase->isFullyPaid())->toBeFalse();
-    expect($newerPurchase->next_installment_date?->toDateString())->toBe('2026-04-11');
+    $this->assertTrue($oldestPurchase->isFullyPaid());
+    $this->assertNull($oldestPurchase->next_installment_date);
+    $this->assertFalse($newerPurchase->isFullyPaid());
+    $this->assertEquals('2026-04-11', $newerPurchase->next_installment_date?->toDateString());
 
     Carbon::setTestNow();
 });

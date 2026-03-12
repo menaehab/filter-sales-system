@@ -138,6 +138,7 @@ return [
     'below_min_quantity' => 'أقل من الحد الأدنى',
     "notifications" => 'الإشعارات',
     "no_notifications" => 'لا توجد إشعارات جديدة.',
+    'number' => 'الرقم',
 
     // Purchases
     'purchases' => 'المشتريات',
