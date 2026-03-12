@@ -83,4 +83,9 @@ class Purchase extends Model
     {
         return $this->paymentAllocations()->count();
     }
+
+    public function getRouteKeyName()
+    {
+        return 'number';
+    }
 }

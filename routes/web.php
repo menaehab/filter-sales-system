@@ -21,4 +21,5 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/purchases/create','purchases.purchase-create')->name('purchases.create')->middleware('permission:manage_purchases');
     Route::livewire('/purchases/{purchase}','purchases.purchase-show')->name('purchases.show')->middleware('permission:view_purchases|manage_purchases');
     Route::livewire('/purchases/{purchase}/edit','purchases.purchase-edit')->name('purchases.edit')->middleware('permission:manage_purchases');
+    Route::livewire('/supplier-payment-allocations','supplier-payment-allocations.supplier-payment-allocations-management')->name('supplier-payment-allocations')->middleware('permission:view_supplier_payment_allocations|manage_supplier_payment_allocations');
 });

@@ -81,6 +81,10 @@
                     <x-sidebar-link href="{{ route('purchases') }}" icon="fas fa-file-invoice"
                         :active="request()->routeIs('purchases.*')">{{ __('keywords.purchases') }}</x-sidebar-link>
                 @endcan
+                {{-- @can(['manage_supplier_payments_allocations', 'view_supplier_payment_allocations']) --}}
+                    <x-sidebar-link href="{{ route('supplier-payment-allocations') }}" icon="fas fa-hand-holding-dollar"
+                        :active="request()->routeIs('supplier-payment-allocations.*')">{{ __('keywords.supplier_payment_allocations') }}</x-sidebar-link>
+                {{-- @endcan --}}
             </nav>
 
             {{-- Sidebar footer --}}

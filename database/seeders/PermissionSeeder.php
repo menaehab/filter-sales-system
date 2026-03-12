@@ -22,7 +22,8 @@ class PermissionSeeder extends Seeder
             'view_customers',
             'manage_purchases',
             'view_purchases',
-            'view_supplier_payments',
+            'manage_supplier_payment_allocations',
+            'view_supplier_payment_allocations',
         ];
 
         foreach ($permissions as $permission) {

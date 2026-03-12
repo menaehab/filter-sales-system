@@ -139,6 +139,14 @@ return [
     "notifications" => 'الإشعارات',
     "no_notifications" => 'لا توجد إشعارات جديدة.',
     'number' => 'الرقم',
+    'add_supplier_payment_allocation' => 'إضافة اذن صرف نقدية للموردين',
+    'supplier_payment_allocations' => 'اذن صرف نقدية للموردين',
+    'manage_supplier_payment_allocations' => 'إدارة صرف نقدية للموردين',
+    'supplier_payment_allocations_management' => 'عرض وتعديل صرف نقدية للموردين.',
+    'view_supplier_payment_allocations' => 'عرض صرف نقدية للموردين',
+    'no_supplier_payment_allocations_found' => 'لم يتم العثور على صرف نقدية مسجلة.',
+    'delete_supplier_payment_allocation' => 'حذف اذن صرف نقدية للموردين',
+    'delete_supplier_payment_allocation_confirmation' => 'هل أنت متأكد أنك تريد حذف هذا الإذن؟.',
 
     // Purchases
     'purchases' => 'المشتريات',
