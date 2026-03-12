@@ -4,11 +4,14 @@ namespace App\Models;
 
 use App\Observers\PurchaseObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[ObservedBy(PurchaseObserver::class)]
 class Purchase extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'number',
         'supplier_name',

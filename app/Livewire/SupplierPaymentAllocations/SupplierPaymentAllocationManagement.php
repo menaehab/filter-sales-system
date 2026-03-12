@@ -10,7 +10,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-class SupplierPaymentAllocationsManagement extends Component
+class SupplierPaymentAllocationManagement extends Component
 {
     use HasCrudModals, WithSearchAndPagination, HasCrudQuery;
 
@@ -66,7 +66,7 @@ class SupplierPaymentAllocationsManagement extends Component
     }
     public function render()
     {
-        return view('livewire.supplier-payment-allocations.supplier-payment-allocations-management');
+        return view('livewire.supplier-payment-allocations.supplier-payment-allocation-management');
     }
     private function authorizeManageSupplierPaymentAllocations()
     {

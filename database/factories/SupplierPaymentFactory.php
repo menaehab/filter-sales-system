@@ -21,6 +21,7 @@ class SupplierPaymentFactory extends Factory
             'payment_method' => $this->faker->randomElement(['cash', 'bank_transfer', 'check']),
             'note' => $this->faker->optional(0.5)->sentence(),
             'supplier_id' => \App\Models\Supplier::factory(),
+            'user_id' => \App\Models\User::factory(),
         ];
     }
 }

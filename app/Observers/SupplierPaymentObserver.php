@@ -11,7 +11,10 @@ class SupplierPaymentObserver
      */
     public function creating(SupplierPayment $supplierPayment): void
     {
-        $supplierPayment->user_id = auth()->id();
+        // only set user_id from auth if it's not already provided (e.g. by a factory)
+        if (is_null($supplierPayment->user_id)) {
+            $supplierPayment->user_id = auth()->id();
+        }
     }
 
     /**

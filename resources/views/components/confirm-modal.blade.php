@@ -3,7 +3,7 @@
     'title' => 'Confirm Action',
     'message' => 'Are you sure you want to proceed?',
     'confirmText' => 'Confirm',
-    'cancelText' => 'Cancel',
+    'cancelText' => __('keywords.cancel'),
     'variant' => 'danger',
 ])
 
