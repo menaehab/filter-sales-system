@@ -182,9 +182,37 @@ class PurchaseCreate extends Component
         });
     }
 
+    public function getSelectedSupplierProperty(): ?Supplier
+    {
+        if (! $this->supplier_id) {
+            return null;
+        }
+
+        return Supplier::find($this->supplier_id);
+    }
+
+    public function getAvailableSupplierCreditProperty(): float
+    {
+        return $this->selectedSupplier?->available_credit ?? 0;
+    }
+
+    public function getAppliedSupplierCreditProperty(): float
+    {
+        return min($this->total_price, $this->available_supplier_credit);
+    }
+
+    public function getCashAmountDueProperty(): float
+    {
+        if ($this->payment_type === 'installment') {
+            return min((float) ($this->down_payment ?: 0), max(0, $this->total_price - $this->applied_supplier_credit));
+        }
+
+        return max(0, $this->total_price - $this->applied_supplier_credit);
+    }
+
     public function getRemainingAfterDownPaymentProperty(): float
     {
-        return max(0, $this->total_price - (float) ($this->down_payment ?: 0));
+        return max(0, $this->total_price - $this->applied_supplier_credit - $this->cash_amount_due);
     }
 
     public function getInstallmentAmountProperty(): float
@@ -237,11 +265,14 @@ class PurchaseCreate extends Component
         $supplier = Supplier::findOrFail($this->supplier_id);
         $totalPrice = $this->total_price;
         $isInstallment = $this->payment_type === 'installment';
-        $downPayment = $isInstallment ? (float) $this->down_payment : $totalPrice;
+        $appliedCredit = min($supplier->available_credit, $totalPrice);
+        $downPayment = $isInstallment
+            ? min((float) $this->down_payment, max(0, $totalPrice - $appliedCredit))
+            : max(0, $totalPrice - $appliedCredit);
         $months = $isInstallment ? (int) $this->installment_months : null;
-        $installmentAmount = $isInstallment ? $this->installment_amount : null;
+        $installmentAmount = $isInstallment && $months > 0 ? round(max(0, $totalPrice - $appliedCredit - $downPayment) / $months, 2) : null;
 
-        DB::transaction(function () use ($supplier, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount) {
+        DB::transaction(function () use ($supplier, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount, $appliedCredit) {
             $purchase = Purchase::create([
                 'supplier_name' => $supplier->name,
                 'user_name' => auth()->user()->name,
@@ -281,7 +312,7 @@ class PurchaseCreate extends Component
                 ]);
             }
 
-            // If cash or has down payment, create supplier payment
+            // Record actual cash paid now.
             if ($downPayment > 0) {
                 $payment = SupplierPayment::create([
                     'amount' => $downPayment,
@@ -293,6 +324,22 @@ class PurchaseCreate extends Component
                 SupplierPaymentAllocation::create([
                     'amount' => $downPayment,
                     'supplier_payment_id' => $payment->id,
+                    'purchase_id' => $purchase->id,
+                ]);
+            }
+
+            // Apply any existing supplier credit from previous non-cash returns.
+            if ($appliedCredit > 0) {
+                $creditPayment = SupplierPayment::create([
+                    'amount' => $appliedCredit,
+                    'payment_method' => 'supplier_credit',
+                    'note' => __('keywords.applied_supplier_credit'),
+                    'supplier_id' => $supplier->id,
+                ]);
+
+                SupplierPaymentAllocation::create([
+                    'amount' => $appliedCredit,
+                    'supplier_payment_id' => $creditPayment->id,
                     'purchase_id' => $purchase->id,
                 ]);
             }

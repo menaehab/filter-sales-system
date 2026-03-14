@@ -81,9 +81,13 @@
                     <x-sidebar-link href="{{ route('purchases') }}" icon="fas fa-file-invoice"
                         :active="request()->routeIs('purchases.*')">{{ __('keywords.purchases') }}</x-sidebar-link>
                 @endcan
+                @can(['manage_purchases_returns', 'view_purchases_returns'])
+                    <x-sidebar-link href="{{ route('purchase-returns') }}" icon="fas fa-rotate-left"
+                        :active="request()->routeIs('purchase-returns.*')">{{ __('keywords.purchase_returns') }}</x-sidebar-link>
+                @endcan
                 {{-- @can(['manage_supplier_payments_allocations', 'view_supplier_payment_allocations']) --}}
-                    <x-sidebar-link href="{{ route('supplier-payment-allocations') }}" icon="fas fa-hand-holding-dollar"
-                        :active="request()->routeIs('supplier-payment-allocations.*')">{{ __('keywords.supplier_payment_allocations') }}</x-sidebar-link>
+                    <x-sidebar-link href="{{ route('supplier-payments') }}" icon="fas fa-hand-holding-dollar"
+                        :active="request()->routeIs('supplier-payments*')">{{ __('keywords.supplier_payments') }}</x-sidebar-link>
                 {{-- @endcan --}}
             </nav>
 

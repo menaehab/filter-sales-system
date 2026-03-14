@@ -16,6 +16,7 @@
     <x-data-table :searchable="false" :paginated="false" :headers="[
         ['key' => 'name', 'label' => __('keywords.name')],
         ['key' => 'phone', 'label' => __('keywords.phone')],
+        ['key' => 'balance', 'label' => __('keywords.balance')],
         ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
     ]">
         @forelse ($this->suppliers as $supplier)
@@ -26,18 +27,39 @@
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-500">{{ $supplier->phone ?? '—' }}</span>
                 </td>
+                <td class="whitespace-nowrap px-4 py-3">
+                    <span @class([
+                        'text-sm font-medium',
+                        'text-purple-600' => $supplier->balance >= 0,
+                        'text-red-600' => $supplier->balance < 0,
+                    ])>
+                        {{ number_format($supplier->balance, 2) }}
+                    </span>
+                </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
-                    <x-table-actions
-                        :viewUrl="route('suppliers.show', $supplier)"
-                        editAction="openEdit({{ $supplier->id }})"
-                        :canEdit="auth()->user()->can('manage_suppliers')"
-                        :canDelete="auth()->user()->can('manage_suppliers')"
-                        deleteAction="setDelete({{ $supplier->id }})"
-                    />
+                    <div class="flex items-center justify-end gap-1">
+                        <a href="{{ route('suppliers.view', $supplier) }}"
+                            class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                            title="{{ __('keywords.view') }}">
+                            <i class="fas fa-eye text-sm"></i>
+                        </a>
+                        @can('manage_suppliers')
+                            <button type="button" wire:click="openEdit({{ $supplier->id }})"
+                                class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                title="{{ __('keywords.edit') }}">
+                                <i class="fas fa-pen-to-square text-sm"></i>
+                            </button>
+                            <button type="button" wire:click="setDelete({{ $supplier->id }})"
+                                class="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                title="{{ __('keywords.delete') }}">
+                                <i class="fas fa-trash-can text-sm"></i>
+                            </button>
+                        @endcan
+                    </div>
                 </td>
             </tr>
         @empty
-            <x-empty-state :title="__('keywords.no_suppliers_found')" :colspan="3" />
+            <x-empty-state :title="__('keywords.no_suppliers_found')" :colspan="4" />
         @endforelse
     </x-data-table>
 

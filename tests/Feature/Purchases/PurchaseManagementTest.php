@@ -202,3 +202,106 @@ it('deletes a purchase from the management component', function () {
         'id' => $purchase->id,
     ]);
 });
+
+it('deletes orphaned supplier payments when deleting a purchase', function () {
+    $supplier = Supplier::factory()->create();
+
+    $purchase = Purchase::create([
+        'supplier_name' => $supplier->name,
+        'user_name' => auth()->user()->name,
+        'total_price' => 200,
+        'payment_type' => 'cash',
+        'installment_amount' => null,
+        'installment_months' => null,
+        'user_id' => auth()->id(),
+        'supplier_id' => $supplier->id,
+    ]);
+
+    $payment = SupplierPayment::create([
+        'amount' => 200,
+        'payment_method' => 'cash',
+        'supplier_id' => $supplier->id,
+    ]);
+
+    SupplierPaymentAllocation::create([
+        'amount' => 200,
+        'supplier_payment_id' => $payment->id,
+        'purchase_id' => $purchase->id,
+    ]);
+
+    Livewire::test('purchases.purchase-management')
+        ->call('setDelete', $purchase->id)
+        ->call('delete')
+        ->assertDispatched('close-modal-delete-purchase');
+
+    $this->assertDatabaseMissing('purchases', [
+        'id' => $purchase->id,
+    ]);
+
+    $this->assertDatabaseMissing('supplier_payments', [
+        'id' => $payment->id,
+    ]);
+});
+
+it('keeps shared supplier payments when deleting one purchase', function () {
+    $supplier = Supplier::factory()->create();
+
+    $firstPurchase = Purchase::create([
+        'supplier_name' => $supplier->name,
+        'user_name' => auth()->user()->name,
+        'total_price' => 100,
+        'payment_type' => 'installment',
+        'installment_amount' => 50,
+        'installment_months' => 2,
+        'user_id' => auth()->id(),
+        'supplier_id' => $supplier->id,
+    ]);
+
+    $secondPurchase = Purchase::create([
+        'supplier_name' => $supplier->name,
+        'user_name' => auth()->user()->name,
+        'total_price' => 100,
+        'payment_type' => 'installment',
+        'installment_amount' => 50,
+        'installment_months' => 2,
+        'user_id' => auth()->id(),
+        'supplier_id' => $supplier->id,
+    ]);
+
+    $sharedPayment = SupplierPayment::create([
+        'amount' => 120,
+        'payment_method' => 'cash',
+        'supplier_id' => $supplier->id,
+    ]);
+
+    SupplierPaymentAllocation::create([
+        'amount' => 100,
+        'supplier_payment_id' => $sharedPayment->id,
+        'purchase_id' => $firstPurchase->id,
+    ]);
+
+    SupplierPaymentAllocation::create([
+        'amount' => 20,
+        'supplier_payment_id' => $sharedPayment->id,
+        'purchase_id' => $secondPurchase->id,
+    ]);
+
+    Livewire::test('purchases.purchase-management')
+        ->call('setDelete', $firstPurchase->id)
+        ->call('delete')
+        ->assertDispatched('close-modal-delete-purchase');
+
+    $this->assertDatabaseMissing('purchases', [
+        'id' => $firstPurchase->id,
+    ]);
+
+    $this->assertDatabaseHas('supplier_payments', [
+        'id' => $sharedPayment->id,
+    ]);
+
+    $this->assertDatabaseHas('supplier_payment_allocations', [
+        'supplier_payment_id' => $sharedPayment->id,
+        'purchase_id' => $secondPurchase->id,
+        'amount' => '20.00',
+    ]);
+});

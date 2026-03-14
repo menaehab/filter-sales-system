@@ -28,6 +28,21 @@
                             <i class="fas fa-truck-fast me-1"></i>
                             {{ __('keywords.supplier_not_found_add_new') }}
                         </button>
+
+                        @if($this->selectedSupplier)
+                            <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                                <div class="flex items-center justify-between gap-3">
+                                    <span>{{ __('keywords.supplier_balance') }}</span>
+                                    <span class="font-semibold">{{ number_format($this->selectedSupplier->balance, 2) }} {{ __('keywords.currency') }}</span>
+                                </div>
+                                @if($this->available_supplier_credit > 0)
+                                    <div class="mt-1 flex items-center justify-between gap-3">
+                                        <span>{{ __('keywords.available_supplier_credit') }}</span>
+                                        <span class="font-semibold text-emerald-700">{{ number_format($this->available_supplier_credit, 2) }} {{ __('keywords.currency') }}</span>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
                     </div>
 
                     <div>
@@ -138,11 +153,25 @@
                                 {{ number_format($this->total_price, 2) }} {{ __('keywords.currency') }}
                             </span>
                         </div>
+                        @if($this->applied_supplier_credit > 0)
+                            <div class="flex justify-between sm:gap-8 text-sm">
+                                <span class="text-gray-500">{{ __('keywords.applied_supplier_credit') }}</span>
+                                <span class="font-medium text-emerald-600">
+                                    - {{ number_format($this->applied_supplier_credit, 2) }} {{ __('keywords.currency') }}
+                                </span>
+                            </div>
+                        @endif
+                        <div class="flex justify-between sm:gap-8 text-sm">
+                            <span class="text-gray-500">{{ __('keywords.cash_due_now') }}</span>
+                            <span class="font-medium text-emerald-600">
+                                {{ number_format($this->cash_amount_due, 2) }} {{ __('keywords.currency') }}
+                            </span>
+                        </div>
                         @if($payment_type === 'installment')
                             <div class="flex justify-between sm:gap-8 text-sm">
                                 <span class="text-gray-500">{{ __('keywords.down_payment') }}</span>
                                 <span class="font-medium text-emerald-600">
-                                    {{ number_format((float)($down_payment ?: 0), 2) }} {{ __('keywords.currency') }}
+                                    {{ number_format($this->cash_amount_due, 2) }} {{ __('keywords.currency') }}
                                 </span>
                             </div>
                             <div class="flex justify-between sm:gap-8 text-sm">

@@ -14,6 +14,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::livewire('/suppliers','suppliers.supplier-management')->name('suppliers')->middleware('permission:view_suppliers|manage_suppliers');
     Route::livewire('/suppliers/{supplier:slug}', 'suppliers.supplier-details')->name('suppliers.show')->middleware('permission:view_suppliers|manage_suppliers');
+    Route::livewire('/suppliers/{supplier:slug}/view', 'suppliers.supplier-view')->name('suppliers.view')->middleware('permission:view_suppliers|manage_suppliers');
     Route::livewire('/customers','customers.customer-management')->name('customers')->middleware('permission:view_customers|manage_customers');
     Route::livewire('/customers/{customer:slug}', 'customers.customer-details')->name('customers.show')->middleware('permission:view_customers|manage_customers');
 
@@ -21,5 +22,10 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/purchases/create','purchases.purchase-create')->name('purchases.create')->middleware('permission:manage_purchases');
     Route::livewire('/purchases/{purchase}','purchases.purchase-show')->name('purchases.show')->middleware('permission:view_purchases|manage_purchases');
     Route::livewire('/purchases/{purchase}/edit','purchases.purchase-edit')->name('purchases.edit')->middleware('permission:manage_purchases');
-    Route::livewire('/supplier-payment-allocations','supplier-payment-allocations.supplier-payment-allocation-management')->name('supplier-payment-allocations')->middleware('permission:view_supplier_payment_allocations|manage_supplier_payment_allocations');
+    Route::livewire('/supplier-payments','supplier-payments.supplier-payment-management')->name('supplier-payments')->middleware('permission:view_supplier_payment_allocations|manage_supplier_payment_allocations');
+
+    Route::livewire('/purchase-returns','purchase-returns.purchase-return-management')->name('purchase-returns')->middleware('permission:view_purchases|manage_purchases');
+    Route::livewire('/purchase-returns/create','purchase-returns.purchase-return-create')->name('purchase-returns.create')->middleware('permission:manage_purchases');
+    Route::livewire('/purchase-returns/{purchaseReturn}','purchase-returns.purchase-return-show')->name('purchase-returns.show')->middleware('permission:view_purchases|manage_purchases');
+    Route::livewire('/purchase-returns/{purchaseReturn}/edit','purchase-returns.purchase-return-edit')->name('purchase-returns.edit')->middleware('permission:manage_purchases');
 });
