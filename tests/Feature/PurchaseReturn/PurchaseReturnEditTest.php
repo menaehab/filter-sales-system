@@ -232,3 +232,102 @@ it('allows updating return with no reason', function () {
     $this->assertNull($return->reason);
 });
 
+it('replaces old return items and movements when product selection changes', function () {
+    $supplier = Supplier::factory()->create();
+    $product1 = Product::factory()->create(['quantity' => 20]);
+    $product2 = Product::factory()->create(['quantity' => 20]);
+
+    $purchase = Purchase::create([
+        'supplier_name' => $supplier->name,
+        'user_name' => auth()->user()->name,
+        'total_price' => 400,
+        'payment_type' => 'cash',
+        'user_id' => auth()->id(),
+        'supplier_id' => $supplier->id,
+    ]);
+
+    PurchaseItem::create([
+        'product_name' => $product1->name,
+        'cost_price' => 40,
+        'quantity' => 5,
+        'purchase_id' => $purchase->id,
+        'product_id' => $product1->id,
+    ]);
+
+    PurchaseItem::create([
+        'product_name' => $product2->name,
+        'cost_price' => 60,
+        'quantity' => 5,
+        'purchase_id' => $purchase->id,
+        'product_id' => $product2->id,
+    ]);
+
+    $return = PurchaseReturn::create([
+        'total_price' => 80,
+        'reason' => 'Initial',
+        'cash_refund' => true,
+        'purchase_id' => $purchase->id,
+        'user_id' => auth()->id(),
+    ]);
+
+    PurchaseReturnItem::create([
+        'cost_price' => 40,
+        'quantity' => 2,
+        'purchase_return_id' => $return->id,
+        'product_id' => $product1->id,
+    ]);
+
+    ProductMovement::create([
+        'quantity' => -2,
+        'movable_type' => PurchaseReturn::class,
+        'movable_id' => $return->id,
+        'product_id' => $product1->id,
+    ]);
+
+    $product1->decrement('quantity', 2);
+
+    Livewire::test('purchase-returns.purchase-return-edit', ['purchaseReturn' => $return])
+        ->set('items.0.selected', false)
+        ->set('items.1.selected', true)
+        ->set('items.1.return_quantity', '4')
+        ->set('cash_refund', false)
+        ->call('update')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('purchase-returns'));
+
+    $return->refresh();
+    $product1->refresh();
+    $product2->refresh();
+
+    $this->assertEquals(240.0, (float) $return->total_price);
+    $this->assertFalse((bool) $return->cash_refund);
+    $this->assertEquals(20.0, (float) $product1->quantity);
+    $this->assertEquals(16.0, (float) $product2->quantity);
+
+    $this->assertDatabaseMissing('purchase_return_items', [
+        'purchase_return_id' => $return->id,
+        'product_id' => $product1->id,
+        'quantity' => 2,
+    ]);
+
+    $this->assertDatabaseHas('purchase_return_items', [
+        'purchase_return_id' => $return->id,
+        'product_id' => $product2->id,
+        'quantity' => 4,
+    ]);
+
+    $this->assertDatabaseMissing('product_movements', [
+        'movable_type' => PurchaseReturn::class,
+        'movable_id' => $return->id,
+        'product_id' => $product1->id,
+        'quantity' => '-2.00',
+    ]);
+
+    $this->assertDatabaseHas('product_movements', [
+        'movable_type' => PurchaseReturn::class,
+        'movable_id' => $return->id,
+        'product_id' => $product2->id,
+        'quantity' => '-4.00',
+    ]);
+});
+

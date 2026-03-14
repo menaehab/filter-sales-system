@@ -7,6 +7,8 @@ use App\Models\PurchaseItem;
 use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
 use App\Models\Supplier;
+use App\Models\SupplierPayment;
+use App\Models\SupplierPaymentAllocation;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -176,5 +178,62 @@ it('allows creating a return without cash refund', function () {
 
     $return = PurchaseReturn::sole();
     $this->assertFalse((bool) $return->cash_refund);
+});
+
+it('shows validation error when purchase number is not found', function () {
+    Livewire::test('purchase-returns.purchase-return-create')
+        ->set('purchase_number', 'NOT-EXISTS-001')
+        ->call('save')
+        ->assertHasErrors(['purchase_number'])
+        ->assertHasErrors(['items']);
+
+    $this->assertDatabaseCount('purchase_returns', 0);
+});
+
+it('creates supplier credit when return is saved without cash refund', function () {
+    $supplier = Supplier::factory()->create();
+    $product = Product::factory()->create(['cost_price' => 60, 'quantity' => 10]);
+
+    $purchase = Purchase::create([
+        'supplier_name' => $supplier->name,
+        'user_name' => auth()->user()->name,
+        'total_price' => 300,
+        'payment_type' => 'cash',
+        'user_id' => auth()->id(),
+        'supplier_id' => $supplier->id,
+    ]);
+
+    PurchaseItem::create([
+        'product_name' => $product->name,
+        'cost_price' => 60,
+        'quantity' => 5,
+        'purchase_id' => $purchase->id,
+        'product_id' => $product->id,
+    ]);
+
+    $payment = SupplierPayment::create([
+        'supplier_id' => $supplier->id,
+        'amount' => 300,
+        'payment_method' => 'cash',
+    ]);
+
+    SupplierPaymentAllocation::create([
+        'supplier_payment_id' => $payment->id,
+        'purchase_id' => $purchase->id,
+        'amount' => 300,
+    ]);
+
+    Livewire::test('purchase-returns.purchase-return-create')
+        ->set('purchase_number', $purchase->number)
+        ->set('items.0.selected', true)
+        ->set('items.0.return_quantity', '2')
+        ->set('cash_refund', false)
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('purchase-returns'));
+
+    $supplier->refresh();
+    $this->assertEquals(120.0, (float) $supplier->available_credit);
+    $this->assertEquals(-120.0, (float) $supplier->balance);
 });
 

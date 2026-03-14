@@ -4,6 +4,7 @@ use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
+use App\Models\SupplierPaymentAllocation;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 
@@ -160,6 +161,18 @@ it('applies available supplier credit to a new purchase before cash payment', fu
         'supplier_id' => $supplier->id,
     ]);
 
+    $oldPurchasePayment = SupplierPayment::create([
+        'supplier_id' => $supplier->id,
+        'amount' => 300,
+        'payment_method' => 'cash',
+    ]);
+
+    SupplierPaymentAllocation::create([
+        'supplier_payment_id' => $oldPurchasePayment->id,
+        'purchase_id' => $oldPurchase->id,
+        'amount' => 300,
+    ]);
+
     $oldPurchase->returns()->create([
         'total_price' => 150,
         'reason' => 'Credit kept for next invoice',
@@ -180,7 +193,7 @@ it('applies available supplier credit to a new purchase before cash payment', fu
         ->assertHasNoErrors()
         ->assertRedirect(route('purchases'));
 
-    $purchase = Purchase::latest()->first();
+    $purchase = Purchase::whereKeyNot($oldPurchase->id)->latest('id')->first();
     $supplier->refresh();
 
     $this->assertEquals(500.0, (float) $purchase->total_price);
