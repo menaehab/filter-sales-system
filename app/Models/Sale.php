@@ -4,11 +4,14 @@ namespace App\Models;
 
 use App\Observers\SaleObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[ObservedBy(SaleObserver::class)]
 class Sale extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'number',
         'dealer_name',

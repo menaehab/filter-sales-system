@@ -93,6 +93,8 @@ class SaleManagement extends Component
 
     public function openPayModal(int $id): void
     {
+        $this->authorizePaySales();
+
         $sale = Sale::with('paymentAllocations')->findOrFail($id);
 
         $this->paySaleId = $sale->id;
@@ -119,6 +121,8 @@ class SaleManagement extends Component
 
     public function submitPayment(): void
     {
+        $this->authorizePaySales();
+
         $this->validate([
             'payAmount' => 'required|numeric|min:0.01',
             'payMethod' => 'required|string',
@@ -213,13 +217,26 @@ class SaleManagement extends Component
         $this->payNote = '';
     }
 
+    protected function authorizeManageSales(): void
+    {
+        abort_unless(auth()->user()?->can('manage_sales'), 403);
+    }
+
+    protected function authorizePaySales(): void
+    {
+        abort_unless(auth()->user()?->canAny(['manage_sales', 'pay_sales']), 403);
+    }
+
     public function setDelete($id): void
     {
+        $this->authorizeManageSales();
         $this->openDeleteModal($id, 'open-modal-delete-sale');
     }
 
     public function delete(): void
     {
+        $this->authorizeManageSales();
+
         $sale = Sale::with('items', 'paymentAllocations')->findOrFail($this->deleteId);
         $relatedPaymentIds = $sale->paymentAllocations->pluck('customer_payment_id')->unique()->all();
 

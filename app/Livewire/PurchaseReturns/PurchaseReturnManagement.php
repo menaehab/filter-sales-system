@@ -52,11 +52,14 @@ class PurchaseReturnManagement extends Component
 
     public function setDelete($id)
     {
+        $this->authorizeManagePurchaseReturns();
         $this->openDeleteModal($id, 'open-modal-delete-purchase-return');
     }
 
     public function delete(): void
     {
+        $this->authorizeManagePurchaseReturns();
+
         $purchaseReturn = PurchaseReturn::with('items')->findOrFail($this->deleteId);
 
         foreach ($purchaseReturn->items as $item) {
@@ -67,6 +70,11 @@ class PurchaseReturnManagement extends Component
         $this->deleteId = null;
         $this->dispatch('close-modal-delete-purchase-return');
         $this->resetPage();
+    }
+
+    protected function authorizeManagePurchaseReturns(): void
+    {
+        abort_unless(auth()->user()?->can('manage_purchase_returns'), 403);
     }
 
     public function render()

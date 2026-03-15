@@ -2,15 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CustomerPayment extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'amount',
         'payment_method',
         'note',
         'customer_id',
+        'user_id',
     ];
 
     public function customer()
@@ -21,5 +25,10 @@ class CustomerPayment extends Model
     public function allocations()
     {
         return $this->hasMany(CustomerPaymentAllocation::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
