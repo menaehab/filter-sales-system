@@ -78,6 +78,10 @@
                         :active="request()->routeIs('customers.*')">{{ __('keywords.customers') }}</x-sidebar-link>
                 @endcan
                 @can(['manage_purchases', 'view_purchases'])
+                    <x-sidebar-link href="{{ route('sales') }}" icon="fas fa-cash-register"
+                        :active="request()->routeIs('sales.*')">{{ __('keywords.sales') }}</x-sidebar-link>
+                @endcan
+                @can(['manage_purchases', 'view_purchases'])
                     <x-sidebar-link href="{{ route('purchases') }}" icon="fas fa-file-invoice"
                         :active="request()->routeIs('purchases.*')">{{ __('keywords.purchases') }}</x-sidebar-link>
                 @endcan
