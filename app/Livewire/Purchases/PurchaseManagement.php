@@ -185,6 +185,7 @@ class PurchaseManagement extends Component
             'payment_method' => $this->payMethod,
             'note' => $this->payNote ?: null,
             'supplier_id' => $purchase->supplier_id,
+            'user_id' => auth()->id(),
         ]);
 
         foreach ($allocations as $allocation) {

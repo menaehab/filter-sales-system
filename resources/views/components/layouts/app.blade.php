@@ -103,6 +103,12 @@
                     </x-sidebar-link>
                 @endcanany
 
+                @canany(['manage_sale_returns', 'view_sale_returns', 'add_sale_returns', 'edit_sale_returns'])
+                    <x-sidebar-link href="{{ route('sale-returns') }}" icon="fas fa-rotate-left" :active="request()->routeIs('sale-returns.*')">
+                        {{ __('keywords.sale_returns') }}
+                    </x-sidebar-link>
+                @endcanany
+
                 @can(['manage_supplier_payment_allocations', 'view_supplier_payment_allocations'])
                     <x-sidebar-link href="{{ route('supplier-payments') }}" icon="fas fa-hand-holding-dollar"
                         :active="request()->routeIs('supplier-payments*')">

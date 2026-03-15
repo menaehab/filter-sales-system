@@ -1,47 +1,47 @@
 <?php
 
-namespace App\Livewire\PurchaseReturns;
+namespace App\Livewire\SaleReturns;
 
 use App\Models\Product;
 use App\Models\ProductMovement;
-use App\Models\Purchase;
-use App\Models\PurchaseReturn;
-use App\Models\PurchaseReturnItem;
+use App\Models\Sale;
+use App\Models\SaleReturn;
+use App\Models\SaleReturnItem;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-class PurchaseReturnCreate extends Component
+class SaleReturnCreate extends Component
 {
-    public string $purchase_number = '';
-    public ?Purchase $purchase = null;
+    public string $sale_number = '';
+    public ?Sale $sale = null;
     public string $reason = '';
     public bool $cash_refund = false;
 
-    /** @var array<int, array{product_id: int, product_name: string, cost_price: string, available_quantity: float, return_quantity: string, selected: bool}> */
+    /** @var array<int, array{product_id: int, product_name: string, sell_price: string, available_quantity: float, return_quantity: string, selected: bool}> */
     public array $items = [];
 
-    public function updatedPurchaseNumber(): void
+    public function updatedSaleNumber(): void
     {
-        $this->resetPurchase();
+        $this->resetSale();
 
-        if (blank($this->purchase_number)) {
+        if (blank($this->sale_number)) {
             return;
         }
 
-        $purchase = Purchase::with('items.product')->where('number', $this->purchase_number)->first();
+        $sale = Sale::with(['items.product', 'customer'])->where('number', $this->sale_number)->first();
 
-        if (! $purchase) {
-            $this->addError('purchase_number', __('keywords.purchase_not_found'));
+        if (! $sale) {
+            $this->addError('sale_number', __('keywords.sale_not_found'));
             return;
         }
 
-        $this->purchase = $purchase;
-        $this->items = $purchase->items->map(fn ($item) => [
+        $this->sale = $sale;
+        $this->items = $sale->items->map(fn ($item) => [
             'product_id' => $item->product_id,
-            'product_name' => $item->product_name,
-            'cost_price' => (string) $item->cost_price,
+            'product_name' => $item->product?->name ?? __('keywords.not_specified'),
+            'sell_price' => (string) $item->sell_price,
             'available_quantity' => (float) $item->quantity,
             'return_quantity' => '',
             'selected' => false,
@@ -52,7 +52,7 @@ class PurchaseReturnCreate extends Component
     {
         return collect($this->items)
             ->filter(fn ($item) => $item['selected'])
-            ->sum(fn ($item) => ((float) ($item['cost_price'] ?: 0)) * ((float) ($item['return_quantity'] ?: 0)));
+            ->sum(fn ($item) => ((float) ($item['sell_price'] ?: 0)) * ((float) ($item['return_quantity'] ?: 0)));
     }
 
     public function getSelectedItemsCountProperty(): int
@@ -63,7 +63,7 @@ class PurchaseReturnCreate extends Component
     protected function rules(): array
     {
         $rules = [
-            'purchase_number' => 'required',
+            'sale_number' => 'required',
             'reason' => 'nullable|string|max:1000',
             'cash_refund' => 'boolean',
         ];
@@ -80,7 +80,7 @@ class PurchaseReturnCreate extends Component
     protected function validationAttributes(): array
     {
         $attrs = [
-            'purchase_number' => __('keywords.purchase_number'),
+            'sale_number' => __('keywords.sale_number'),
             'reason' => __('keywords.reason'),
             'cash_refund' => __('keywords.cash_refund'),
         ];
@@ -105,11 +105,11 @@ class PurchaseReturnCreate extends Component
         DB::transaction(function () {
             $totalPrice = $this->total_return_price;
 
-            $purchaseReturn = PurchaseReturn::create([
+            $saleReturn = SaleReturn::create([
                 'total_price' => $totalPrice,
                 'reason' => $this->reason ?: null,
                 'cash_refund' => $this->cash_refund,
-                'purchase_id' => $this->purchase->id,
+                'sale_id' => $this->sale->id,
                 'user_id' => auth()->id(),
             ]);
 
@@ -120,40 +120,38 @@ class PurchaseReturnCreate extends Component
 
                 $quantity = (int) $item['return_quantity'];
 
-                PurchaseReturnItem::create([
-                    'cost_price' => (float) $item['cost_price'],
+                SaleReturnItem::create([
+                    'sell_price' => (float) $item['sell_price'],
                     'quantity' => $quantity,
-                    'purchase_return_id' => $purchaseReturn->id,
+                    'sale_return_id' => $saleReturn->id,
                     'product_id' => $item['product_id'],
                 ]);
 
-                // Decrease product stock
                 $product = Product::findOrFail($item['product_id']);
-                $product->decrement('quantity', $quantity);
+                $product->increment('quantity', $quantity);
 
-                // Record product movement (negative)
                 ProductMovement::create([
-                    'quantity' => -$quantity,
-                    'movable_type' => PurchaseReturn::class,
-                    'movable_id' => $purchaseReturn->id,
+                    'quantity' => $quantity,
+                    'movable_type' => SaleReturn::class,
+                    'movable_id' => $saleReturn->id,
                     'product_id' => $item['product_id'],
                 ]);
             }
         });
 
-        session()->flash('success', __('keywords.purchase_return_created'));
-        $this->redirect(route('purchase-returns'), navigate: true);
+        session()->flash('success', __('keywords.sale_return_created'));
+        $this->redirect(route('sale-returns'), navigate: true);
     }
 
-    private function resetPurchase(): void
+    private function resetSale(): void
     {
-        $this->purchase = null;
+        $this->sale = null;
         $this->items = [];
-        $this->resetErrorBag('purchase_number');
+        $this->resetErrorBag('sale_number');
     }
 
     public function render()
     {
-        return view('livewire.purchase-returns.purchase-return-create');
+        return view('livewire.sale-returns.sale-return-create');
     }
 }

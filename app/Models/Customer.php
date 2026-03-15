@@ -53,6 +53,14 @@ class Customer extends Model
             ->sum('amount');
     }
 
+    public function getTotalReturnsWithoutCashAttribute(): float
+    {
+        // Sum of sale returns where cash_refund = false.
+        return (float) SaleReturn::whereIn('sale_id', $this->sales()->pluck('id'))
+            ->where('cash_refund', false)
+            ->sum('total_price');
+    }
+
     public function getAvailableCreditAttribute(): float
     {
         return abs(min(0, $this->balance));
@@ -60,8 +68,8 @@ class Customer extends Model
 
     public function getBalanceAttribute(): float
     {
-        // Balance = Total Sales - Total Payments.
+        // Balance = Total Sales - Total Payments - Returns (without cash refund).
         // Positive = Customer still owes us, Negative = Customer has credit.
-        return $this->total_sales - $this->total_payments;
+        return $this->total_sales - $this->total_payments - $this->total_returns_without_cash;
     }
 }

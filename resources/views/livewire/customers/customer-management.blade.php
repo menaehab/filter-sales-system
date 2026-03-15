@@ -18,6 +18,7 @@
         ['key' => 'phone', 'label' => __('keywords.phone')],
         ['key' => 'national_number', 'label' => __('keywords.national_number')],
         ['key' => 'address', 'label' => __('keywords.address')],
+        ['key' => 'balance', 'label' => __('keywords.balance')],
         ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
     ]">
         @forelse ($this->customers as $customer)
@@ -32,20 +33,25 @@
                     <span class="text-sm text-gray-500">{{ $customer->national_number ?? '—' }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
-                    <span class="text-sm text-gray-500 truncate max-w-[200px] inline-block">{{ $customer->address ?? '—' }}</span>
+                    <span
+                        class="text-sm text-gray-500 truncate max-w-[200px] inline-block">{{ $customer->address ?? '—' }}</span>
+                </td>
+                <td class="whitespace-nowrap px-4 py-3">
+                    <span @class([
+                        'text-sm font-medium',
+                        'text-purple-600' => $customer->balance >= 0,
+                        'text-red-600' => $customer->balance < 0,
+                    ])>
+                        {{ number_format($customer->balance, 2) }}
+                    </span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
-                    <x-table-actions
-                        :viewUrl="route('customers.show', $customer->slug)"
-                        editAction="openEdit({{ $customer->id }})"
-                        :canEdit="auth()->user()->can('manage_customers')"
-                        :canDelete="auth()->user()->can('manage_customers')"
-                        deleteAction="setDelete({{ $customer->id }})"
-                    />
+                    <x-table-actions :viewUrl="route('customers.view', $customer->slug)" editAction="openEdit({{ $customer->id }})" :canEdit="auth()->user()->can('manage_customers')"
+                        :canDelete="auth()->user()->can('manage_customers')" deleteAction="setDelete({{ $customer->id }})" />
                 </td>
             </tr>
         @empty
-            <x-empty-state :title="__('keywords.no_customers_found')" :colspan="5" />
+            <x-empty-state :title="__('keywords.no_customers_found')" :colspan="6" />
         @endforelse
     </x-data-table>
 
@@ -82,8 +88,7 @@
                     <x-input name="form.phone" label="{{ __('keywords.phone') }}"
                         placeholder="{{ __('keywords.enter_your_phone') }}" wire:model.blur="form.phone" />
                     <x-input name="form.national_number" label="{{ __('keywords.national_number') }}"
-                        placeholder="{{ __('keywords.enter_national_number') }}"
-                        wire:model.blur="form.national_number" />
+                        placeholder="{{ __('keywords.enter_national_number') }}" wire:model.blur="form.national_number" />
                     <x-input name="form.address" label="{{ __('keywords.address') }}"
                         placeholder="{{ __('keywords.enter_address') }}" wire:model.blur="form.address" />
                 </div>

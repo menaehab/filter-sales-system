@@ -222,7 +222,7 @@ class PurchaseEdit extends Component
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.cost_price' => 'required|numeric|min:0.01',
-            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.quantity' => 'required|integer|min:1',
         ];
     }
 
@@ -287,7 +287,7 @@ class PurchaseEdit extends Component
                 PurchaseItem::create([
                     'product_name' => $product->name,
                     'cost_price' => (float) $item['cost_price'],
-                    'quantity' => (float) $item['quantity'],
+                    'quantity' => (int) $item['quantity'],
                     'purchase_id' => $this->purchase->id,
                     'product_id' => $product->id,
                 ]);
@@ -297,10 +297,10 @@ class PurchaseEdit extends Component
                     'cost_price' => (float) $item['cost_price'],
                 ]);
 
-                $product->increment('quantity', (float) $item['quantity']);
+                $product->increment('quantity', (int) $item['quantity']);
 
                 ProductMovement::create([
-                    'quantity' => (float) $item['quantity'],
+                    'quantity' => (int) $item['quantity'],
                     'movable_type' => Purchase::class,
                     'movable_id' => $this->purchase->id,
                     'product_id' => $product->id,

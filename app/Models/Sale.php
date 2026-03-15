@@ -93,4 +93,9 @@ class Sale extends Model
     {
         return 'number';
     }
+
+    public function saleReturns()
+    {
+        return $this->hasMany(SaleReturn::class);
+    }
 }

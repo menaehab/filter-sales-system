@@ -235,7 +235,7 @@ class PurchaseCreate extends Component
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.cost_price' => 'required|numeric|min:0.01',
-            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.quantity' => 'required|integer|min:1',
         ];
     }
 
@@ -290,7 +290,7 @@ class PurchaseCreate extends Component
                 PurchaseItem::create([
                     'product_name' => $product->name,
                     'cost_price' => (float) $item['cost_price'],
-                    'quantity' => (float) $item['quantity'],
+                    'quantity' => (int) $item['quantity'],
                     'purchase_id' => $purchase->id,
                     'product_id' => $product->id,
                 ]);
@@ -301,11 +301,11 @@ class PurchaseCreate extends Component
                 ]);
 
                 // Update product stock
-                $product->increment('quantity', (float) $item['quantity']);
+                $product->increment('quantity', (int) $item['quantity']);
 
                 // Record product movement
                 ProductMovement::create([
-                    'quantity' => (float) $item['quantity'],
+                    'quantity' => (int) $item['quantity'],
                     'movable_type' => Purchase::class,
                     'movable_id' => $purchase->id,
                     'product_id' => $product->id,
@@ -319,6 +319,7 @@ class PurchaseCreate extends Component
                     'payment_method' => 'cash',
                     'note' => $isInstallment ? __('keywords.down_payment') : __('keywords.cash_payment'),
                     'supplier_id' => $supplier->id,
+                    'user_id' => auth()->id(),
                 ]);
 
                 SupplierPaymentAllocation::create([
@@ -335,6 +336,7 @@ class PurchaseCreate extends Component
                     'payment_method' => 'supplier_credit',
                     'note' => __('keywords.applied_supplier_credit'),
                     'supplier_id' => $supplier->id,
+                    'user_id' => auth()->id(),
                 ]);
 
                 SupplierPaymentAllocation::create([

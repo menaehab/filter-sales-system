@@ -1,44 +1,44 @@
 <?php
 
-namespace App\Livewire\PurchaseReturns;
+namespace App\Livewire\SaleReturns;
 
 use App\Models\Product;
 use App\Models\ProductMovement;
-use App\Models\PurchaseReturn;
-use App\Models\PurchaseReturnItem;
+use App\Models\SaleReturn;
+use App\Models\SaleReturnItem;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-class PurchaseReturnEdit extends Component
+class SaleReturnEdit extends Component
 {
-    public PurchaseReturn $purchaseReturn;
+    public SaleReturn $saleReturn;
     public string $reason = '';
     public bool $cash_refund = false;
 
-    /** @var array<int, array{product_id: int, product_name: string, cost_price: string, available_quantity: float, return_quantity: string, selected: bool, original_return_quantity: int}> */
+    /** @var array<int, array{product_id: int, product_name: string, sell_price: string, available_quantity: float, return_quantity: string, selected: bool, original_return_quantity: float}> */
     public array $items = [];
 
-    public function mount(PurchaseReturn $purchaseReturn): void
+    public function mount(SaleReturn $saleReturn): void
     {
-        $this->purchaseReturn = $purchaseReturn->load(['purchase.items.product', 'items']);
-        $this->reason = $purchaseReturn->reason ?? '';
-        $this->cash_refund = (bool) $purchaseReturn->cash_refund;
+        $this->saleReturn = $saleReturn->load(['sale.items.product', 'items']);
+        $this->reason = $saleReturn->reason ?? '';
+        $this->cash_refund = (bool) $saleReturn->cash_refund;
 
-        $returnItems = $purchaseReturn->items->keyBy('product_id');
+        $returnItems = $saleReturn->items->keyBy('product_id');
 
-        $this->items = $purchaseReturn->purchase->items->map(function ($purchaseItem) use ($returnItems) {
-            $returnItem = $returnItems->get($purchaseItem->product_id);
+        $this->items = $saleReturn->sale->items->map(function ($saleItem) use ($returnItems) {
+            $returnItem = $returnItems->get($saleItem->product_id);
 
             return [
-                'product_id' => $purchaseItem->product_id,
-                'product_name' => $purchaseItem->product_name,
-                'cost_price' => (string) $purchaseItem->cost_price,
-                'available_quantity' => (float) $purchaseItem->quantity,
+                'product_id' => $saleItem->product_id,
+                'product_name' => $saleItem->product?->name ?? __('keywords.not_specified'),
+                'sell_price' => (string) $saleItem->sell_price,
+                'available_quantity' => (float) $saleItem->quantity,
                 'return_quantity' => $returnItem ? (string) $returnItem->quantity : '',
                 'selected' => (bool) $returnItem,
-                'original_return_quantity' => $returnItem ? (int) $returnItem->quantity : 0,
+                'original_return_quantity' => $returnItem ? (float) $returnItem->quantity : 0,
             ];
         })->toArray();
     }
@@ -47,7 +47,7 @@ class PurchaseReturnEdit extends Component
     {
         return collect($this->items)
             ->filter(fn ($item) => $item['selected'])
-            ->sum(fn ($item) => ((float) ($item['cost_price'] ?: 0)) * ((float) ($item['return_quantity'] ?: 0)));
+            ->sum(fn ($item) => ((float) ($item['sell_price'] ?: 0)) * ((float) ($item['return_quantity'] ?: 0)));
     }
 
     public function getSelectedItemsCountProperty(): int
@@ -96,23 +96,21 @@ class PurchaseReturnEdit extends Component
         $this->validate();
 
         DB::transaction(function () {
-            // Reverse old stock changes
-            foreach ($this->purchaseReturn->items as $oldItem) {
+            foreach ($this->saleReturn->items as $oldItem) {
                 $product = Product::find($oldItem->product_id);
                 if ($product) {
-                    $product->increment('quantity', $oldItem->quantity);
+                    $product->decrement('quantity', $oldItem->quantity);
                 }
             }
 
-            // Delete old items and movements
-            ProductMovement::where('movable_type', PurchaseReturn::class)
-                ->where('movable_id', $this->purchaseReturn->id)
+            ProductMovement::where('movable_type', SaleReturn::class)
+                ->where('movable_id', $this->saleReturn->id)
                 ->delete();
-            $this->purchaseReturn->items()->delete();
+            $this->saleReturn->items()->delete();
 
             $totalPrice = $this->total_return_price;
 
-            $this->purchaseReturn->update([
+            $this->saleReturn->update([
                 'total_price' => $totalPrice,
                 'reason' => $this->reason ?: null,
                 'cash_refund' => $this->cash_refund,
@@ -125,33 +123,31 @@ class PurchaseReturnEdit extends Component
 
                 $quantity = (int) $item['return_quantity'];
 
-                PurchaseReturnItem::create([
-                    'cost_price' => (float) $item['cost_price'],
+                SaleReturnItem::create([
+                    'sell_price' => (float) $item['sell_price'],
                     'quantity' => $quantity,
-                    'purchase_return_id' => $this->purchaseReturn->id,
+                    'sale_return_id' => $this->saleReturn->id,
                     'product_id' => $item['product_id'],
                 ]);
 
-                // Decrease product stock
                 $product = Product::findOrFail($item['product_id']);
-                $product->decrement('quantity', $quantity);
+                $product->increment('quantity', $quantity);
 
-                // Record product movement (negative)
                 ProductMovement::create([
-                    'quantity' => -$quantity,
-                    'movable_type' => PurchaseReturn::class,
-                    'movable_id' => $this->purchaseReturn->id,
+                    'quantity' => $quantity,
+                    'movable_type' => SaleReturn::class,
+                    'movable_id' => $this->saleReturn->id,
                     'product_id' => $item['product_id'],
                 ]);
             }
         });
 
-        session()->flash('success', __('keywords.purchase_return_updated'));
-        $this->redirect(route('purchase-returns'), navigate: true);
+        session()->flash('success', __('keywords.sale_return_updated'));
+        $this->redirect(route('sale-returns'), navigate: true);
     }
 
     public function render()
     {
-        return view('livewire.purchase-returns.purchase-return-edit');
+        return view('livewire.sale-returns.sale-return-edit');
     }
 }

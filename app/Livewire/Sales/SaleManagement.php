@@ -183,6 +183,7 @@ class SaleManagement extends Component
             'payment_method' => $this->payMethod,
             'note' => $this->payNote ?: null,
             'customer_id' => $sale->customer_id,
+            'user_id' => auth()->id(),
         ]);
 
         foreach ($allocations as $allocation) {
