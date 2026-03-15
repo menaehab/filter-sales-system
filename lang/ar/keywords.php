@@ -330,4 +330,5 @@ return [
     'edit_sales' => 'تعديل المبيعات',
     'pay_sales' => 'سداد المبيعات',
     'pay_purchases' => 'سداد المشتريات',
+    'submitting' => 'جاري الإرسال...',
 ];

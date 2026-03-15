@@ -21,12 +21,12 @@ class CustomerPaymentManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['customer.name', 'user.name', 'payment_method', 'note', 'allocations.purchase.number'];
+        return ['customer.name', 'user.name', 'payment_method', 'note', 'allocations.sale.number'];
     }
 
     protected function getWithRelations(): array
     {
-        return ['customer', 'user', 'allocations.purchase'];
+        return ['customer', 'user', 'allocations.sale'];
     }
 
     public function getCustomerPaymentsProperty()

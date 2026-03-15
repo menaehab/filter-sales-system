@@ -23,7 +23,7 @@
                     <span class="text-sm text-gray-900">{{ $payment->user?->name ?? '—' }}</span>
                 </td>
                 <td class="px-4 py-3">
-                    <span class="text-sm font-medium text-gray-900">{{ $payment->allocations->pluck('purchase.number')->filter()->join(', ') ?: '—' }}</span>
+                    <span class="text-sm font-medium text-gray-900">{{ $payment->allocations->pluck('sale.number')->filter()->join(', ') ?: '—' }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-700">{{ $payment->payment_method === 'customer_credit' ? __('keywords.applied_customer_credit') : $payment->payment_method }}</span>
