@@ -55,44 +55,73 @@
 
             {{-- Navigation --}}
             <nav class="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-                <x-sidebar-link href="{{ route('home') }}" icon="fas fa-house-user"
-                    :active="request()->routeIs('home')">{{ __('keywords.home') }}</x-sidebar-link>
+
+                <x-sidebar-link href="{{ route('home') }}" icon="fas fa-house-user" :active="request()->routeIs('home')">
+                    {{ __('keywords.home') }}
+                </x-sidebar-link>
+
                 @can('manage_categories')
-                    <x-sidebar-link href="{{ route('categories') }}" icon="fas fa-tag"
-                        :active="request()->routeIs('categories.*')">{{ __('keywords.categories') }}</x-sidebar-link>
+                    <x-sidebar-link href="{{ route('categories') }}" icon="fas fa-tag" :active="request()->routeIs('categories.*')">
+                        {{ __('keywords.categories') }}
+                    </x-sidebar-link>
                 @endcan
+
                 @can('manage_products')
-                    <x-sidebar-link href="{{ route('products') }}" icon="fas fa-cube"
-                        :active="request()->routeIs('products.*')">{{ __('keywords.products') }}</x-sidebar-link>
+                    <x-sidebar-link href="{{ route('products') }}" icon="fas fa-cube" :active="request()->routeIs('products.*')">
+                        {{ __('keywords.products') }}
+                    </x-sidebar-link>
                 @endcan
-                @can('manage_users')
-                    <x-sidebar-link href="{{ route('users') }}" icon="fas fa-cog"
-                        :active="request()->routeIs('users.*')">{{ __('keywords.users') }}</x-sidebar-link>
-                @endcan
+
                 @can(['manage_suppliers', 'view_suppliers'])
-                    <x-sidebar-link href="{{ route('suppliers') }}" icon="fas fa-truck"
-                        :active="request()->routeIs('suppliers.*')">{{ __('keywords.suppliers') }}</x-sidebar-link>
+                    <x-sidebar-link href="{{ route('suppliers') }}" icon="fas fa-truck" :active="request()->routeIs('suppliers.*')">
+                        {{ __('keywords.suppliers') }}
+                    </x-sidebar-link>
                 @endcan
+
                 @can(['manage_customers', 'view_customers'])
-                    <x-sidebar-link href="{{ route('customers') }}" icon="fas fa-users"
-                        :active="request()->routeIs('customers.*')">{{ __('keywords.customers') }}</x-sidebar-link>
+                    <x-sidebar-link href="{{ route('customers') }}" icon="fas fa-users" :active="request()->routeIs('customers.*')">
+                        {{ __('keywords.customers') }}
+                    </x-sidebar-link>
                 @endcan
-                @can(['manage_purchases', 'view_purchases'])
-                    <x-sidebar-link href="{{ route('sales') }}" icon="fas fa-cash-register"
-                        :active="request()->routeIs('sales.*')">{{ __('keywords.sales') }}</x-sidebar-link>
-                @endcan
-                @can(['manage_purchases', 'view_purchases'])
-                    <x-sidebar-link href="{{ route('purchases') }}" icon="fas fa-file-invoice"
-                        :active="request()->routeIs('purchases.*')">{{ __('keywords.purchases') }}</x-sidebar-link>
-                @endcan
-                @can(['manage_purchases_returns', 'view_purchases_returns'])
-                    <x-sidebar-link href="{{ route('purchase-returns') }}" icon="fas fa-rotate-left"
-                        :active="request()->routeIs('purchase-returns.*')">{{ __('keywords.purchase_returns') }}</x-sidebar-link>
-                @endcan
-                {{-- @can(['manage_supplier_payments_allocations', 'view_supplier_payment_allocations']) --}}
+
+                @canany(['manage_purchases', 'view_purchases', 'add_purchases', 'edit_purchases', 'pay_purchases'])
+                    <x-sidebar-link href="{{ route('purchases') }}" icon="fas fa-file-invoice" :active="request()->routeIs('purchases.*')">
+                        {{ __('keywords.purchases') }}
+                    </x-sidebar-link>
+                @endcanany
+
+                @canany(['manage_purchases_returns', 'view_purchase_returns', 'add_purchase_returns',
+                    'edit_purchase_returns'])
+                    <x-sidebar-link href="{{ route('purchase-returns') }}" icon="fas fa-rotate-left" :active="request()->routeIs('purchase-returns.*')">
+                        {{ __('keywords.purchase_returns') }}
+                    </x-sidebar-link>
+                @endcanany
+
+                @canany(['manage_sales', 'view_sales', 'add_sales', 'edit_sales', 'pay_sales'])
+                    <x-sidebar-link href="{{ route('sales') }}" icon="fas fa-cash-register" :active="request()->routeIs('sales.*')">
+                        {{ __('keywords.sales') }}
+                    </x-sidebar-link>
+                @endcanany
+
+                @can(['manage_supplier_payment_allocations', 'view_supplier_payment_allocations'])
                     <x-sidebar-link href="{{ route('supplier-payments') }}" icon="fas fa-hand-holding-dollar"
-                        :active="request()->routeIs('supplier-payments*')">{{ __('keywords.supplier_payments') }}</x-sidebar-link>
-                {{-- @endcan --}}
+                        :active="request()->routeIs('supplier-payments*')">
+                        {{ __('keywords.supplier_payments') }}
+                    </x-sidebar-link>
+                @endcan
+
+                @can(['manage_customer_payment_allocations', 'view_customer_payment_allocations'])
+                    <x-sidebar-link href="{{ route('customer-payments') }}" icon="fas fa-sack-dollar" :active="request()->routeIs('customer-payments*')">
+                        {{ __('keywords.customer_payments') }}
+                    </x-sidebar-link>
+                @endcan
+
+                @can('manage_users')
+                    <x-sidebar-link href="{{ route('users') }}" icon="fas fa-cog" :active="request()->routeIs('users.*')">
+                        {{ __('keywords.users') }}
+                    </x-sidebar-link>
+                @endcan
+
             </nav>
 
             {{-- Sidebar footer --}}
@@ -149,12 +178,15 @@
                     <button @click="openNotifications = !openNotifications"
                         class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                         title="{{ __('Notifications') }}">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                         </svg>
 
-                        @if($unreadNotificationsCount > 0)
-                            <span class="absolute -top-1 -end-1 min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-bold text-white">
+                        @if ($unreadNotificationsCount > 0)
+                            <span
+                                class="absolute -top-1 -end-1 min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-bold text-white">
                                 {{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}
                             </span>
                         @endif
@@ -178,7 +210,8 @@
                                     $notificationMessage = data_get($notification->data, 'message', __('Notification'));
                                     $notificationDate = optional($notification->created_at)->diffForHumans();
                                 @endphp
-                                <div class="border-b border-gray-50 px-4 py-3 {{ is_null($notification->read_at) ? 'bg-emerald-50/40' : '' }}">
+                                <div
+                                    class="border-b border-gray-50 px-4 py-3 {{ is_null($notification->read_at) ? 'bg-emerald-50/40' : '' }}">
                                     <p class="text-sm text-gray-700">{{ $notificationMessage }}</p>
                                     <p class="mt-1 text-xs text-gray-400">{{ $notificationDate }}</p>
                                 </div>

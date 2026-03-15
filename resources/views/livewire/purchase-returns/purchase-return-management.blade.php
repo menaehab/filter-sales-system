@@ -1,11 +1,13 @@
 <div x-on:confirmed-delete-purchase-return.window="$wire.delete()">
     <x-page-header :title="__('keywords.purchase_returns')" :description="__('keywords.purchase_returns_management')">
-        <x-slot:actions>
-            <x-button variant="primary" href="{{ route('purchase-returns.create') }}">
-                <i class="fas fa-plus text-xs"></i>
-                {{ __('keywords.add_purchase_return') }}
-            </x-button>
-        </x-slot:actions>
+        @canany(['manage_purchase_returns', 'add_purchase_returns'])
+            <x-slot:actions>
+                <x-button variant="primary" href="{{ route('purchase-returns.create') }}">
+                    <i class="fas fa-plus text-xs"></i>
+                    {{ __('keywords.add_purchase_return') }}
+                </x-button>
+            </x-slot:actions>
+        @endcanany
     </x-page-header>
 
     <x-search-toolbar />
@@ -49,21 +51,29 @@
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                     <div class="flex items-center justify-end gap-1">
-                        <a href="{{ route('purchase-returns.show', $return) }}"
-                            class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
-                            title="{{ __('keywords.view') }}">
-                            <i class="fas fa-eye text-sm"></i>
-                        </a>
-                        <a href="{{ route('purchase-returns.edit', $return) }}"
-                            class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
-                            title="{{ __('keywords.edit') }}">
-                            <i class="fas fa-pen-to-square text-sm"></i>
-                        </a>
-                        <button wire:click="setDelete({{ $return->id }})"
-                            class="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                            title="{{ __('keywords.delete') }}">
-                            <i class="fas fa-trash-can text-sm"></i>
-                        </button>
+                        @canany(['manage_purchase_returns', 'view_purchase_returns'])
+                            <a href="{{ route('purchase-returns.show', $return) }}"
+                                class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                title="{{ __('keywords.view') }}">
+                                <i class="fas fa-eye text-sm"></i>
+                            </a>
+                        @endcanany
+
+                        @canany(['manage_purchase_returns', 'edit_purchase_returns'])
+                            <a href="{{ route('purchase-returns.edit', $return) }}"
+                                class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                title="{{ __('keywords.edit') }}">
+                                <i class="fas fa-pen-to-square text-sm"></i>
+                            </a>
+                        @endcanany
+
+                        @can('manage_purchase_returns')
+                            <button wire:click="setDelete({{ $return->id }})"
+                                class="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                title="{{ __('keywords.delete') }}">
+                                <i class="fas fa-trash-can text-sm"></i>
+                            </button>
+                        @endcan
                     </div>
                 </td>
             </tr>

@@ -94,6 +94,8 @@ class PurchaseManagement extends Component
     // Payment handling
     public function openPayModal(int $id)
     {
+        $this->authorizePayPurchases();
+
         $purchase = Purchase::with('paymentAllocations')->findOrFail($id);
 
         $this->payPurchaseId = $purchase->id;
@@ -120,6 +122,8 @@ class PurchaseManagement extends Component
 
     public function submitPayment()
     {
+        $this->authorizePayPurchases();
+
         $this->validate([
             'payAmount' => 'required|numeric|min:0.01',
             'payMethod' => 'required|string',
@@ -215,14 +219,27 @@ class PurchaseManagement extends Component
         $this->payNote = '';
     }
 
+    protected function authorizeManagePurchases(): void
+    {
+        abort_unless(auth()->user()?->can('manage_purchases'), 403);
+    }
+
+    protected function authorizePayPurchases(): void
+    {
+        abort_unless(auth()->user()?->canAny(['manage_purchases', 'pay_purchases']), 403);
+    }
+
     // Delete
     public function setDelete($id)
     {
+        $this->authorizeManagePurchases();
         $this->openDeleteModal($id, 'open-modal-delete-purchase');
     }
 
     public function delete()
     {
+        $this->authorizeManagePurchases();
+
         $purchase = Purchase::with('paymentAllocations')->findOrFail($this->deleteId);
         $relatedPaymentIds = $purchase->paymentAllocations->pluck('supplier_payment_id')->unique()->all();
 

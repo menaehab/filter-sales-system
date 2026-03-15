@@ -1,11 +1,13 @@
 <div x-on:confirmed-delete-purchase.window="$wire.delete()">
     <x-page-header :title="__('keywords.purchases')" :description="__('keywords.purchases_management')">
-        <x-slot:actions>
-            <x-button variant="primary" href="{{ route('purchases.create') }}">
-                <i class="fas fa-plus text-xs"></i>
-                {{ __('keywords.add_purchase') }}
-            </x-button>
-        </x-slot:actions>
+        @canany(['manage_purchases', 'add_purchases'])
+            <x-slot:actions>
+                <x-button variant="primary" href="{{ route('purchases.create') }}">
+                    <i class="fas fa-plus text-xs"></i>
+                    {{ __('keywords.add_purchase') }}
+                </x-button>
+            </x-slot:actions>
+        @endcanany
     </x-page-header>
 
     <x-search-toolbar>
@@ -76,28 +78,39 @@
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                     <div class="flex items-center justify-end gap-1">
-                        @if (!$purchase->isFullyPaid())
-                            <button wire:click="openPayModal({{ $purchase->id }})"
-                                class="rounded-lg p-1.5 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
-                                title="{{ __('keywords.pay') }}">
-                                <i class="fas fa-money-bill-wave text-sm"></i>
+                        @canany(['manage_purchases', 'pay_purchases'])
+                            @if (!$purchase->isFullyPaid())
+                                <button wire:click="openPayModal({{ $purchase->id }})"
+                                    class="rounded-lg p-1.5 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                                    title="{{ __('keywords.pay') }}">
+                                    <i class="fas fa-money-bill-wave text-sm"></i>
+                                </button>
+                            @endif
+                        @endcanany
+
+                        @canany(['manage_purchases', 'view_purchases'])
+                            <a href="{{ route('purchases.show', $purchase) }}"
+                                class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                title="{{ __('keywords.view') }}">
+                                <i class="fas fa-eye text-sm"></i>
+                            </a>
+                        @endcanany
+
+                        @canany(['manage_purchases', 'edit_purchases'])
+                            <a href="{{ route('purchases.edit', $purchase) }}"
+                                class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                title="{{ __('keywords.edit') }}">
+                                <i class="fas fa-pen-to-square text-sm"></i>
+                            </a>
+                        @endcanany
+
+                        @can('manage_purchases')
+                            <button wire:click="setDelete({{ $purchase->id }})"
+                                class="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                title="{{ __('keywords.delete') }}">
+                                <i class="fas fa-trash-can text-sm"></i>
                             </button>
-                        @endif
-                        <a href="{{ route('purchases.show', $purchase) }}"
-                            class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
-                            title="{{ __('keywords.view') }}">
-                            <i class="fas fa-eye text-sm"></i>
-                        </a>
-                        <a href="{{ route('purchases.edit', $purchase) }}"
-                            class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
-                            title="{{ __('keywords.edit') }}">
-                            <i class="fas fa-pen-to-square text-sm"></i>
-                        </a>
-                        <button wire:click="setDelete({{ $purchase->id }})"
-                            class="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                            title="{{ __('keywords.delete') }}">
-                            <i class="fas fa-trash-can text-sm"></i>
-                        </button>
+                        @endcan
                     </div>
                 </td>
             </tr>

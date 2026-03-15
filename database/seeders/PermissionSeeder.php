@@ -24,8 +24,20 @@ class PermissionSeeder extends Seeder
             'view_purchases',
             'manage_supplier_payment_allocations',
             'view_supplier_payment_allocations',
-            'view_purchases_returns',
-            'manage_purchases_returns',
+            'manage_customer_payment_allocations',
+            'view_customer_payment_allocations',
+            'view_sales',
+            'manage_sales',
+            'add_sales',
+            'edit_sales',
+            'pay_sales',
+            'add_purchases',
+            'edit_purchases',
+            'pay_purchases',
+            'manage_purchase_returns',
+            'view_purchase_returns',
+            'add_purchase_returns',
+            'edit_purchase_returns',
         ];
 
         foreach ($permissions as $permission) {
