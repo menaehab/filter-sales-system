@@ -3,7 +3,12 @@
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
-    Route::livewire('/', 'dashboard')->name('home');
+    Route::livewire('/', 'sales.sale-create')->name('home');
+    Route::livewire('/sales', 'sales.sale-management')->name('sales')->middleware('permission:view_purchases|manage_purchases');
+    Route::livewire('/sales/create', 'sales.sale-create')->name('sales.create')->middleware('permission:manage_purchases');
+    Route::livewire('/sales/{sale}', 'sales.sale-show')->name('sales.show')->middleware('permission:view_purchases|manage_purchases');
+    Route::livewire('/sales/{sale}/edit', 'sales.sale-edit')->name('sales.edit')->middleware('permission:manage_purchases');
+
     Route::livewire('/categories','categories.category-management')->name('categories')->middleware('permission:manage_categories');
     Route::livewire('/products','products.product-management')->name('products')->middleware('permission:view_products|manage_products');
 
