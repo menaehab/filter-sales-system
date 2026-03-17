@@ -208,6 +208,38 @@
                 <x-input name="dealer_name" label="{{ __('keywords.dealer_name') }}"
                     placeholder="{{ __('keywords.dealer_name') }}" wire:model.live="dealer_name" />
 
+                <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                    <input type="checkbox" wire:model.live="includeWaterReading"
+                        class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    <span>{{ __('keywords.include_water_reading') }}</span>
+                </label>
+
+                @if ($includeWaterReading)
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg border border-emerald-100 bg-emerald-50/40 p-3">
+                        <x-input name="waterReading.technician_name" label="{{ __('keywords.technician_name') }}"
+                            placeholder="{{ __('keywords.technician_name') }}" wire:model.live="waterReading.technician_name" required />
+
+                        <x-input name="waterReading.tds" label="{{ __('keywords.tds') }}"
+                            placeholder="0" wire:model.live="waterReading.tds" type="number" step="0.01" min="0" required />
+
+                        <div class="sm:col-span-2">
+                            <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                                {{ __('keywords.water_quality') }} <span class="text-red-500">*</span>
+                            </label>
+                            <select wire:model.live="waterReading.water_quality"
+                                class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                <option value="">{{ __('keywords.select_water_quality') }}</option>
+                                @foreach ($waterQualityOptions as $quality)
+                                    <option value="{{ $quality->value }}">{{ __('keywords.' . $quality->label()) }}</option>
+                                @endforeach
+                            </select>
+                            @error('waterReading.water_quality')
+                                <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                @endif
+
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-gray-700">
                         {{ __('keywords.payment_type') }} <span class="text-red-500">*</span>

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sales;
 
+use App\Enums\WaterQualityTypeEnum;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\CustomerPayment;
@@ -10,6 +11,7 @@ use App\Models\Product;
 use App\Models\ProductMovement;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\WaterReading;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
@@ -27,6 +29,7 @@ class SaleCreate extends Component
 
     public string $search = '';
     public string $activeCategory = 'all';
+    public bool $includeWaterReading = false;
 
     public array $cart = [];
 
@@ -37,11 +40,28 @@ class SaleCreate extends Component
         'address' => '',
     ];
 
+    public array $waterReading = [
+        'technician_name' => '',
+        'tds' => '',
+        'water_quality' => '',
+    ];
+
     public function updatedPaymentType(string $value): void
     {
         if ($value !== 'installment') {
             $this->down_payment = '0';
             $this->installment_months = '';
+        }
+    }
+
+    public function updatedIncludeWaterReading(bool $value): void
+    {
+        if (! $value) {
+            $this->waterReading = [
+                'technician_name' => '',
+                'tds' => '',
+                'water_quality' => '',
+            ];
         }
     }
 
@@ -143,6 +163,7 @@ class SaleCreate extends Component
         $this->customer_id = $customer->id;
         $this->customerSearch = $customer->name;
         $this->dispatch('close-modal-create-customer-inline');
+        $this->dispatch('open-modal-sale-payment');
     }
 
     public function selectCustomer(int $customerId, string $customerName): void
@@ -221,6 +242,7 @@ class SaleCreate extends Component
         $rules = [
             'customer_id' => 'required|exists:customers,id',
             'dealer_name' => 'nullable|string|max:255',
+            'includeWaterReading' => 'boolean',
             'payment_type' => 'required|in:cash,installment',
             'down_payment' => 'required_if:payment_type,installment|numeric|min:0',
             'installment_months' => 'required_if:payment_type,installment|nullable|integer|min:1|max:60',
@@ -229,6 +251,16 @@ class SaleCreate extends Component
             'cart.*.sell_price' => 'required|numeric|min:0.01',
             'cart.*.quantity' => 'required|integer|min:1',
         ];
+
+        if ($this->includeWaterReading) {
+            $rules['waterReading.technician_name'] = 'required|string|max:255';
+            $rules['waterReading.tds'] = 'required|numeric|min:0';
+            $rules['waterReading.water_quality'] = 'required|in:' . implode(',', WaterQualityTypeEnum::values());
+        } else {
+            $rules['waterReading.technician_name'] = 'nullable|string|max:255';
+            $rules['waterReading.tds'] = 'nullable|numeric|min:0';
+            $rules['waterReading.water_quality'] = 'nullable|in:' . implode(',', WaterQualityTypeEnum::values());
+        }
 
         foreach ($this->cart as $i => $item) {
             $rules["cart.{$i}.quantity"] = "required|integer|min:1|max:{$item['available_quantity']}";
@@ -245,6 +277,9 @@ class SaleCreate extends Component
             'down_payment' => __('keywords.down_payment'),
             'installment_months' => __('keywords.installment_months'),
             'dealer_name' => __('keywords.dealer_name'),
+            'waterReading.technician_name' => __('keywords.technician_name'),
+            'waterReading.tds' => __('keywords.tds'),
+            'waterReading.water_quality' => __('keywords.water_quality'),
         ];
 
         foreach ($this->cart as $i => $item) {
@@ -353,6 +388,15 @@ class SaleCreate extends Component
                     'sale_id' => $sale->id,
                 ]);
             }
+
+            if ($this->includeWaterReading) {
+                WaterReading::create([
+                    'technician_name' => $this->waterReading['technician_name'],
+                    'tds' => $this->waterReading['tds'],
+                    'water_quality' => $this->waterReading['water_quality'],
+                    'customer_id' => $customer->id,
+                ]);
+            }
         });
 
         session()->flash('success', __('keywords.sale_created'));
@@ -384,6 +428,7 @@ class SaleCreate extends Component
             'products' => $productsQuery->get(),
             'categories' => Category::orderBy('name')->get(),
             'customers' => $customersQuery->limit(100)->pluck('name', 'id')->all(),
+            'waterQualityOptions' => WaterQualityTypeEnum::cases(),
         ]);
     }
 }
