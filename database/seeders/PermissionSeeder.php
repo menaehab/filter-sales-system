@@ -38,6 +38,10 @@ class PermissionSeeder extends Seeder
             'view_purchase_returns',
             'add_purchase_returns',
             'edit_purchase_returns',
+            'view_sale_returns',
+            'manage_sale_returns',
+            'add_sale_returns',
+            'edit_sale_returns',
         ];
 
         foreach ($permissions as $permission) {

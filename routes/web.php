@@ -89,6 +89,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('customers.show')
         ->middleware('permission:view_customers|manage_customers');
 
+    Route::livewire('/customers/{customer:slug}/view', 'customers.customer-view')
+        ->name('customers.view')
+        ->middleware('permission:view_customers|manage_customers');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -152,4 +156,26 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/purchase-returns/{purchaseReturn}/edit', 'purchase-returns.purchase-return-edit')
         ->name('purchase-returns.edit')
         ->middleware('permission:manage_purchase_returns|edit_purchase_returns');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sale Returns
+    |--------------------------------------------------------------------------
+    */
+    Route::livewire('/sale-returns', 'sale-returns.sale-return-management')
+        ->name('sale-returns')
+        ->middleware('permission:view_sale_returns|manage_sale_returns|add_sale_returns|edit_sale_returns');
+
+    Route::livewire('/sale-returns/create', 'sale-returns.sale-return-create')
+        ->name('sale-returns.create')
+        ->middleware('permission:manage_sale_returns|add_sale_returns');
+
+    Route::livewire('/sale-returns/{saleReturn}', 'sale-returns.sale-return-show')
+        ->name('sale-returns.show')
+        ->middleware('permission:view_sale_returns|manage_sale_returns');
+
+    Route::livewire('/sale-returns/{saleReturn}/edit', 'sale-returns.sale-return-edit')
+        ->name('sale-returns.edit')
+        ->middleware('permission:manage_sale_returns|edit_sale_returns');
 });

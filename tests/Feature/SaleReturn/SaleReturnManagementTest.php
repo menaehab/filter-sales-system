@@ -17,7 +17,7 @@ it('displays list of purchase returns', function () {
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create(['quantity' => 20]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 100,
@@ -26,7 +26,7 @@ it('displays list of purchase returns', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product->name,
         'cost_price' => 100,
         'quantity' => 5,
@@ -34,7 +34,7 @@ it('displays list of purchase returns', function () {
         'product_id' => $product->id,
     ]);
 
-    $return = PurchaseReturn::factory()->create([
+    $return = PurchaseReturn::create([
         'total_price' => 50,
         'reason' => 'Defective',
         'cash_refund' => true,
@@ -42,7 +42,7 @@ it('displays list of purchase returns', function () {
         'user_id' => auth()->id(),
     ]);
 
-    PurchaseReturnItem::factory()->create([
+    PurchaseReturnItem::create([
         'cost_price' => 100,
         'quantity' => 2,
         'purchase_return_id' => $return->id,
@@ -60,7 +60,7 @@ it('filters purchase returns by search number', function () {
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create(['quantity' => 30]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 100,
@@ -69,7 +69,7 @@ it('filters purchase returns by search number', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product->name,
         'cost_price' => 100,
         'quantity' => 5,
@@ -77,7 +77,7 @@ it('filters purchase returns by search number', function () {
         'product_id' => $product->id,
     ]);
 
-    $return1 = PurchaseReturn::factory()->create([
+    $return1 = PurchaseReturn::create([
         'total_price' => 100,
         'reason' => 'Test 1',
         'cash_refund' => true,
@@ -86,7 +86,7 @@ it('filters purchase returns by search number', function () {
     ]);
 
     $supply2 = Supplier::factory()->create();
-    $purchase2 = Purchase::factory()->create([
+    $purchase2 = Purchase::create([
         'supplier_name' => $supply2->name,
         'user_name' => auth()->user()->name,
         'total_price' => 100,
@@ -95,7 +95,7 @@ it('filters purchase returns by search number', function () {
         'supplier_id' => $supply2->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product->name,
         'cost_price' => 100,
         'quantity' => 5,
@@ -103,7 +103,7 @@ it('filters purchase returns by search number', function () {
         'product_id' => $product->id,
     ]);
 
-    $return2 = PurchaseReturn::factory()->create([
+    $return2 = PurchaseReturn::create([
         'total_price' => 100,
         'reason' => 'Test 2',
         'cash_refund' => false,
@@ -121,7 +121,7 @@ it('deletes a purchase return and restores product inventory', function () {
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create(['quantity' => 3]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 100,
@@ -130,7 +130,7 @@ it('deletes a purchase return and restores product inventory', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product->name,
         'cost_price' => 100,
         'quantity' => 5,
@@ -138,7 +138,7 @@ it('deletes a purchase return and restores product inventory', function () {
         'product_id' => $product->id,
     ]);
 
-    $return = PurchaseReturn::factory()->create([
+    $return = PurchaseReturn::create([
         'total_price' => 50,
         'reason' => 'Defective',
         'cash_refund' => true,
@@ -146,7 +146,7 @@ it('deletes a purchase return and restores product inventory', function () {
         'user_id' => auth()->id(),
     ]);
 
-    PurchaseReturnItem::factory()->create([
+    PurchaseReturnItem::create([
         'cost_price' => 100,
         'quantity' => 2,
         'purchase_return_id' => $return->id,

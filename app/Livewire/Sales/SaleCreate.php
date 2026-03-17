@@ -57,8 +57,8 @@ class SaleCreate extends Component
         $existingIndex = collect($this->cart)->search(fn ($item) => (int) $item['product_id'] === $product->id);
 
         if ($existingIndex !== false) {
-            $currentQuantity = (float) ($this->cart[$existingIndex]['quantity'] ?: 0);
-            if ($currentQuantity < (float) $product->quantity) {
+            $currentQuantity = (int) ($this->cart[$existingIndex]['quantity'] ?: 0);
+            if ($currentQuantity < (int) $product->quantity) {
                 $this->cart[$existingIndex]['quantity'] = (string) ($currentQuantity + 1);
             }
 
@@ -71,7 +71,7 @@ class SaleCreate extends Component
             'category_name' => $product->category?->name ?? __('keywords.not_specified'),
             'cost_price' => (string) $product->cost_price,
             'sell_price' => (string) $product->cost_price,
-            'available_quantity' => (float) $product->quantity,
+            'available_quantity' => (int) $product->quantity,
             'quantity' => '1',
         ];
     }
@@ -92,14 +92,14 @@ class SaleCreate extends Component
             return;
         }
 
-        $next = (float) ($this->cart[$index]['quantity'] ?: 0) + $delta;
+        $next = (int) ($this->cart[$index]['quantity'] ?: 0) + $delta;
 
         if ($next <= 0) {
             $this->removeFromCart($index);
             return;
         }
 
-        $this->cart[$index]['quantity'] = (string) min($next, (float) $this->cart[$index]['available_quantity']);
+        $this->cart[$index]['quantity'] = (string) min($next, (int) $this->cart[$index]['available_quantity']);
     }
 
     public function clearCart(): void
@@ -227,11 +227,11 @@ class SaleCreate extends Component
             'cart' => 'required|array|min:1',
             'cart.*.product_id' => 'required|exists:products,id',
             'cart.*.sell_price' => 'required|numeric|min:0.01',
-            'cart.*.quantity' => 'required|numeric|min:0.01',
+            'cart.*.quantity' => 'required|integer|min:1',
         ];
 
         foreach ($this->cart as $i => $item) {
-            $rules["cart.{$i}.quantity"] = "required|numeric|min:0.01|max:{$item['available_quantity']}";
+            $rules["cart.{$i}.quantity"] = "required|integer|min:1|max:{$item['available_quantity']}";
         }
 
         return $rules;
@@ -263,7 +263,7 @@ class SaleCreate extends Component
         foreach ($this->cart as $item) {
             $product = Product::find($item['product_id']);
 
-            if (! $product || (float) $product->quantity < (float) $item['quantity']) {
+            if (! $product || (int) $product->quantity < (int) $item['quantity']) {
                 throw ValidationException::withMessages([
                     'cart' => __('keywords.not_available') . ': ' . ($item['product_name'] ?? __('keywords.product')),
                 ]);
@@ -296,9 +296,9 @@ class SaleCreate extends Component
 
             foreach ($this->cart as $item) {
                 $product = Product::lockForUpdate()->findOrFail($item['product_id']);
-                $quantity = (float) $item['quantity'];
+                $quantity = (int) $item['quantity'];
 
-                if ((float) $product->quantity < $quantity) {
+                if ((int) $product->quantity < $quantity) {
                     throw ValidationException::withMessages([
                         'cart' => __('keywords.not_available') . ': ' . $product->name,
                     ]);
@@ -328,6 +328,7 @@ class SaleCreate extends Component
                     'payment_method' => 'cash',
                     'note' => $isInstallment ? __('keywords.down_payment') : __('keywords.cash_payment'),
                     'customer_id' => $customer->id,
+                    'user_id' => auth()->id(),
                 ]);
 
                 CustomerPaymentAllocation::create([
@@ -343,6 +344,7 @@ class SaleCreate extends Component
                     'payment_method' => 'customer_credit',
                     'note' => __('keywords.applied_customer_credit'),
                     'customer_id' => $customer->id,
+                    'user_id' => auth()->id(),
                 ]);
 
                 CustomerPaymentAllocation::create([

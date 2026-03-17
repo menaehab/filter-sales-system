@@ -58,6 +58,7 @@ it('updates a sale and recalculates stock and movements', function () {
         'amount' => 30,
         'payment_method' => 'cash',
         'customer_id' => $oldCustomer->id,
+        'user_id' => auth()->id(),
     ]);
 
     CustomerPaymentAllocation::create([

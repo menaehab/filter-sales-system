@@ -1,56 +1,54 @@
 <div>
-    <x-page-header :title="__('keywords.create_purchase_return')" :description="__('keywords.create_purchase_return_description')">
+    <x-page-header :title="__('keywords.create_sale_return')" :description="__('keywords.create_sale_return_description')">
         <x-slot:actions>
-            <x-button variant="secondary" href="{{ route('purchase-returns') }}">
+            <x-button variant="secondary" href="{{ route('sale-returns') }}">
                 <i class="fas fa-arrow-right text-xs"></i>
-                {{ __('keywords.back_to_purchase_returns') }}
+                {{ __('keywords.back_to_sale_returns') }}
             </x-button>
         </x-slot:actions>
     </x-page-header>
 
     <div class="space-y-6">
-        {{-- Purchase Number Search --}}
+        {{-- Sale Number Search --}}
         <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
             <div class="border-b border-gray-200 px-6 py-4">
                 <h3 class="text-base font-semibold text-gray-900">
                     <i class="fas fa-search me-2 text-emerald-500"></i>
-                    {{ __('keywords.search_purchase') }}
+                    {{ __('keywords.search_sale') }}
                 </h3>
             </div>
             <div class="p-6">
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
                     <div>
-                        <x-input name="purchase_number" label="{{ __('keywords.purchase_number') }}"
-                            placeholder="{{ __('keywords.enter_purchase_number') }}"
-                            wire:model.live.debounce.500ms="purchase_number" required />
+                        <x-input name="sale_number" label="{{ __('keywords.sale_number') }}"
+                            placeholder="{{ __('keywords.enter_sale_number') }}" wire:model.live.debounce.500ms="sale_number"
+                            required />
                     </div>
 
-                    @if ($purchase)
+                    @if ($sale)
                         <div class="sm:col-span-2">
                             <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-4 space-y-2">
                                 <div class="flex items-center gap-2 text-sm font-medium text-emerald-800">
                                     <i class="fas fa-check-circle"></i>
-                                    {{ __('keywords.purchase_found') }}
+                                    {{ __('keywords.sale_found') }}
                                 </div>
                                 <div class="grid grid-cols-2 gap-2 text-sm">
                                     <div>
-                                        <span class="text-gray-500">{{ __('keywords.supplier') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ $purchase->supplier_name }}</span>
+                                        <span class="text-gray-500">{{ __('keywords.customer') }}:</span>
+                                        <span class="font-medium text-gray-900">{{ $sale->customer?->name ?? '—' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500">{{ __('keywords.dealer_name') }}:</span>
+                                        <span class="font-medium text-gray-900">{{ $sale->dealer_name ?: '—' }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.total_price') }}:</span>
-                                        <span
-                                            class="font-medium text-gray-900">{{ number_format($purchase->total_price, 2) }}
+                                        <span class="font-medium text-gray-900">{{ number_format($sale->total_price, 2) }}
                                             {{ __('keywords.currency') }}</span>
                                     </div>
                                     <div>
-                                        <span class="text-gray-500">{{ __('keywords.date') }}:</span>
-                                        <span
-                                            class="font-medium text-gray-900">{{ $purchase->created_at->format('Y-m-d') }}</span>
-                                    </div>
-                                    <div>
-                                        <span class="text-gray-500">{{ __('keywords.purchase_items') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ $purchase->items->count() }}
+                                        <span class="text-gray-500">{{ __('keywords.sale_items') }}:</span>
+                                        <span class="font-medium text-gray-900">{{ $sale->items->count() }}
                                             {{ __('keywords.items') }}</span>
                                     </div>
                                 </div>
@@ -61,8 +59,8 @@
             </div>
         </div>
 
-        {{-- Purchase Items for Return --}}
-        @if ($purchase && count($items) > 0)
+        {{-- Sale Items for Return --}}
+        @if ($sale && count($items) > 0)
             <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div class="border-b border-gray-200 px-6 py-4">
                     <h3 class="text-base font-semibold text-gray-900">
@@ -94,12 +92,12 @@
                                 <div class="text-sm font-medium text-gray-900 py-2">{{ $item['product_name'] }}</div>
                             </div>
 
-                            {{-- Cost Price --}}
+                            {{-- Sell Price --}}
                             <div class="w-full sm:w-36">
                                 <label
-                                    class="mb-1.5 block text-sm font-medium text-gray-700">{{ __('keywords.cost_price') }}</label>
+                                    class="mb-1.5 block text-sm font-medium text-gray-700">{{ __('keywords.sell_price') }}</label>
                                 <div class="text-sm text-gray-700 py-2">
-                                    {{ number_format((float) $item['cost_price'], 2) }} {{ __('keywords.currency') }}
+                                    {{ number_format((float) $item['sell_price'], 2) }} {{ __('keywords.currency') }}
                                 </div>
                             </div>
 
@@ -116,14 +114,15 @@
                                 <x-input name="items.{{ $index }}.return_quantity"
                                     label="{{ __('keywords.return_quantity') }}" placeholder="0"
                                     wire:model.live="items.{{ $index }}.return_quantity" type="number"
-                                    min="1" step="1" :max="$item['available_quantity']" :disabled="!$item['selected']" />
+                                    min="1" step="1" :max="$item['available_quantity']"
+                                    :disabled="!$item['selected']" />
                             </div>
 
                             {{-- Line Total --}}
                             <div class="w-full sm:w-32 pt-0 sm:pt-7">
                                 <div
                                     class="text-sm font-medium {{ $item['selected'] ? 'text-red-600' : 'text-gray-400' }}">
-                                    {{ number_format(((float) ($item['cost_price'] ?: 0)) * ((float) ($item['return_quantity'] ?: 0)), 2) }}
+                                    {{ number_format(((float) ($item['sell_price'] ?: 0)) * ((float) ($item['return_quantity'] ?: 0)), 2) }}
                                     {{ __('keywords.currency') }}
                                 </div>
                             </div>
@@ -189,7 +188,7 @@
                         <x-button variant="primary" size="lg" wire:click="save" wire:loading.attr="disabled">
                             <span wire:loading.remove wire:target="save">
                                 <i class="fas fa-check me-1"></i>
-                                {{ __('keywords.save_purchase_return') }}
+                                {{ __('keywords.save_sale_return') }}
                             </span>
                             <span wire:loading wire:target="save">
                                 <i class="fas fa-spinner fa-spin me-1"></i>

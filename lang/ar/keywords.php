@@ -261,6 +261,7 @@ return [
 
     // Customer Balance
     'customer_balance' => 'رصيد العميل',
+    'total_sales' => 'إجمالي المبيعات',
     'available_customer_credit' => 'الرصيد المتاح للخصم',
     'applied_customer_credit' => 'رصيد مطبّق على الفاتورة',
 
@@ -304,6 +305,31 @@ return [
     'update_purchase_return' => 'تحديث المرتجع',
     'purchase_return_updated' => 'تم تحديث مرتجع الشراء بنجاح.',
 
+    // Sale Returns
+    'sale_returns' => 'مرتجعات المبيعات',
+    'sale_returns_management' => 'إدارة مرتجعات فواتير البيع',
+    'add_sale_return' => 'إضافة مرتجع',
+    'create_sale_return' => 'إنشاء مرتجع بيع',
+    'create_sale_return_description' => 'إنشاء مرتجع فاتورة بيع جديدة مع تحديد المنتجات المراد استرجاعها.',
+    'back_to_sale_returns' => 'العودة إلى المرتجعات',
+    'search_sale' => 'البحث عن فاتورة البيع',
+    'sale_number' => 'رقم فاتورة البيع',
+    'enter_sale_number' => 'أدخل رقم فاتورة البيع',
+    'sale_not_found' => 'لم يتم العثور على فاتورة بيع بهذا الرقم.',
+    'sale_found' => 'تم العثور على فاتورة البيع',
+    'save_sale_return' => 'حفظ المرتجع',
+    'sale_return_created' => 'تم إنشاء مرتجع البيع بنجاح.',
+    'sale_return_details' => 'تفاصيل مرتجع البيع',
+    'sale_return_details_description' => 'عرض بيانات المرتجع والأصناف المرتجعة.',
+    'no_sale_returns_found' => 'لم يتم العثور على مرتجعات.',
+    'delete_sale_return' => 'حذف المرتجع',
+    'delete_sale_return_confirmation' => 'هل أنت متأكد أنك تريد حذف هذا المرتجع؟ سيتم خصم الكميات من المخزون.',
+    'edit_sale_return' => 'تعديل مرتجع البيع',
+    'edit_sale_return_description' => 'تعديل بيانات مرتجع فاتورة البيع.',
+    'update_sale_return' => 'تحديث المرتجع',
+    'sale_return_updated' => 'تم تحديث مرتجع البيع بنجاح.',
+    'enter_dealer_name' => 'أدخل اسم الديلر (اختياري)',
+
     // Supplier Balance
     'balance' => 'الرصيد',
     'supplier_balance' => 'رصيد المورد',
@@ -331,4 +357,8 @@ return [
     'pay_sales' => 'سداد المبيعات',
     'pay_purchases' => 'سداد المشتريات',
     'submitting' => 'جاري الإرسال...',
+    'view_sale_returns' => 'عرض مرتجع المبيعات',
+    'manage_sale_returns' => 'إدارة مرتجع المبيعات',
+    'add_sale_returns' => 'إضافة مرتجع المبيعات',
+    'edit_sale_returns' => 'تعديل مرتجع المبيعات',
 ];

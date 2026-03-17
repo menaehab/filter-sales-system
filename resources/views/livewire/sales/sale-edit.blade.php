@@ -90,7 +90,7 @@
                                 label="{{ __('keywords.quantity') }}"
                                 placeholder="1"
                                 wire:model.live="items.{{ $index }}.quantity"
-                                type="number" step="0.01" min="0.01" required />
+                                type="number" step="1" min="1" required />
                         </div>
                         <div class="w-full sm:w-32 pt-0 sm:pt-7">
                             <div class="text-sm font-medium text-gray-700">

@@ -34,7 +34,7 @@ class SaleEdit extends Component
         $this->payment_type = $sale->isInstallment() ? 'installment' : 'cash';
         $this->down_payment = (string) $sale->down_payment;
         $this->installment_months = (string) ($sale->installment_months ?? '');
-        $this->dealer_name = $sale->dealer_name;
+        $this->dealer_name = $sale->dealer_name ?? '';
 
         $this->items = $sale->items->map(function ($item) {
             return [
@@ -129,7 +129,7 @@ class SaleEdit extends Component
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.sell_price' => 'required|numeric|min:0.01',
-            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.quantity' => 'required|integer|min:1',
         ];
     }
 
@@ -188,9 +188,9 @@ class SaleEdit extends Component
 
             foreach ($this->items as $item) {
                 $product = Product::findOrFail($item['product_id']);
-                $quantity = (float) $item['quantity'];
+                $quantity = (int) $item['quantity'];
 
-                if ((float) $product->quantity < $quantity) {
+                if ((int) $product->quantity < $quantity) {
                     throw ValidationException::withMessages([
                         'items' => __('keywords.not_available') . ': ' . $product->name,
                     ]);

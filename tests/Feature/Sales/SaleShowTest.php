@@ -30,6 +30,7 @@ it('shows sale details including items and payment history', function () {
         'amount' => 20,
         'payment_method' => 'cash',
         'customer_id' => $customer->id,
+        'user_id' => auth()->id(),
     ]);
 
     CustomerPaymentAllocation::create([
@@ -51,6 +52,7 @@ it('shows sale details including items and payment history', function () {
         'payment_method' => 'bank_transfer',
         'note' => 'First transfer',
         'customer_id' => $customer->id,
+        'user_id' => auth()->id(),
     ]);
 
     CustomerPaymentAllocation::create([

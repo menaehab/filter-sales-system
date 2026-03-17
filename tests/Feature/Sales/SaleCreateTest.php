@@ -175,6 +175,7 @@ it('applies available customer credit to a new sale before cash payment', functi
         'customer_id' => $customer->id,
         'amount' => 450,
         'payment_method' => 'cash',
+        'user_id' => auth()->id(),
     ]);
 
     CustomerPaymentAllocation::create([
