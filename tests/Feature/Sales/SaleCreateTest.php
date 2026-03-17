@@ -5,6 +5,7 @@ use App\Models\CustomerPayment;
 use App\Models\CustomerPaymentAllocation;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\WaterReading;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 
@@ -225,4 +226,45 @@ it('applies available customer credit to a new sale before cash payment', functi
         'sale_id' => $sale->id,
         'amount' => '150.00',
     ]);
+});
+
+it('creates a sale and stores water reading when enabled', function () {
+    $customer = Customer::create(['name' => 'Water Reading Customer']);
+    $product = Product::factory()->create([
+        'name' => 'Water Filter',
+        'cost_price' => 70,
+        'quantity' => 6,
+    ]);
+
+    Livewire::test('sales.sale-create')
+        ->set('customer_id', $customer->id)
+        ->set('payment_type', 'cash')
+        ->set('includeWaterReading', true)
+        ->set('waterReading.technician_name', 'Technician A')
+        ->set('waterReading.tds', '145')
+        ->set('waterReading.water_quality', 'fair')
+        ->set('cart', [[
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'category_name' => 'Filters',
+            'cost_price' => '70',
+            'sell_price' => '100',
+            'available_quantity' => 6,
+            'quantity' => '2',
+        ]])
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('sales'));
+
+    $sale = Sale::sole();
+    $this->assertEquals(200.0, (float) $sale->total_price);
+
+    $this->assertDatabaseHas('water_readings', [
+        'technician_name' => 'Technician A',
+        'tds' => '145.00',
+        'water_quality' => 'fair',
+        'customer_id' => $customer->id,
+    ]);
+
+    $this->assertEquals(1, WaterReading::query()->count());
 });

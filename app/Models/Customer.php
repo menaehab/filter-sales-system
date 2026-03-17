@@ -41,6 +41,11 @@ class Customer extends Model
         return $this->hasMany(CustomerPayment::class);
     }
 
+    public function waterReadings()
+    {
+        return $this->hasMany(WaterReading::class);
+    }
+
     public function getTotalSalesAttribute(): float
     {
         return (float) $this->sales->sum('total_price');

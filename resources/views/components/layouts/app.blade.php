@@ -72,13 +72,13 @@
                     </x-sidebar-link>
                 @endcan
 
-                @can(['manage_suppliers', 'view_suppliers'])
+                @canAny(['manage_suppliers', 'view_suppliers'])
                     <x-sidebar-link href="{{ route('suppliers') }}" icon="fas fa-truck" :active="request()->routeIs('suppliers.*')">
                         {{ __('keywords.suppliers') }}
                     </x-sidebar-link>
                 @endcan
 
-                @can(['manage_customers', 'view_customers'])
+                @canAny(['manage_customers', 'view_customers'])
                     <x-sidebar-link href="{{ route('customers') }}" icon="fas fa-users" :active="request()->routeIs('customers.*')">
                         {{ __('keywords.customers') }}
                     </x-sidebar-link>
@@ -109,18 +109,24 @@
                     </x-sidebar-link>
                 @endcanany
 
-                @can(['manage_supplier_payment_allocations', 'view_supplier_payment_allocations'])
+                @canAny(['manage_supplier_payment_allocations', 'view_supplier_payment_allocations'])
                     <x-sidebar-link href="{{ route('supplier-payments') }}" icon="fas fa-hand-holding-dollar"
                         :active="request()->routeIs('supplier-payments*')">
                         {{ __('keywords.supplier_payments') }}
                     </x-sidebar-link>
-                @endcan
+                @endcanAny
 
-                @can(['manage_customer_payment_allocations', 'view_customer_payment_allocations'])
+                @canAny(['manage_customer_payment_allocations', 'view_customer_payment_allocations'])
                     <x-sidebar-link href="{{ route('customer-payments') }}" icon="fas fa-sack-dollar" :active="request()->routeIs('customer-payments*')">
                         {{ __('keywords.customer_payments') }}
                     </x-sidebar-link>
-                @endcan
+                @endcanAny
+
+                @canany(['manage_water_readings','view_water_readings'])
+                    <x-sidebar-link href="{{ route('water-readings') }}" icon="fas fa-tint" :active="request()->routeIs('water-readings*')">
+                        {{ __('keywords.water_readings') }}
+                    </x-sidebar-link>
+                @endcanany
 
                 @can('manage_users')
                     <x-sidebar-link href="{{ route('users') }}" icon="fas fa-cog" :active="request()->routeIs('users.*')">

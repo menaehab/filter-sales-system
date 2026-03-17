@@ -178,4 +178,14 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/sale-returns/{saleReturn}/edit', 'sale-returns.sale-return-edit')
         ->name('sale-returns.edit')
         ->middleware('permission:manage_sale_returns|edit_sale_returns');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Water Readings
+    |--------------------------------------------------------------------------
+    */
+
+    Route::livewire('/water-readings', 'water-readings.water-reading-management')
+        ->name('water-readings')
+        ->middleware('permission:view_water_readings|manage_water_readings');
 });
