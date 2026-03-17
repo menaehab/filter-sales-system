@@ -47,6 +47,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('products')
         ->middleware('permission:view_products|manage_products');
 
+    Route::livewire('/products/{product:slug}', 'products.product-show')
+        ->name('products.show')
+        ->middleware('permission:view_products|manage_products');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -188,4 +192,24 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/water-readings', 'water-readings.water-reading-management')
         ->name('water-readings')
         ->middleware('permission:view_water_readings|manage_water_readings');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Damaged Products
+    |--------------------------------------------------------------------------
+    */
+    Route::livewire('/damaged-products', 'damaged-products.damaged-product-management')
+        ->name('damaged-products')
+        ->middleware('permission:view_damaged_products|manage_damaged_products');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Expenses
+    |--------------------------------------------------------------------------
+    */
+    Route::livewire('/expenses', 'expenses.expense-management')
+        ->name('expenses')
+        ->middleware('permission:view_expenses|manage_expenses');
 });

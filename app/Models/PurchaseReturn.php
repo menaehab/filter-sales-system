@@ -40,4 +40,9 @@ class PurchaseReturn extends Model
     {
         return 'number';
     }
+
+    public function movements()
+    {
+        return $this->morphMany(ProductMovement::class, 'movable');
+    }
 }

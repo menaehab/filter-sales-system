@@ -98,4 +98,9 @@ class Sale extends Model
     {
         return $this->hasMany(SaleReturn::class);
     }
+
+    public function movements()
+    {
+        return $this->morphMany(ProductMovement::class, 'movable');
+    }
 }

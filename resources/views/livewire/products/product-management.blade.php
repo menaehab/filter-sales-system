@@ -47,7 +47,9 @@
                         <span class="text-sm text-gray-900">{{ $product->min_quantity }}</span>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
-                        <x-table-actions editAction="openEdit({{ $product->id }})"
+                        <x-table-actions
+                            :viewUrl="route('products.show', $product)"
+                            editAction="openEdit({{ $product->id }})"
                             :canEdit="auth()->user()->can('manage_products')"
                             :canDelete="auth()->user()->can('manage_products')"
                             deleteAction="setDelete({{ $product->id }})" />
