@@ -44,6 +44,10 @@ class PermissionSeeder extends Seeder
             'edit_sale_returns',
             'view_water_readings',
             'manage_water_readings',
+            'view_damaged_products',
+            'manage_damaged_products',
+            'view_expenses',
+            'manage_expenses',
         ];
 
         foreach ($permissions as $permission) {

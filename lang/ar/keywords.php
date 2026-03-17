@@ -380,4 +380,58 @@ return [
     'poor' => 'سيء',
     'delete_water_reading' => 'حذف قراءة الماء',
     'delete_water_reading_confirmation' => 'هل أنت متأكد أنك تريد حذف هذه القراءة؟.',
+
+    // Damaged Products
+    'damaged_products' => 'هالك المنتجات',
+    'damaged_products_management' => 'إدارة هالك المنتجات',
+    'view_damaged_products' => 'عرض هالك المنتجات',
+    'manage_damaged_products' => 'إدارة هالك المنتجات',
+    'add_damaged_product' => 'إضافة هالك',
+    'create_damaged_product' => 'تسجيل هالك جديد',
+    'edit_damaged_product' => 'تعديل الهالك',
+    'delete_damaged_product' => 'حذف الهالك',
+    'delete_damaged_product_confirmation' => 'هل أنت متأكد أنك تريد حذف هذا الهالك؟ سيتم إعادة الكمية إلى المخزون.',
+    'no_damaged_products_found' => 'لم يتم العثور على هالك.',
+    'damaged_product' => 'هالك المنتج',
+    'search_product' => 'البحث عن منتج',
+    'no_products_found_search' => 'لم يتم العثور على منتجات.',
+    'enter_reason' => 'أدخل سبب الهالك',
+
+    // Expenses
+    'expenses' => 'المصروفات',
+    'expenses_management' => 'إدارة المصروفات',
+    'view_expenses' => 'عرض المصروفات',
+    'manage_expenses' => 'إدارة المصروفات',
+    'add_expense' => 'إضافة مصروف',
+    'create_expense' => 'تسجيل مصروف جديد',
+    'edit_expense' => 'تعديل المصروف',
+    'delete_expense' => 'حذف المصروف',
+    'delete_expense_confirmation' => 'هل أنت متأكد أنك تريد حذف هذا المصروف؟',
+    'no_expenses_found' => 'لم يتم العثور على مصروفات.',
+    'total_expenses' => 'إجمالي المصروفات',
+    'expense' => 'المصروف',
+
+    // Product Details
+    'product_details' => 'تفاصيل المنتج',
+    'product_details_description' => 'عرض بيانات المنتج والإحصائيات وسجل الحركة.',
+    'product_info' => 'معلومات المنتج',
+    'back_to_products' => 'العودة إلى المنتجات',
+    'total_purchased' => 'إجمالي المشتريات',
+    'total_sold' => 'إجمالي المبيعات',
+    'total_damaged' => 'إجمالي الهالك',
+    'stock_summary' => 'ملخص المخزون',
+    'movement_history' => 'سجل الحركة',
+    'no_movements_found' => 'لا توجد حركات مسجلة.',
+    'calculated_stock' => 'المخزون المحسوب',
+    'current_stock' => 'المخزون الحالي',
+
+    // Date Filter
+    'from_date' => 'من تاريخ',
+    'to_date' => 'إلى تاريخ',
+
+    // Profit & Loss
+    'total_profit' => 'إجمالي الربح',
+    'total_loss' => 'إجمالي الخسارة',
+    'profit_loss_summary' => 'ملخص الربح والخسارة',
+    'net_profit' => 'صافي الربح',
 ];

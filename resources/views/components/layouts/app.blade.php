@@ -128,6 +128,18 @@
                     </x-sidebar-link>
                 @endcanany
 
+                @canany(['manage_damaged_products', 'view_damaged_products'])
+                    <x-sidebar-link href="{{ route('damaged-products') }}" icon="fas fa-trash-alt" :active="request()->routeIs('damaged-products*')">
+                        {{ __('keywords.damaged_products') }}
+                    </x-sidebar-link>
+                @endcanany
+
+                @canany(['manage_expenses', 'view_expenses'])
+                    <x-sidebar-link href="{{ route('expenses') }}" icon="fas fa-wallet" :active="request()->routeIs('expenses*')">
+                        {{ __('keywords.expenses') }}
+                    </x-sidebar-link>
+                @endcanany
+
                 @can('manage_users')
                     <x-sidebar-link href="{{ route('users') }}" icon="fas fa-cog" :active="request()->routeIs('users.*')">
                         {{ __('keywords.users') }}
