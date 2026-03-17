@@ -48,6 +48,8 @@ class PermissionSeeder extends Seeder
             'manage_damaged_products',
             'view_expenses',
             'manage_expenses',
+            'view_activities',
+            'view_dashboard',
         ];
 
         foreach ($permissions as $permission) {

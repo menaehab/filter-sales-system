@@ -16,6 +16,8 @@
     if ($multiple && is_string($selectedValue)) {
         $selectedValue = explode(',', $selectedValue);
     }
+
+    $hasCustomOptions = isset($slot) && trim((string) $slot) !== '';
 @endphp
 
 <div {{ $attributes->only('class')->merge(['class' => 'w-full']) }}>
@@ -40,22 +42,26 @@
                 . ($multiple ? ' min-h-[120px]' : ''),
         ]) }}
     >
-        @unless($multiple)
+        @unless($multiple || $hasCustomOptions)
             <option value="">{{ $placeholder }}</option>
         @endunless
 
-        @foreach($options as $value => $optionLabel)
-            <option
-                value="{{ $value }}"
-                @if($multiple && is_array($selectedValue))
-                    {{ in_array($value, $selectedValue) ? 'selected' : '' }}
-                @else
-                    {{ (string) $selectedValue === (string) $value ? 'selected' : '' }}
-                @endif
-            >
-                {{ $optionLabel }}
-            </option>
-        @endforeach
+        @if($hasCustomOptions)
+            {{ $slot }}
+        @else
+            @foreach($options as $value => $optionLabel)
+                <option
+                    value="{{ $value }}"
+                    @if($multiple && is_array($selectedValue))
+                        {{ in_array($value, $selectedValue) ? 'selected' : '' }}
+                    @else
+                        {{ (string) $selectedValue === (string) $value ? 'selected' : '' }}
+                    @endif
+                >
+                    {{ $optionLabel }}
+                </option>
+            @endforeach
+        @endif
     </select>
 
     @if($hint && !$errors->has($name) && !$error)

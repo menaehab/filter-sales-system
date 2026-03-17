@@ -140,11 +140,23 @@
                     </x-sidebar-link>
                 @endcanany
 
+                @can('view_dashboard')
+                    <x-sidebar-link href="{{ route('dashboard') }}" icon="fas fa-bar-chart" :active="request()->routeIs('dashboard')">
+                        {{ __('keywords.dashboard') }}
+                    </x-sidebar-link>
+                @endcan
+
                 @can('manage_users')
                     <x-sidebar-link href="{{ route('users') }}" icon="fas fa-cog" :active="request()->routeIs('users.*')">
                         {{ __('keywords.users') }}
                     </x-sidebar-link>
                 @endcan
+
+                    @can('view_activities')
+                        <x-sidebar-link href="{{ route('activities') }}" icon="fas fa-list" :active="request()->routeIs('activities*')">
+                            {{ __('keywords.activity_logs') }}
+                        </x-sidebar-link>
+                    @endcan
 
             </nav>
 
@@ -287,6 +299,7 @@
         </div>
     </div>
     @livewireScripts
+    @stack('scripts')
 </body>
 
 </html>
