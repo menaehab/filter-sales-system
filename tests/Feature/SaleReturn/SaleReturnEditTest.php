@@ -18,7 +18,7 @@ it('updates a purchase return and recalculates stock', function () {
     $product1 = Product::factory()->create(['quantity' => 10]);
     $product2 = Product::factory()->create(['quantity' => 15]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 500,
@@ -27,7 +27,7 @@ it('updates a purchase return and recalculates stock', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product1->name,
         'cost_price' => 50,
         'quantity' => 5,
@@ -35,7 +35,7 @@ it('updates a purchase return and recalculates stock', function () {
         'product_id' => $product1->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product2->name,
         'cost_price' => 30,
         'quantity' => 10,
@@ -44,7 +44,7 @@ it('updates a purchase return and recalculates stock', function () {
     ]);
 
     // Create initial return
-    $return = PurchaseReturn::factory()->create([
+    $return = PurchaseReturn::create([
         'total_price' => 250,
         'reason' => 'Defective',
         'cash_refund' => true,
@@ -52,14 +52,14 @@ it('updates a purchase return and recalculates stock', function () {
         'user_id' => auth()->id(),
     ]);
 
-    PurchaseReturnItem::factory()->create([
+    PurchaseReturnItem::create([
         'cost_price' => 50,
         'quantity' => 1,
         'purchase_return_id' => $return->id,
         'product_id' => $product1->id,
     ]);
 
-    PurchaseReturnItem::factory()->create([
+    PurchaseReturnItem::create([
         'cost_price' => 30,
         'quantity' => 5,
         'purchase_return_id' => $return->id,
@@ -132,7 +132,7 @@ it('validates edited return data before updating', function () {
     $product1 = Product::factory()->create(['quantity' => 10]);
     $product2 = Product::factory()->create(['quantity' => 10]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 200,
@@ -141,7 +141,7 @@ it('validates edited return data before updating', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product1->name,
         'cost_price' => 50,
         'quantity' => 2,
@@ -149,7 +149,7 @@ it('validates edited return data before updating', function () {
         'product_id' => $product1->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product2->name,
         'cost_price' => 100,
         'quantity' => 1,
@@ -157,7 +157,7 @@ it('validates edited return data before updating', function () {
         'product_id' => $product2->id,
     ]);
 
-    $return = PurchaseReturn::factory()->create([
+    $return = PurchaseReturn::create([
         'total_price' => 100,
         'reason' => null,
         'cash_refund' => true,
@@ -165,7 +165,7 @@ it('validates edited return data before updating', function () {
         'user_id' => auth()->id(),
     ]);
 
-    PurchaseReturnItem::factory()->create([
+    PurchaseReturnItem::create([
         'cost_price' => 50,
         'quantity' => 1,
         'purchase_return_id' => $return->id,
@@ -188,7 +188,7 @@ it('allows updating return with no reason', function () {
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create(['quantity' => 10]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 100,
@@ -197,7 +197,7 @@ it('allows updating return with no reason', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product->name,
         'cost_price' => 100,
         'quantity' => 2,
@@ -205,7 +205,7 @@ it('allows updating return with no reason', function () {
         'product_id' => $product->id,
     ]);
 
-    $return = PurchaseReturn::factory()->create([
+    $return = PurchaseReturn::create([
         'total_price' => 100,
         'reason' => 'Old reason',
         'cash_refund' => true,
@@ -213,7 +213,7 @@ it('allows updating return with no reason', function () {
         'user_id' => auth()->id(),
     ]);
 
-    PurchaseReturnItem::factory()->create([
+    PurchaseReturnItem::create([
         'cost_price' => 100,
         'quantity' => 1,
         'purchase_return_id' => $return->id,
@@ -237,7 +237,7 @@ it('replaces old return items and movements when product selection changes', fun
     $product1 = Product::factory()->create(['quantity' => 20]);
     $product2 = Product::factory()->create(['quantity' => 20]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 400,
@@ -246,7 +246,7 @@ it('replaces old return items and movements when product selection changes', fun
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product1->name,
         'cost_price' => 40,
         'quantity' => 5,
@@ -254,7 +254,7 @@ it('replaces old return items and movements when product selection changes', fun
         'product_id' => $product1->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product2->name,
         'cost_price' => 60,
         'quantity' => 5,
@@ -262,7 +262,7 @@ it('replaces old return items and movements when product selection changes', fun
         'product_id' => $product2->id,
     ]);
 
-    $return = PurchaseReturn::factory()->create([
+    $return = PurchaseReturn::create([
         'total_price' => 80,
         'reason' => 'Initial',
         'cash_refund' => true,
@@ -270,7 +270,7 @@ it('replaces old return items and movements when product selection changes', fun
         'user_id' => auth()->id(),
     ]);
 
-    PurchaseReturnItem::factory()->create([
+    PurchaseReturnItem::create([
         'cost_price' => 40,
         'quantity' => 2,
         'purchase_return_id' => $return->id,

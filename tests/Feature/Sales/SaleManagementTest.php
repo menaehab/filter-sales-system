@@ -50,12 +50,14 @@ it('filters sales by search, payment type, and status', function () {
         'amount' => 25,
         'payment_method' => 'cash',
         'customer_id' => $northCustomer->id,
+        'user_id' => auth()->id(),
     ]);
 
     $paidPayment = CustomerPayment::create([
         'amount' => 100,
         'payment_method' => 'cash',
         'customer_id' => $northCustomer->id,
+        'user_id' => auth()->id(),
     ]);
 
     CustomerPaymentAllocation::create([
@@ -214,6 +216,7 @@ it('deletes orphaned customer payments when deleting a sale', function () {
         'amount' => 200,
         'payment_method' => 'cash',
         'customer_id' => $customer->id,
+        'user_id' => auth()->id(),
     ]);
 
     CustomerPaymentAllocation::create([
@@ -265,6 +268,7 @@ it('keeps shared customer payments when deleting one sale', function () {
         'amount' => 120,
         'payment_method' => 'cash',
         'customer_id' => $customer->id,
+        'user_id' => auth()->id(),
     ]);
 
     CustomerPaymentAllocation::create([

@@ -13,12 +13,12 @@ beforeEach(function () {
     actAsAdmin($this);
 });
 
-it('creates a purchase return and decreases inventory', function () {
+it('creates a customer return and decreases inventory', function () {
     $supplier = Supplier::factory()->create();
     $product1 = Product::factory()->create(['cost_price' => 50, 'quantity' => 10]);
     $product2 = Product::factory()->create(['cost_price' => 30, 'quantity' => 5]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 230,
@@ -27,7 +27,7 @@ it('creates a purchase return and decreases inventory', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product1->name,
         'cost_price' => 50,
         'quantity' => 3,
@@ -35,7 +35,7 @@ it('creates a purchase return and decreases inventory', function () {
         'product_id' => $product1->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product2->name,
         'cost_price' => 30,
         'quantity' => 4,
@@ -88,7 +88,7 @@ it('validates that at least one item is selected for return', function () {
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create(['quantity' => 10]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 100,
@@ -97,7 +97,7 @@ it('validates that at least one item is selected for return', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product->name,
         'cost_price' => 100,
         'quantity' => 1,
@@ -117,7 +117,7 @@ it('validates return quantity does not exceed available quantity', function () {
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create(['quantity' => 5]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 100,
@@ -126,7 +126,7 @@ it('validates return quantity does not exceed available quantity', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product->name,
         'cost_price' => 100,
         'quantity' => 3,
@@ -148,7 +148,7 @@ it('allows creating a return without cash refund', function () {
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create(['quantity' => 10]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 100,
@@ -157,7 +157,7 @@ it('allows creating a return without cash refund', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product->name,
         'cost_price' => 100,
         'quantity' => 2,
@@ -192,7 +192,7 @@ it('creates supplier credit when return is saved without cash refund', function 
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create(['cost_price' => 60, 'quantity' => 10]);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 300,
@@ -201,7 +201,7 @@ it('creates supplier credit when return is saved without cash refund', function 
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product->name,
         'cost_price' => 60,
         'quantity' => 5,
@@ -209,14 +209,13 @@ it('creates supplier credit when return is saved without cash refund', function 
         'product_id' => $product->id,
     ]);
 
-    $payment = SupplierPayment::factory()->create([
+    $payment = SupplierPayment::create([
         'supplier_id' => $supplier->id,
         'amount' => 300,
         'payment_method' => 'cash',
-        'user_id' => auth()->id(),
     ]);
 
-    SupplierPaymentAllocation::factory()->create([
+    SupplierPaymentAllocation::create([
         'supplier_payment_id' => $payment->id,
         'purchase_id' => $purchase->id,
         'amount' => 300,

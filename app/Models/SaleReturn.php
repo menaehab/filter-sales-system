@@ -4,11 +4,13 @@ namespace App\Models;
 
 use App\Observers\SaleReturnObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[ObservedBy(SaleReturnObserver::class)]
 class SaleReturn extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'number',
         'total_price',

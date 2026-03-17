@@ -15,7 +15,7 @@ it('displays purchase return details with items', function () {
     $supplier = Supplier::factory()->create(['name' => 'Test Supplier']);
     $product = Product::factory()->create(['name' => 'Test Filter']);
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 300,
@@ -24,7 +24,7 @@ it('displays purchase return details with items', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product->name,
         'cost_price' => 100,
         'quantity' => 3,
@@ -32,7 +32,7 @@ it('displays purchase return details with items', function () {
         'product_id' => $product->id,
     ]);
 
-    $return = PurchaseReturn::factory()->create([
+    $return = PurchaseReturn::create([
         'total_price' => 200,
         'reason' => 'Quality issues',
         'cash_refund' => true,
@@ -40,7 +40,7 @@ it('displays purchase return details with items', function () {
         'user_id' => auth()->id(),
     ]);
 
-    PurchaseReturnItem::factory()->create([
+    PurchaseReturnItem::create([
         'cost_price' => 100,
         'quantity' => 2,
         'purchase_return_id' => $return->id,
@@ -62,7 +62,7 @@ it('shows correct total for multiple returned items', function () {
     $product1 = Product::factory()->create();
     $product2 = Product::factory()->create();
 
-    $purchase = Purchase::factory()->create([
+    $purchase = Purchase::create([
         'supplier_name' => $supplier->name,
         'user_name' => auth()->user()->name,
         'total_price' => 500,
@@ -71,7 +71,7 @@ it('shows correct total for multiple returned items', function () {
         'supplier_id' => $supplier->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product1->name,
         'cost_price' => 100,
         'quantity' => 3,
@@ -79,7 +79,7 @@ it('shows correct total for multiple returned items', function () {
         'product_id' => $product1->id,
     ]);
 
-    PurchaseItem::factory()->create([
+    PurchaseItem::create([
         'product_name' => $product2->name,
         'cost_price' => 50,
         'quantity' => 4,
@@ -87,7 +87,7 @@ it('shows correct total for multiple returned items', function () {
         'product_id' => $product2->id,
     ]);
 
-    $return = PurchaseReturn::factory()->create([
+    $return = PurchaseReturn::create([
         'total_price' => 400,
         'reason' => null,
         'cash_refund' => false,
@@ -95,14 +95,14 @@ it('shows correct total for multiple returned items', function () {
         'user_id' => auth()->id(),
     ]);
 
-    PurchaseReturnItem::factory()->create([
+    PurchaseReturnItem::create([
         'cost_price' => 100,
         'quantity' => 2,
         'purchase_return_id' => $return->id,
         'product_id' => $product1->id,
     ]);
 
-    PurchaseReturnItem::factory()->create([
+    PurchaseReturnItem::create([
         'cost_price' => 50,
         'quantity' => 4,
         'purchase_return_id' => $return->id,
