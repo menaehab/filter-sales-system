@@ -13,6 +13,9 @@
         {{ __('keywords.results') }}
     </p>
     <div>
-        {{ $paginator->links() }}
+        @php($currentLocale = app()->getLocale())
+        @php(app()->setLocale('ar'))
+        {{ $paginator->onEachSide(1)->links() }}
+        @php(app()->setLocale($currentLocale))
     </div>
 </div>

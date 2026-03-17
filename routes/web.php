@@ -212,4 +212,25 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/expenses', 'expenses.expense-management')
         ->name('expenses')
         ->middleware('permission:view_expenses|manage_expenses');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dashboard
+    |--------------------------------------------------------------------------
+    */
+
+    Route::livewire('/dashboard', 'dashboard')
+        ->middleware('permission:view_dashboard')
+        ->name('dashboard');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Activity Log
+    |--------------------------------------------------------------------------
+    */
+
+    Route::livewire('/activities', 'activity-log.activity-log-management')
+        ->middleware('permission:view_activities')
+        ->name('activities');
 });

@@ -20,6 +20,11 @@ trait HasCrudQuery
 
     public function getItemsProperty()
     {
+        return $this->buildQuery()->latest()->paginate($this->perPage);
+    }
+
+    protected function buildQuery(): Builder
+    {
         $query = $this->getModelClass()::query()->with($this->getWithRelations());
 
         $this->applyAdditionalFilters($query);
@@ -32,7 +37,7 @@ trait HasCrudQuery
             });
         }
 
-        return $query->latest()->paginate($this->perPage);
+        return $query;
     }
 
     protected function applySearchCondition(Builder $builder, string $field, bool $isFirst): void

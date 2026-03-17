@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Traits\HasLogActivity;
 use Illuminate\Database\Eloquent\Model;
 
 class WaterReading extends Model
 {
+    use HasLogActivity;
     protected $fillable = [
         'technician_name',
         'tds',

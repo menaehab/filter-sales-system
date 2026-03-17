@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Observers\PurchaseReturnObserver;
+use App\Traits\HasLogActivity;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 #[ObservedBy(PurchaseReturnObserver::class)]
 class PurchaseReturn extends Model
 {
-    use HasFactory;
+    use HasFactory, HasLogActivity;
 
     protected $fillable = [
         'number',
