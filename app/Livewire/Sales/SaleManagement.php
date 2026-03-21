@@ -27,6 +27,7 @@ class SaleManagement extends Component
     public string $payMethod = 'cash';
     public string $payNote = '';
     public ?int $payFromSaleId = null;
+    public bool $printAfterPayment = false;
 
     public function mount()
     {
@@ -194,8 +195,15 @@ class SaleManagement extends Component
             ]);
         }
 
+        $printAfterPayment = $this->printAfterPayment;
+        $paymentId = $payment->id;
+
         $this->resetPayForm();
         $this->dispatch('close-modal-pay-sale');
+
+        if ($printAfterPayment) {
+            $this->redirect(route('customer-payments.print', $paymentId), navigate: true);
+        }
     }
 
     protected function getCustomerInstallmentQueue(int $customerId)
@@ -216,6 +224,7 @@ class SaleManagement extends Component
         $this->payAmount = '';
         $this->payMethod = 'cash';
         $this->payNote = '';
+        $this->printAfterPayment = false;
     }
 
     protected function authorizeManageSales(): void

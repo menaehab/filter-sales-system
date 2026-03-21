@@ -79,6 +79,12 @@
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                         <div class="flex items-center justify-end gap-1">
+                            <a href="{{ route('sales.print', $sale) }}" target="_blank"
+                                class="rounded-lg p-1.5 text-gray-400 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                                title="{{ __('keywords.print') }}">
+                                <i class="fas fa-print text-sm"></i>
+                            </a>
+
                             @canany(['manage_sales', 'pay_sales'])
                                 @if (!$sale->isFullyPaid())
                                     <button wire:click="openPayModal({{ $sale->id }})"
@@ -195,6 +201,12 @@
 
                     <x-textarea name="payNote" label="{{ __('keywords.note') }}"
                         placeholder="{{ __('keywords.enter_note') }}" wire:model="payNote" />
+
+                    <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                        <input type="checkbox" wire:model.live="printAfterPayment"
+                            class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        <span>{{ __('keywords.print_after_payment') }}</span>
+                    </label>
                 </div>
             </x-slot:body>
             <x-slot:footer>

@@ -30,6 +30,7 @@ class SaleCreate extends Component
     public string $search = '';
     public string $activeCategory = 'all';
     public bool $includeWaterReading = false;
+    public bool $printAfterSave = false;
 
     public array $cart = [];
 
@@ -78,8 +79,10 @@ class SaleCreate extends Component
 
         if ($existingIndex !== false) {
             $currentQuantity = (int) ($this->cart[$existingIndex]['quantity'] ?: 0);
-            if ($currentQuantity < (int) $product->quantity) {
-                $this->cart[$existingIndex]['quantity'] = (string) ($currentQuantity + 1);
+            $this->cart[$existingIndex]['quantity'] = (string) ($currentQuantity + 1);
+
+            if (($currentQuantity + 1) > (int) $product->quantity) {
+                session()->flash('warning', __('keywords.low_stock_warning') . ': ' . $product->name . ' (' . __('keywords.available') . ': ' . $product->quantity . ')');
             }
 
             return;
@@ -94,6 +97,10 @@ class SaleCreate extends Component
             'available_quantity' => (int) $product->quantity,
             'quantity' => '1',
         ];
+
+        if ((int) $product->quantity <= 0) {
+            session()->flash('warning', __('keywords.out_of_stock_warning') . ': ' . $product->name);
+        }
     }
 
     public function removeFromCart(int $index): void
@@ -119,7 +126,11 @@ class SaleCreate extends Component
             return;
         }
 
-        $this->cart[$index]['quantity'] = (string) min($next, (int) $this->cart[$index]['available_quantity']);
+        $this->cart[$index]['quantity'] = (string) $next;
+
+        if ($next > (int) $this->cart[$index]['available_quantity']) {
+            session()->flash('warning', __('keywords.low_stock_warning') . ': ' . $this->cart[$index]['product_name'] . ' (' . __('keywords.available') . ': ' . $this->cart[$index]['available_quantity'] . ')');
+        }
     }
 
     public function clearCart(): void
@@ -263,7 +274,7 @@ class SaleCreate extends Component
         }
 
         foreach ($this->cart as $i => $item) {
-            $rules["cart.{$i}.quantity"] = "required|integer|min:1|max:{$item['available_quantity']}";
+            $rules["cart.{$i}.quantity"] = "required|integer|min:1";
         }
 
         return $rules;
@@ -295,16 +306,6 @@ class SaleCreate extends Component
     {
         $this->validate();
 
-        foreach ($this->cart as $item) {
-            $product = Product::find($item['product_id']);
-
-            if (! $product || (int) $product->quantity < (int) $item['quantity']) {
-                throw ValidationException::withMessages([
-                    'cart' => __('keywords.not_available') . ': ' . ($item['product_name'] ?? __('keywords.product')),
-                ]);
-            }
-        }
-
         $customer = Customer::findOrFail($this->customer_id);
         $totalPrice = $this->total_price;
         $isInstallment = $this->payment_type === 'installment';
@@ -317,7 +318,9 @@ class SaleCreate extends Component
             ? round(max(0, $totalPrice - $appliedCredit - $downPayment) / $months, 2)
             : null;
 
-        DB::transaction(function () use ($customer, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount, $appliedCredit) {
+        $saleNumber = null;
+
+        DB::transaction(function () use ($customer, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount, $appliedCredit, &$saleNumber) {
             $sale = Sale::create([
                 'dealer_name' => $this->dealer_name ?? null,
                 'user_name' => auth()->user()->name,
@@ -329,16 +332,13 @@ class SaleCreate extends Component
                 'customer_id' => $customer->id,
             ]);
 
+            $saleNumber = $sale->number;
+
             foreach ($this->cart as $item) {
                 $product = Product::lockForUpdate()->findOrFail($item['product_id']);
                 $quantity = (int) $item['quantity'];
 
-                if ((int) $product->quantity < $quantity) {
-                    throw ValidationException::withMessages([
-                        'cart' => __('keywords.not_available') . ': ' . $product->name,
-                    ]);
-                }
-
+                // Allow sales even if stock is zero or negative
                 SaleItem::create([
                     'sell_price' => (float) $item['sell_price'],
                     'cost_price' => (float) $item['cost_price'],
@@ -400,7 +400,12 @@ class SaleCreate extends Component
         });
 
         session()->flash('success', __('keywords.sale_created'));
-        $this->redirect(route('sales'), navigate: true);
+
+        if ($this->printAfterSave && $saleNumber) {
+            $this->redirect(route('sales.print', $saleNumber), navigate: true);
+        } else {
+            $this->redirect(route('sales.create'), navigate: true);
+        }
     }
 
     public function render()

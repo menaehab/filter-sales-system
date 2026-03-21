@@ -21,6 +21,7 @@ class PurchaseCreate extends Component
     public string $payment_type = 'cash';
     public string $down_payment = '0';
     public string $installment_months = '';
+    public bool $printAfterSave = false;
 
     public array $items = [];
     public array $newSupplier = [
@@ -272,7 +273,9 @@ class PurchaseCreate extends Component
         $months = $isInstallment ? (int) $this->installment_months : null;
         $installmentAmount = $isInstallment && $months > 0 ? round(max(0, $totalPrice - $appliedCredit - $downPayment) / $months, 2) : null;
 
-        DB::transaction(function () use ($supplier, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount, $appliedCredit) {
+        $purchaseNumber = null;
+
+        DB::transaction(function () use ($supplier, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount, $appliedCredit, &$purchaseNumber) {
             $purchase = Purchase::create([
                 'supplier_name' => $supplier->name,
                 'user_name' => auth()->user()->name,
@@ -283,6 +286,8 @@ class PurchaseCreate extends Component
                 'user_id' => auth()->id(),
                 'supplier_id' => $supplier->id,
             ]);
+
+            $purchaseNumber = $purchase->number;
 
             foreach ($this->items as $item) {
                 $product = Product::findOrFail($item['product_id']);
@@ -346,6 +351,10 @@ class PurchaseCreate extends Component
                 ]);
             }
         });
+
+        if ($this->printAfterSave && $purchaseNumber) {
+            return $this->redirect(route('purchases.print', $purchaseNumber), navigate: true);
+        }
 
         return $this->redirect(route('purchases'), navigate: true);
     }
