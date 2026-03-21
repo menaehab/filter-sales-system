@@ -1,5 +1,5 @@
 <div class="max-w-4xl mx-auto p-8 bg-white">
-    {{-- Print Button و Back Button --}}
+    {{-- Print and Back Buttons --}}
     <div class="no-print flex items-center justify-between mb-6 border-b pb-4">
         <a href="{{ route('purchases') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
             <i class="fas fa-arrow-right"></i>

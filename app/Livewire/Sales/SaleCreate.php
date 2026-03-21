@@ -338,7 +338,7 @@ class SaleCreate extends Component
                 $product = Product::lockForUpdate()->findOrFail($item['product_id']);
                 $quantity = (int) $item['quantity'];
 
-                // السماح بالبيع حتى لو كان المخزون صفر أو سالب
+                // Allow sales even if stock is zero or negative
                 SaleItem::create([
                     'sell_price' => (float) $item['sell_price'],
                     'cost_price' => (float) $item['cost_price'],
