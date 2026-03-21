@@ -33,6 +33,14 @@ Route::middleware(['auth'])->group(function () {
         ->name('sales.edit')
         ->middleware('permission:manage_sales|edit_sales');
 
+    Route::livewire('/sales/{sale}/print', 'sales.sale-print')
+        ->name('sales.print')
+        ->middleware('permission:view_sales|manage_sales|add_sales|edit_sales|pay_sales');
+
+    Route::livewire('/customer-payments/{payment}/print', 'sales.payment-receipt-print')
+        ->name('customer-payments.print')
+        ->middleware('permission:view_customer_payment_allocations|manage_customer_payment_allocations|pay_sales|manage_sales');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -118,6 +126,14 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/purchases/{purchase}/edit', 'purchases.purchase-edit')
         ->name('purchases.edit')
         ->middleware('permission:manage_purchases|edit_purchases');
+
+    Route::livewire('/purchases/{purchase}/print', 'purchases.purchase-print')
+        ->name('purchases.print')
+        ->middleware('permission:view_purchases|manage_purchases|add_purchases|edit_purchases|pay_purchases');
+
+    Route::livewire('/supplier-payments/{payment}/print', 'purchases.payment-voucher-print')
+        ->name('supplier-payments.print')
+        ->middleware('permission:view_supplier_payment_allocations|manage_supplier_payment_allocations|pay_purchases|manage_purchases');
 
 
     /*

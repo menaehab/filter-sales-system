@@ -37,16 +37,21 @@
                 (document.documentElement.dir === 'rtl' ? 'translate-x-full' : '-translate-x-full')"
             class="fixed inset-y-0 start-0 z-50 flex w-64 flex-col bg-gray-900 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto">
             {{-- Sidebar header --}}
-            <div class="flex h-16 items-center gap-3 px-6 border-b border-gray-800">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600">
-                    <svg class="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a.75.75 0 0 1 .352-.642l7.5-4.5a.75.75 0 0 1 .796 0l7.5 4.5a.75.75 0 0 1 .352.642" />
-                    </svg>
+            <div class="flex h-16 items-center gap-3 px-6">
+                <!-- Logo container -->
+                <div class="flex h-12 w-14 items-center justify-center rounded-lg overflow-hidden shadow-sm">
+                    <img src="{{ asset('images/logo.jpg') }}" alt="Logo"
+                        class="h-full w-full object-cover rounded-lg">
                 </div>
-                <span class="text-lg font-semibold text-white">{{ __('keywords.app') }}</span>
-                <button @click="sidebarOpen = false" class="ms-auto text-gray-400 hover:text-white lg:hidden">
+
+                <!-- App name -->
+                <span class="text-md font-semibold text-white">
+                    {{ __('keywords.app') }}
+                </span>
+
+                <!-- Close button for sidebar on mobile -->
+                <button @click="sidebarOpen = false"
+                    class="ms-auto text-gray-400 hover:text-white lg:hidden transition-colors duration-200">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
@@ -122,7 +127,7 @@
                     </x-sidebar-link>
                 @endcanAny
 
-                @canany(['manage_water_readings','view_water_readings'])
+                @canany(['manage_water_readings', 'view_water_readings'])
                     <x-sidebar-link href="{{ route('water-readings') }}" icon="fas fa-tint" :active="request()->routeIs('water-readings*')">
                         {{ __('keywords.water_readings') }}
                     </x-sidebar-link>
@@ -152,11 +157,11 @@
                     </x-sidebar-link>
                 @endcan
 
-                    @can('view_activities')
-                        <x-sidebar-link href="{{ route('activities') }}" icon="fas fa-list" :active="request()->routeIs('activities*')">
-                            {{ __('keywords.activity_logs') }}
-                        </x-sidebar-link>
-                    @endcan
+                @can('view_activities')
+                    <x-sidebar-link href="{{ route('activities') }}" icon="fas fa-list" :active="request()->routeIs('activities*')">
+                        {{ __('keywords.activity_logs') }}
+                    </x-sidebar-link>
+                @endcan
 
             </nav>
 

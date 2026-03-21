@@ -201,6 +201,14 @@
                         </span>
                     </x-button>
                 </div>
+
+                <div class="mt-4">
+                    <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                        <input type="checkbox" wire:model.live="printAfterSave"
+                            class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        <span>{{ __('keywords.print_after_save') }}</span>
+                    </label>
+                </div>
             </div>
         </div>
     </div>

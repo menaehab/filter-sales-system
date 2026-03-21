@@ -27,6 +27,7 @@ class PurchaseManagement extends Component
     public string $payMethod = 'cash';
     public string $payNote = '';
     public ?int $payFromPurchaseId = null;
+    public bool $printAfterPayment = false;
 
     public function mount()
     {
@@ -196,8 +197,15 @@ class PurchaseManagement extends Component
             ]);
         }
 
+        $printAfterPayment = $this->printAfterPayment;
+        $paymentId = $payment->id;
+
         $this->resetPayForm();
         $this->dispatch('close-modal-pay-purchase');
+
+        if ($printAfterPayment) {
+            $this->redirect(route('supplier-payments.print', $paymentId), navigate: true);
+        }
     }
 
     protected function getSupplierInstallmentQueue(int $supplierId)
@@ -218,6 +226,7 @@ class PurchaseManagement extends Component
         $this->payAmount = '';
         $this->payMethod = 'cash';
         $this->payNote = '';
+        $this->printAfterPayment = false;
     }
 
     protected function authorizeManagePurchases(): void

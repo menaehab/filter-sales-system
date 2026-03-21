@@ -1,4 +1,13 @@
 <div>
+    @if (session()->has('warning'))
+        <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>{{ session('warning') }}</span>
+            </div>
+        </div>
+    @endif
+
     <div class="flex h-[calc(100vh-7rem)] flex-col gap-6 lg:flex-row">
         <div class="flex flex-1 flex-col min-w-0">
             <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -298,6 +307,12 @@
                         @endif
                     @endif
                 </div>
+
+                <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                    <input type="checkbox" wire:model.live="printAfterSave"
+                        class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    <span>{{ __('keywords.print_after_save') }}</span>
+                </label>
             </div>
         </x-slot:body>
         <x-slot:footer>
