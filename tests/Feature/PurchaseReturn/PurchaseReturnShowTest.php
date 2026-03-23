@@ -113,4 +113,3 @@ it('shows correct total for multiple returned items', function () {
         ->assertOk()
         ->assertSee('400.00', false);
 });
-

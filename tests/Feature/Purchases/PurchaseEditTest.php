@@ -75,7 +75,7 @@ it('updates a purchase and recalculates stock and movements', function () {
                 'product_name' => $newProduct->name,
                 'cost_price' => '30',
                 'quantity' => '4',
-            ]
+            ],
         ])
         ->call('update')
         ->assertHasNoErrors()
@@ -156,7 +156,7 @@ it('validates edited purchase data before updating', function () {
                 'product_name' => '',
                 'cost_price' => '',
                 'quantity' => '',
-            ]
+            ],
         ])
         ->call('update')
         ->assertHasErrors([

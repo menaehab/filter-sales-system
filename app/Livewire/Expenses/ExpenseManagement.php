@@ -14,9 +14,10 @@ use Livewire\Component;
 #[Layout('layouts.app', ['title' => 'expenses_management'])]
 class ExpenseManagement extends Component
 {
-    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery, HasValidationAttributes;
+    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
 
     public ?string $dateFrom = null;
+
     public ?string $dateTo = null;
 
     public function mount()
@@ -63,7 +64,7 @@ class ExpenseManagement extends Component
         $query = Expense::query();
 
         if (filled($this->search)) {
-            $query->where('description', 'like', '%' . $this->search . '%');
+            $query->where('description', 'like', '%'.$this->search.'%');
         }
 
         if (filled($this->dateFrom)) {

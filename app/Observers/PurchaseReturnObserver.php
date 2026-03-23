@@ -13,7 +13,7 @@ class PurchaseReturnObserver
     {
         $today = now()->format('Ymd');
 
-        $lastPurchase = PurchaseReturn::where('number', 'like', $today . '-%')
+        $lastPurchase = PurchaseReturn::where('number', 'like', $today.'-%')
             ->orderByDesc('number')
             ->first();
 
@@ -24,7 +24,7 @@ class PurchaseReturnObserver
             $nextNumber = $lastSequence + 1;
         }
 
-        $purchaseReturn->number = $today . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+        $purchaseReturn->number = $today.'-'.str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
     }
 
     /**

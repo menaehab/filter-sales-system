@@ -21,7 +21,7 @@ class WaterReadingFactory extends Factory
             'technician_name' => $this->faker->name(),
             'tds' => $this->faker->randomFloat(2, 0, 1000),
             'water_quality' => $this->faker->randomElement(WaterQualityTypeEnum::values()),
-            'customer_id' => \App\Models\Customer::factory(),
+            'water_filter_id' => \App\Models\WaterFilter::factory(),
         ];
     }
 }

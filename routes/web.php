@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
@@ -10,7 +11,6 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::livewire('/', 'sales.sale-create')->name('home');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -41,7 +41,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('customer-payments.print')
         ->middleware('permission:view_customer_payment_allocations|manage_customer_payment_allocations|pay_sales|manage_sales');
 
-
     /*
     |--------------------------------------------------------------------------
     | Categories & Products
@@ -59,7 +58,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('products.show')
         ->middleware('permission:view_products|manage_products');
 
-
     /*
     |--------------------------------------------------------------------------
     | Users
@@ -68,7 +66,6 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/users', 'users.user-management')
         ->name('users')
         ->middleware('permission:manage_users');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -87,7 +84,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('suppliers.view')
         ->middleware('permission:view_suppliers|manage_suppliers');
 
-
     /*
     |--------------------------------------------------------------------------
     | Customers
@@ -104,7 +100,6 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/customers/{customer:slug}/view', 'customers.customer-view')
         ->name('customers.view')
         ->middleware('permission:view_customers|manage_customers');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -135,7 +130,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('supplier-payments.print')
         ->middleware('permission:view_supplier_payment_allocations|manage_supplier_payment_allocations|pay_purchases|manage_purchases');
 
-
     /*
     |--------------------------------------------------------------------------
     | Supplier Payments
@@ -145,7 +139,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('supplier-payments')
         ->middleware('permission:view_supplier_payment_allocations|manage_supplier_payment_allocations');
 
-
     /*
     |--------------------------------------------------------------------------
     | Customers Payments
@@ -154,7 +147,6 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/customer-payments', 'customer-payments.customer-payment-management')
         ->name('customer-payments')
         ->middleware('permission:view_customer_payment_allocations|manage_customer_payment_allocations');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -176,7 +168,6 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/purchase-returns/{purchaseReturn}/edit', 'purchase-returns.purchase-return-edit')
         ->name('purchase-returns.edit')
         ->middleware('permission:manage_purchase_returns|edit_purchase_returns');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -201,14 +192,17 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Water Readings
+    | Filters
     |--------------------------------------------------------------------------
     */
 
-    Route::livewire('/water-readings', 'water-readings.water-reading-management')
-        ->name('water-readings')
-        ->middleware('permission:view_water_readings|manage_water_readings');
+    Route::livewire('/filters', 'filters.filter-management')
+        ->name('filters')
+        ->middleware('permission:view_water_filters|manage_water_filters');
 
+    Route::livewire('/filters/{filter:slug}', 'filters.filter-view')
+        ->name('filters.view')
+        ->middleware('permission:view_water_filters|manage_water_filters');
 
     /*
     |--------------------------------------------------------------------------
@@ -218,7 +212,6 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/damaged-products', 'damaged-products.damaged-product-management')
         ->name('damaged-products')
         ->middleware('permission:view_damaged_products|manage_damaged_products');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -239,7 +232,6 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('permission:view_dashboard')
         ->name('dashboard');
 
-
     /*
     |--------------------------------------------------------------------------
     | Activity Log
@@ -249,4 +241,25 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/activities', 'activity-log.activity-log-management')
         ->middleware('permission:view_activities')
         ->name('activities');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notifications
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])
+        ->name('notifications.read');
+
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.read-all');
+
+    Route::delete('/notifications/delete-all-read', [NotificationController::class, 'deleteAllRead'])
+        ->name('notifications.delete-all-read');
+
+    Route::delete('/notifications/delete-all', [NotificationController::class, 'deleteAll'])
+        ->name('notifications.delete-all');
+
+    Route::delete('/notifications/{id}', [NotificationController::class, 'delete'])
+        ->name('notifications.delete');
 });

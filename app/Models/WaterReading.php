@@ -8,15 +8,34 @@ use Illuminate\Database\Eloquent\Model;
 class WaterReading extends Model
 {
     use HasLogActivity;
+
     protected $fillable = [
         'technician_name',
         'tds',
         'water_quality',
-        'customer_id',
+        'before_installment',
+        'water_filter_id',
     ];
 
-    public function customer()
+    protected $casts = [
+        'before_installment' => 'boolean',
+        'tds' => 'decimal:2',
+    ];
+
+    protected static function booted(): void
     {
-        return $this->belongsTo(Customer::class);
+        static::created(function (WaterReading $reading) {
+            if ($reading->before_installment && $reading->waterFilter) {
+                $filter = $reading->waterFilter;
+                if (! $filter->installed_at) {
+                    $filter->update(['installed_at' => $reading->created_at->toDateString()]);
+                }
+            }
+        });
+    }
+
+    public function waterFilter()
+    {
+        return $this->belongsTo(WaterFilter::class);
     }
 }

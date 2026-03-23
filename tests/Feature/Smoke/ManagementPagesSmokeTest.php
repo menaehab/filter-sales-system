@@ -1,6 +1,5 @@
 <?php
 
-
 it('redirects guests from management pages to login', function () {
     $this->get(route('home'))->assertRedirect(route('login'));
     $this->get(route('categories'))->assertRedirect(route('login'));

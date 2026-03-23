@@ -17,11 +17,14 @@ use Livewire\Component;
 #[Layout('layouts.app', ['title' => 'damaged_products_management'])]
 class DamagedProductManagement extends Component
 {
-    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery, HasValidationAttributes;
+    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
 
     public $productSlug = '';
+
     public $productSearch = '';
+
     public $products;
+
     public $formProductSearch = '';
 
     public function mount()
@@ -59,7 +62,7 @@ class DamagedProductManagement extends Component
 
         return [
             'form.product_id' => ['required', 'exists:products,id'],
-            'form.quantity' => ['required', 'integer', 'min:1', 'max:' . $maxQuantity],
+            'form.quantity' => ['required', 'integer', 'min:1', 'max:'.$maxQuantity],
             'form.reason' => ['nullable', 'string', 'max:1000'],
         ];
     }

@@ -14,7 +14,7 @@ trait HasValidationAttributes
                     return [$key => $value];
                 }
 
-                return [$value => __('keywords.' . $value)];
+                return [$value => __('keywords.'.$value)];
             })
             ->toArray();
     }

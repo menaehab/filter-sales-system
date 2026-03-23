@@ -17,16 +17,22 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class SaleManagement extends Component
 {
-    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
     public string $filterPaymentType = '';
+
     public string $filterStatus = '';
 
     public ?int $paySaleId = null;
+
     public string $payAmount = '';
+
     public string $payMethod = 'cash';
+
     public string $payNote = '';
+
     public ?int $payFromSaleId = null;
+
     public bool $printAfterPayment = false;
 
     public function mount()

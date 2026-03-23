@@ -16,9 +16,10 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class ProductManagement extends Component
 {
-    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery, HasValidationAttributes;
+    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
 
     public $categorySlug = '';
+
     public $stockStatus = '';
 
     public function mount()
@@ -164,10 +165,10 @@ class ProductManagement extends Component
 
     protected function applyAdditionalFilters(Builder $query): void
     {
-        $query->when($this->categorySlug, fn(Builder $builder) => $builder->whereHas('category', fn(Builder $categoryQuery) => $categoryQuery->where('slug', $this->categorySlug)));
+        $query->when($this->categorySlug, fn (Builder $builder) => $builder->whereHas('category', fn (Builder $categoryQuery) => $categoryQuery->where('slug', $this->categorySlug)));
 
-        $query->when($this->stockStatus === 'above', fn(Builder $builder) => $builder->whereColumn('quantity', '>', 'min_quantity'));
-        $query->when($this->stockStatus === 'below', fn(Builder $builder) => $builder->whereColumn('quantity', '<', 'min_quantity'));
+        $query->when($this->stockStatus === 'above', fn (Builder $builder) => $builder->whereColumn('quantity', '>', 'min_quantity'));
+        $query->when($this->stockStatus === 'below', fn (Builder $builder) => $builder->whereColumn('quantity', '<', 'min_quantity'));
     }
 
     public function getProductsProperty()

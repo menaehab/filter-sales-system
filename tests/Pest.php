@@ -50,7 +50,7 @@ function something()
 
 function actAsAdmin($test)
 {
-    (new \Database\Seeders\PermissionSeeder())->run();
+    (new \Database\Seeders\PermissionSeeder)->run();
 
     $admin = \App\Models\User::factory()->create();
     $permissions = Permission::all();

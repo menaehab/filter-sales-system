@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class SaleReturnItem extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'sell_price',
         'quantity',

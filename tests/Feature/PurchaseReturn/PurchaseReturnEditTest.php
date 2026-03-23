@@ -330,4 +330,3 @@ it('replaces old return items and movements when product selection changes', fun
         'quantity' => '-4.00',
     ]);
 });
-

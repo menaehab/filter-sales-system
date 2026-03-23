@@ -13,7 +13,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class PurchaseReturnManagement extends Component
 {
-    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
     public function mount()
     {

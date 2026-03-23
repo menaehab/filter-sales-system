@@ -15,6 +15,7 @@ class CustomerDetails extends Component
     {
         $this->customer = $customer;
     }
+
     public function getStatusColorProperty(): string
     {
         return filled($this->customer->phone)
@@ -28,6 +29,7 @@ class CustomerDetails extends Component
             ? __('keywords.contact_available')
             : __('keywords.contact_missing');
     }
+
     public function render()
     {
         return view('livewire.customers.customer-details', [

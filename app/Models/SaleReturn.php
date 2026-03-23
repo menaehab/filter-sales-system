@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 class SaleReturn extends Model
 {
     use HasFactory, HasLogActivity;
+
     protected $fillable = [
         'number',
         'total_price',

@@ -19,6 +19,7 @@ class ProductShow extends Component
     use WithPagination;
 
     public Product $product;
+
     public int $movementsPerPage = 10;
 
     public function mount(Product $product)

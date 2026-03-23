@@ -18,18 +18,24 @@ class PurchaseEdit extends Component
     public Purchase $purchase;
 
     public ?int $supplier_id = null;
+
     public string $payment_type = 'cash';
+
     public string $down_payment = '0';
+
     public string $installment_months = '';
 
     public array $items = [];
+
     public array $newSupplier = [
         'name' => '',
         'phone' => '',
     ];
+
     public array $newCategory = [
         'name' => '',
     ];
+
     public array $newProduct = [
         'name' => '',
         'description' => '',
@@ -37,6 +43,7 @@ class PurchaseEdit extends Component
         'min_quantity' => '0',
         'category_id' => '',
     ];
+
     public ?int $targetItemIndexForNewProduct = null;
 
     public function mount(Purchase $purchase)
@@ -48,7 +55,7 @@ class PurchaseEdit extends Component
         $this->down_payment = (string) $purchase->down_payment;
         $this->installment_months = (string) ($purchase->installment_months ?? '');
 
-        $this->items = $purchase->items->map(fn($item) => [
+        $this->items = $purchase->items->map(fn ($item) => [
             'product_id' => (string) $item->product_id,
             'product_name' => $item->product_name,
             'cost_price' => (string) $item->cost_price,
@@ -237,9 +244,9 @@ class PurchaseEdit extends Component
 
         foreach ($this->items as $i => $item) {
             $n = $i + 1;
-            $attrs["items.{$i}.product_id"] = __('keywords.product') . " #{$n}";
-            $attrs["items.{$i}.cost_price"] = __('keywords.cost_price') . " #{$n}";
-            $attrs["items.{$i}.quantity"] = __('keywords.quantity') . " #{$n}";
+            $attrs["items.{$i}.product_id"] = __('keywords.product')." #{$n}";
+            $attrs["items.{$i}.cost_price"] = __('keywords.cost_price')." #{$n}";
+            $attrs["items.{$i}.quantity"] = __('keywords.quantity')." #{$n}";
         }
 
         return $attrs;
@@ -256,7 +263,7 @@ class PurchaseEdit extends Component
         $months = $isInstallment ? (int) $this->installment_months : null;
         $installmentAmount = $isInstallment ? $this->installment_amount : null;
 
-        DB::transaction(function () use ($supplier, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount) {
+        DB::transaction(function () use ($supplier, $totalPrice, $isInstallment, $months, $installmentAmount) {
             // Reverse old stock changes
             foreach ($this->purchase->items as $oldItem) {
                 $product = Product::find($oldItem->product_id);

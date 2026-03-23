@@ -127,9 +127,9 @@
                     </x-sidebar-link>
                 @endcanAny
 
-                @canany(['manage_water_readings', 'view_water_readings'])
-                    <x-sidebar-link href="{{ route('water-readings') }}" icon="fas fa-tint" :active="request()->routeIs('water-readings*')">
-                        {{ __('keywords.water_readings') }}
+                @canany(['manage_water_filters', 'view_water_filters'])
+                    <x-sidebar-link href="{{ route('filters') }}" icon="fas fa-filter" :active="request()->routeIs('filters*')">
+                        {{ __('keywords.filters') }}
                     </x-sidebar-link>
                 @endcanany
 
@@ -215,10 +215,10 @@
                 {{-- <x-lang-toggle /> --}}
 
                 {{-- Notifications --}}
-                <div class="relative" x-data="{ openNotifications: false }">
-                    <button @click="openNotifications = !openNotifications"
+                <div class="relative" x-data="notificationPanel()">
+                    <button @click="open = !open"
                         class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                        title="{{ __('Notifications') }}">
+                        title="{{ __('keywords.notifications') }}">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -233,37 +233,203 @@
                         @endif
                     </button>
 
-                    <div x-show="openNotifications" @click.outside="openNotifications = false"
+                    <div x-show="open" @click.outside="open = false"
                         x-transition:enter="transition ease-out duration-100"
                         x-transition:enter-start="transform opacity-0 scale-95"
                         x-transition:enter-end="transform opacity-100 scale-100"
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="transform opacity-100 scale-100"
                         x-transition:leave-end="transform opacity-0 scale-95"
-                        class="absolute end-0 mt-2 w-80 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5">
-                        <div class="border-b border-gray-100 px-4 py-3">
+                        class="absolute end-0 mt-2 w-96 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5">
+
+                        {{-- Header with actions --}}
+                        <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                             <p class="text-sm font-semibold text-gray-800">{{ __('keywords.notifications') }}</p>
+
+                            @if ($unreadNotificationsCount > 0)
+                                <button @click="markAllAsRead()"
+                                    class="text-xs text-emerald-600 hover:text-emerald-700 font-medium">
+                                    {{ __('keywords.mark_all_as_read') }}
+                                </button>
+                            @endif
                         </div>
 
-                        <div class="max-h-80 overflow-y-auto">
+                        {{-- Notifications list --}}
+                        <div class="max-h-96 overflow-y-auto">
                             @forelse($latestNotifications as $notification)
                                 @php
-                                    $notificationMessage = data_get($notification->data, 'message', __('Notification'));
+                                    $notificationMessage = data_get(
+                                        $notification->data,
+                                        'message',
+                                        __('keywords.notification'),
+                                    );
                                     $notificationDate = optional($notification->created_at)->diffForHumans();
+                                    $notificationType = data_get($notification->data, 'type', 'default');
+                                    $typeColors = [
+                                        'customer_installment' => 'text-blue-600',
+                                        'supplier_installment' => 'text-purple-600',
+                                        'low_stock' => 'text-red-600',
+                                        'filter_candle' => 'text-amber-600',
+                                    ];
+                                    $typeColor = $typeColors[$notificationType] ?? 'text-gray-600';
                                 @endphp
-                                <div
-                                    class="border-b border-gray-50 px-4 py-3 {{ is_null($notification->read_at) ? 'bg-emerald-50/40' : '' }}">
-                                    <p class="text-sm text-gray-700">{{ $notificationMessage }}</p>
-                                    <p class="mt-1 text-xs text-gray-400">{{ $notificationDate }}</p>
+                                <div x-data="{ hover: false }" @mouseenter="hover = true" @mouseleave="hover = false"
+                                    class="relative border-b border-gray-50 px-4 py-3 {{ is_null($notification->read_at) ? 'bg-emerald-50/40' : '' }} hover:bg-gray-50 transition-colors">
+
+                                    {{-- Notification content --}}
+                                    <div class="flex items-start gap-3">
+                                        {{-- Icon --}}
+                                        <div class="flex-shrink-0 mt-0.5">
+                                            @if ($notificationType === 'customer_installment' || $notificationType === 'supplier_installment')
+                                                <i class="fas fa-money-bill-wave {{ $typeColor }}"></i>
+                                            @elseif($notificationType === 'low_stock')
+                                                <i class="fas fa-exclamation-triangle {{ $typeColor }}"></i>
+                                            @elseif($notificationType === 'filter_candle')
+                                                <i class="fas fa-filter {{ $typeColor }}"></i>
+                                            @else
+                                                <i class="fas fa-bell {{ $typeColor }}"></i>
+                                            @endif
+                                        </div>
+
+                                        {{-- Message --}}
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm text-gray-700 leading-relaxed">
+                                                {{ $notificationMessage }}</p>
+                                            <p class="mt-1 text-xs text-gray-400">{{ $notificationDate }}</p>
+                                        </div>
+
+                                        {{-- Actions (shown on hover) --}}
+                                        <div x-show="hover" x-transition class="flex gap-1 flex-shrink-0">
+                                            @if (is_null($notification->read_at))
+                                                <button @click="markAsRead('{{ $notification->id }}')"
+                                                    class="p-1.5 text-gray-400 hover:text-emerald-600 rounded transition-colors"
+                                                    title="{{ __('keywords.mark_as_read') }}">
+                                                    <i class="fas fa-check text-xs"></i>
+                                                </button>
+                                            @endif
+                                            <button @click="deleteNotification('{{ $notification->id }}')"
+                                                class="p-1.5 text-gray-400 hover:text-red-600 rounded transition-colors"
+                                                title="{{ __('keywords.delete') }}">
+                                                <i class="fas fa-trash text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             @empty
-                                <div class="px-4 py-6 text-center text-sm text-gray-500">
-                                    {{ __('keywords.no_notifications') }}
+                                <div class="px-4 py-8 text-center text-sm text-gray-500">
+                                    <i class="fas fa-bell-slash text-2xl text-gray-300 mb-2"></i>
+                                    <p>{{ __('keywords.no_notifications') }}</p>
                                 </div>
                             @endforelse
                         </div>
+
+                        {{-- Footer with clear actions --}}
+                        @if ($latestNotifications->isNotEmpty())
+                            <div class="border-t border-gray-100 px-4 py-2 bg-gray-50 flex gap-2">
+                                <button @click="deleteAllRead()"
+                                    class="flex-1 text-xs py-2 px-3 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors">
+                                    <i class="fas fa-trash-alt me-1"></i>
+                                    {{ __('keywords.delete_read_notifications') }}
+                                </button>
+                                <button @click="deleteAll()"
+                                    class="flex-1 text-xs py-2 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors">
+                                    <i class="fas fa-trash me-1"></i> {{ __('keywords.delete_all_notifications') }}
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 </div>
+
+                <script>
+                    function notificationPanel() {
+                        return {
+                            open: false,
+                            async markAsRead(id) {
+                                try {
+                                    const response = await fetch(`/notifications/${id}/read`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                        }
+                                    });
+                                    if (response.ok) {
+                                        location.reload();
+                                    }
+                                } catch (error) {
+                                    console.error('Error marking notification as read:', error);
+                                }
+                            },
+                            async markAllAsRead() {
+                                try {
+                                    const response = await fetch('/notifications/read-all', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                        }
+                                    });
+                                    if (response.ok) {
+                                        location.reload();
+                                    }
+                                } catch (error) {
+                                    console.error('Error marking all as read:', error);
+                                }
+                            },
+                            async deleteNotification(id) {
+                                if (!confirm(@json(__('keywords.delete_notification_confirmation')))) return;
+                                try {
+                                    const response = await fetch(`/notifications/${id}`, {
+                                        method: 'DELETE',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                        }
+                                    });
+                                    if (response.ok) {
+                                        location.reload();
+                                    }
+                                } catch (error) {
+                                    console.error('Error deleting notification:', error);
+                                }
+                            },
+                            async deleteAllRead() {
+                                if (!confirm(@json(__('keywords.delete_all_read_notifications_confirmation')))) return;
+                                try {
+                                    const response = await fetch('/notifications/delete-all-read', {
+                                        method: 'DELETE',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                        }
+                                    });
+                                    if (response.ok) {
+                                        location.reload();
+                                    }
+                                } catch (error) {
+                                    console.error('Error deleting read notifications:', error);
+                                }
+                            },
+                            async deleteAll() {
+                                if (!confirm(@json(__('keywords.delete_all_notifications_confirmation')))) return;
+                                try {
+                                    const response = await fetch('/notifications/delete-all', {
+                                        method: 'DELETE',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                        }
+                                    });
+                                    if (response.ok) {
+                                        location.reload();
+                                    }
+                                } catch (error) {
+                                    console.error('Error deleting all notifications:', error);
+                                }
+                            }
+                        }
+                    }
+                </script>
 
                 {{-- User avatar dropdown --}}
                 <div class="relative" x-data="{ open: false }">

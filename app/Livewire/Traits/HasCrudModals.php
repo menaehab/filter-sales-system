@@ -5,6 +5,7 @@ namespace App\Livewire\Traits;
 trait HasCrudModals
 {
     public $editId = null;
+
     public $deleteId = null;
 
     public function openEditModal($id, string $modalEvent)

@@ -43,6 +43,7 @@ class PurchaseFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $months = $this->faker->numberBetween(2, 12);
+
             return [
                 'payment_type' => 'installment',
                 'installment_months' => $months,

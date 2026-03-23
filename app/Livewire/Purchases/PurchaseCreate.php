@@ -18,19 +18,26 @@ use Livewire\Component;
 class PurchaseCreate extends Component
 {
     public ?int $supplier_id = null;
+
     public string $payment_type = 'cash';
+
     public string $down_payment = '0';
+
     public string $installment_months = '';
+
     public bool $printAfterSave = false;
 
     public array $items = [];
+
     public array $newSupplier = [
         'name' => '',
         'phone' => '',
     ];
+
     public array $newCategory = [
         'name' => '',
     ];
+
     public array $newProduct = [
         'name' => '',
         'description' => '',
@@ -38,6 +45,7 @@ class PurchaseCreate extends Component
         'min_quantity' => '0',
         'category_id' => '',
     ];
+
     public ?int $targetItemIndexForNewProduct = null;
 
     public function mount()
@@ -251,9 +259,9 @@ class PurchaseCreate extends Component
 
         foreach ($this->items as $i => $item) {
             $n = $i + 1;
-            $attrs["items.{$i}.product_id"] = __('keywords.product') . " #{$n}";
-            $attrs["items.{$i}.cost_price"] = __('keywords.cost_price') . " #{$n}";
-            $attrs["items.{$i}.quantity"] = __('keywords.quantity') . " #{$n}";
+            $attrs["items.{$i}.product_id"] = __('keywords.product')." #{$n}";
+            $attrs["items.{$i}.cost_price"] = __('keywords.cost_price')." #{$n}";
+            $attrs["items.{$i}.quantity"] = __('keywords.quantity')." #{$n}";
         }
 
         return $attrs;

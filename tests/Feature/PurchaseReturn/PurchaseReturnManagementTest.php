@@ -173,4 +173,3 @@ it('deletes a purchase return and restores product inventory', function () {
     $this->assertEquals(3.0, (float) $product->quantity);
     $this->assertDatabaseMissing('purchase_returns', ['id' => $return->id]);
 });
-

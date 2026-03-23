@@ -10,7 +10,7 @@ use Spatie\Sluggable\SlugOptions;
 
 class Customer extends Model
 {
-    use HasSlug,HasFactory,HasLogActivity;
+    use HasFactory,HasLogActivity,HasSlug;
 
     protected $fillable = [
         'name',
@@ -42,9 +42,9 @@ class Customer extends Model
         return $this->hasMany(CustomerPayment::class);
     }
 
-    public function waterReadings()
+    public function waterFilters()
     {
-        return $this->hasMany(WaterReading::class);
+        return $this->hasMany(WaterFilter::class);
     }
 
     public function getTotalSalesAttribute(): float

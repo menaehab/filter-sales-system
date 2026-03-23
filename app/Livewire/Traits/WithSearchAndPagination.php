@@ -9,6 +9,7 @@ trait WithSearchAndPagination
     use WithPagination;
 
     public $search = '';
+
     public $perPage = 10;
 
     protected function queryString()

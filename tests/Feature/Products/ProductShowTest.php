@@ -207,7 +207,7 @@ it('paginates movements', function () {
 it('returns correct movement type labels', function () {
     $product = Product::factory()->create();
 
-    $component = new \App\Livewire\Products\ProductShow();
+    $component = new \App\Livewire\Products\ProductShow;
     $component->mount($product);
 
     expect($component->getMovementTypeLabel(Purchase::class))->toBe(__('keywords.purchase'));

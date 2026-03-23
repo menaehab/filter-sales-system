@@ -11,25 +11,33 @@ use App\Models\Product;
 use App\Models\ProductMovement;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\WaterFilter;
 use App\Models\WaterReading;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('layouts.app',['title' => 'pos'])]
+#[Layout('layouts.app', ['title' => 'pos'])]
 class SaleCreate extends Component
 {
     public ?int $customer_id = null;
+
     public string $payment_type = 'cash';
+
     public string $down_payment = '0';
+
     public string $installment_months = '';
+
     public string $customerSearch = '';
+
     public ?string $dealer_name = null;
 
     public string $search = '';
+
     public string $activeCategory = 'all';
+
     public bool $includeWaterReading = false;
+
     public bool $printAfterSave = false;
 
     public array $cart = [];
@@ -41,10 +49,22 @@ class SaleCreate extends Component
         'address' => '',
     ];
 
+    public ?int $water_filter_id = null;
+
+    public string $filterSearch = '';
+
+    public bool $createNewFilter = false;
+
+    public array $newFilter = [
+        'filter_model' => '',
+        'address' => '',
+    ];
+
     public array $waterReading = [
         'technician_name' => '',
         'tds' => '',
         'water_quality' => '',
+        'before_installment' => false,
     ];
 
     public function updatedPaymentType(string $value): void
@@ -58,12 +78,64 @@ class SaleCreate extends Component
     public function updatedIncludeWaterReading(bool $value): void
     {
         if (! $value) {
+            $this->water_filter_id = null;
+            $this->filterSearch = '';
+            $this->createNewFilter = false;
+            $this->newFilter = [
+                'filter_model' => '',
+                'address' => '',
+            ];
             $this->waterReading = [
                 'technician_name' => '',
                 'tds' => '',
                 'water_quality' => '',
+                'before_installment' => false,
             ];
         }
+    }
+
+    public function updatedCustomerId(): void
+    {
+        $this->water_filter_id = null;
+        $this->filterSearch = '';
+    }
+
+    public function updatedCreateNewFilter(bool $value): void
+    {
+        if ($value) {
+            $this->water_filter_id = null;
+            $this->filterSearch = '';
+        } else {
+            $this->newFilter = [
+                'filter_model' => '',
+                'address' => '',
+            ];
+        }
+    }
+
+    public function selectFilter(int $filterId, string $filterLabel): void
+    {
+        $this->water_filter_id = $filterId;
+        $this->filterSearch = $filterLabel;
+        $this->createNewFilter = false;
+    }
+
+    public function getCustomerFiltersProperty(): array
+    {
+        if (! $this->customer_id) {
+            return [];
+        }
+
+        return WaterFilter::where('customer_id', $this->customer_id)
+            ->orderBy('filter_model')
+            ->get()
+            ->map(fn ($f) => [
+                'id' => $f->id,
+                'label' => $f->filter_model.' - '.$f->address,
+                'filter_model' => $f->filter_model,
+                'address' => $f->address,
+            ])
+            ->toArray();
     }
 
     public function setActiveCategory(string $categoryId): void
@@ -82,7 +154,7 @@ class SaleCreate extends Component
             $this->cart[$existingIndex]['quantity'] = (string) ($currentQuantity + 1);
 
             if (($currentQuantity + 1) > (int) $product->quantity) {
-                session()->flash('warning', __('keywords.low_stock_warning') . ': ' . $product->name . ' (' . __('keywords.available') . ': ' . $product->quantity . ')');
+                session()->flash('warning', __('keywords.low_stock_warning').': '.$product->name.' ('.__('keywords.available').': '.$product->quantity.')');
             }
 
             return;
@@ -99,7 +171,7 @@ class SaleCreate extends Component
         ];
 
         if ((int) $product->quantity <= 0) {
-            session()->flash('warning', __('keywords.out_of_stock_warning') . ': ' . $product->name);
+            session()->flash('warning', __('keywords.out_of_stock_warning').': '.$product->name);
         }
     }
 
@@ -123,13 +195,14 @@ class SaleCreate extends Component
 
         if ($next <= 0) {
             $this->removeFromCart($index);
+
             return;
         }
 
         $this->cart[$index]['quantity'] = (string) $next;
 
         if ($next > (int) $this->cart[$index]['available_quantity']) {
-            session()->flash('warning', __('keywords.low_stock_warning') . ': ' . $this->cart[$index]['product_name'] . ' (' . __('keywords.available') . ': ' . $this->cart[$index]['available_quantity'] . ')');
+            session()->flash('warning', __('keywords.low_stock_warning').': '.$this->cart[$index]['product_name'].' ('.__('keywords.available').': '.$this->cart[$index]['available_quantity'].')');
         }
     }
 
@@ -187,6 +260,7 @@ class SaleCreate extends Component
     {
         if (count($this->cart) === 0) {
             $this->addError('cart', __('keywords.select_at_least_one_item'));
+
             return;
         }
 
@@ -264,17 +338,24 @@ class SaleCreate extends Component
         ];
 
         if ($this->includeWaterReading) {
+            if ($this->createNewFilter) {
+                $rules['newFilter.filter_model'] = 'required|string|max:255';
+                $rules['newFilter.address'] = 'required|string|max:255';
+            } else {
+                $rules['water_filter_id'] = 'required|exists:water_filters,id';
+            }
             $rules['waterReading.technician_name'] = 'required|string|max:255';
             $rules['waterReading.tds'] = 'required|numeric|min:0';
-            $rules['waterReading.water_quality'] = 'required|in:' . implode(',', WaterQualityTypeEnum::values());
+            $rules['waterReading.water_quality'] = 'required|in:'.implode(',', WaterQualityTypeEnum::values());
+            $rules['waterReading.before_installment'] = 'boolean';
         } else {
             $rules['waterReading.technician_name'] = 'nullable|string|max:255';
             $rules['waterReading.tds'] = 'nullable|numeric|min:0';
-            $rules['waterReading.water_quality'] = 'nullable|in:' . implode(',', WaterQualityTypeEnum::values());
+            $rules['waterReading.water_quality'] = 'nullable|in:'.implode(',', WaterQualityTypeEnum::values());
         }
 
         foreach ($this->cart as $i => $item) {
-            $rules["cart.{$i}.quantity"] = "required|integer|min:1";
+            $rules["cart.{$i}.quantity"] = 'required|integer|min:1';
         }
 
         return $rules;
@@ -288,15 +369,19 @@ class SaleCreate extends Component
             'down_payment' => __('keywords.down_payment'),
             'installment_months' => __('keywords.installment_months'),
             'dealer_name' => __('keywords.dealer_name'),
+            'water_filter_id' => __('keywords.filter'),
+            'newFilter.filter_model' => __('keywords.filter_model'),
+            'newFilter.address' => __('keywords.address'),
             'waterReading.technician_name' => __('keywords.technician_name'),
             'waterReading.tds' => __('keywords.tds'),
             'waterReading.water_quality' => __('keywords.water_quality'),
+            'waterReading.before_installment' => __('keywords.before_installment'),
         ];
 
         foreach ($this->cart as $i => $item) {
             $n = $i + 1;
-            $attrs["cart.{$i}.sell_price"] = __('keywords.sell_price') . " #{$n}";
-            $attrs["cart.{$i}.quantity"] = __('keywords.quantity') . " #{$n}";
+            $attrs["cart.{$i}.sell_price"] = __('keywords.sell_price')." #{$n}";
+            $attrs["cart.{$i}.quantity"] = __('keywords.quantity')." #{$n}";
         }
 
         return $attrs;
@@ -390,11 +475,23 @@ class SaleCreate extends Component
             }
 
             if ($this->includeWaterReading) {
+                $filterId = $this->water_filter_id;
+
+                if ($this->createNewFilter) {
+                    $newFilter = WaterFilter::create([
+                        'filter_model' => $this->newFilter['filter_model'],
+                        'address' => $this->newFilter['address'],
+                        'customer_id' => $customer->id,
+                    ]);
+                    $filterId = $newFilter->id;
+                }
+
                 WaterReading::create([
                     'technician_name' => $this->waterReading['technician_name'],
                     'tds' => $this->waterReading['tds'],
                     'water_quality' => $this->waterReading['water_quality'],
-                    'customer_id' => $customer->id,
+                    'before_installment' => $this->waterReading['before_installment'] ?? false,
+                    'water_filter_id' => $filterId,
                 ]);
             }
         });
@@ -414,7 +511,7 @@ class SaleCreate extends Component
         $customersQuery = Customer::query()->orderBy('name');
 
         if (filled($this->search)) {
-            $productsQuery->where('name', 'like', '%' . $this->search . '%');
+            $productsQuery->where('name', 'like', '%'.$this->search.'%');
         }
 
         if ($this->activeCategory !== 'all') {
@@ -423,9 +520,9 @@ class SaleCreate extends Component
 
         if (filled($this->customerSearch)) {
             $customersQuery->where(function ($query) {
-                $query->where('name', 'like', '%' . $this->customerSearch . '%')
-                    ->orWhere('phone', 'like', '%' . $this->customerSearch . '%')
-                    ->orWhere('national_number', 'like', '%' . $this->customerSearch . '%');
+                $query->where('name', 'like', '%'.$this->customerSearch.'%')
+                    ->orWhere('phone', 'like', '%'.$this->customerSearch.'%')
+                    ->orWhere('national_number', 'like', '%'.$this->customerSearch.'%');
             });
         }
 
@@ -434,6 +531,7 @@ class SaleCreate extends Component
             'categories' => Category::orderBy('name')->get(),
             'customers' => $customersQuery->limit(100)->pluck('name', 'id')->all(),
             'waterQualityOptions' => WaterQualityTypeEnum::cases(),
+            'customerFilters' => $this->customer_filters,
         ]);
     }
 }

@@ -14,6 +14,7 @@ class SupplierView extends Component
     use WithSearchAndPagination;
 
     public Supplier $supplier;
+
     public string $activeTab = 'purchases';
 
     public function mount(Supplier $supplier): void

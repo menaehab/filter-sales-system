@@ -14,7 +14,8 @@ use Livewire\Component;
 #[Layout('layouts.app', ['title' => 'customers_management'])]
 class CustomerManagement extends Component
 {
-    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery, HasValidationAttributes;
+    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
+
     public function mount()
     {
         $this->resetForm();
@@ -29,6 +30,7 @@ class CustomerManagement extends Component
             'form.address' => 'nullable|string|max:255',
         ];
     }
+
     protected function validationAttributes(): array
     {
         return [
@@ -68,6 +70,7 @@ class CustomerManagement extends Component
         $this->resetForm();
         $this->dispatch('close-modal-create-customer');
     }
+
     public function updateCustomer()
     {
         $this->authorizeManageCustomers();

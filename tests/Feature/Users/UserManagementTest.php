@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\User;
-use Spatie\Permission\Models\Permission;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission;
 
 beforeEach(function () {
     actAsAdmin($this);

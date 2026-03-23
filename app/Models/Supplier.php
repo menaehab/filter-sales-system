@@ -10,7 +10,8 @@ use Spatie\Sluggable\SlugOptions;
 
 class Supplier extends Model
 {
-    use HasSlug,HasFactory,HasLogActivity;
+    use HasFactory,HasLogActivity,HasSlug;
+
     protected $fillable = [
         'name',
         'slug',
