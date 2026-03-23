@@ -12,7 +12,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class SupplierPaymentManagement extends Component
 {
-    use HasCrudModals, WithSearchAndPagination, HasCrudQuery;
+    use HasCrudModals, HasCrudQuery, WithSearchAndPagination;
 
     protected function getModelClass(): string
     {

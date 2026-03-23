@@ -235,4 +235,3 @@ it('creates supplier credit when return is saved without cash refund', function 
     $this->assertEquals(120.0, (float) $supplier->available_credit);
     $this->assertEquals(-120.0, (float) $supplier->balance);
 });
-

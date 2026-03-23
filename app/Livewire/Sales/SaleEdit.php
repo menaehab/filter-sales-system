@@ -18,9 +18,13 @@ class SaleEdit extends Component
     public Sale $sale;
 
     public ?int $customer_id = null;
+
     public string $payment_type = 'cash';
+
     public string $down_payment = '0';
+
     public string $installment_months = '';
+
     public string $dealer_name = '';
 
     /** @var array<int, array{product_id: string, product_name: string, sell_price: string, cost_price: string, quantity: string}> */
@@ -145,9 +149,9 @@ class SaleEdit extends Component
 
         foreach ($this->items as $i => $item) {
             $n = $i + 1;
-            $attrs["items.{$i}.product_id"] = __('keywords.product') . " #{$n}";
-            $attrs["items.{$i}.sell_price"] = __('keywords.sell_price') . " #{$n}";
-            $attrs["items.{$i}.quantity"] = __('keywords.quantity') . " #{$n}";
+            $attrs["items.{$i}.product_id"] = __('keywords.product')." #{$n}";
+            $attrs["items.{$i}.sell_price"] = __('keywords.sell_price')." #{$n}";
+            $attrs["items.{$i}.quantity"] = __('keywords.quantity')." #{$n}";
         }
 
         return $attrs;
@@ -192,7 +196,7 @@ class SaleEdit extends Component
 
                 if ((int) $product->quantity < $quantity) {
                     throw ValidationException::withMessages([
-                        'items' => __('keywords.not_available') . ': ' . $product->name,
+                        'items' => __('keywords.not_available').': '.$product->name,
                     ]);
                 }
 

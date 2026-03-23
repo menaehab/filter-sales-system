@@ -10,7 +10,7 @@ use Spatie\Sluggable\SlugOptions;
 
 class Category extends Model
 {
-    use HasSlug, HasFactory, HasLogActivity;
+    use HasFactory, HasLogActivity, HasSlug;
 
     protected $fillable = [
         'name',

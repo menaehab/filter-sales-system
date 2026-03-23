@@ -17,7 +17,7 @@ class SaleFactory extends Factory
     public function definition(): array
     {
         return [
-            'number' => 'S-' . $this->faker->unique()->randomNumber(6, true),
+            'number' => 'S-'.$this->faker->unique()->randomNumber(6, true),
             'dealer_name' => $this->faker->company(),
             'user_name' => $this->faker->name(),
             'total_price' => $this->faker->randomFloat(2, 50, 1000),

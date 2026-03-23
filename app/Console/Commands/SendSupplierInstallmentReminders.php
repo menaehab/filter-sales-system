@@ -4,10 +4,10 @@ namespace App\Console\Commands;
 
 use App\Models\Purchase;
 use App\Models\User;
-use App\Notifications\InstallmentDueNotification;
+use App\Notifications\SupplierInstallmentDueNotification;
 use Illuminate\Console\Command;
 
-class SendInstallmentReminders extends Command
+class SendSupplierInstallmentReminders extends Command
 {
     /**
      * The name and signature of the console command.
@@ -33,7 +33,7 @@ class SendInstallmentReminders extends Command
             ->where('installment_months', '>', 0)
             ->whereRaw('DATE_ADD(created_at, INTERVAL 1 MONTH) <= ?', [now()->addDays(3)])
             ->get()
-            ->filter(fn($p) => !$p->isFullyPaid());
+            ->filter(fn ($p) => ! $p->isFullyPaid());
 
         if ($purchases->isEmpty()) {
             $this->info('No installments due.');
@@ -45,7 +45,7 @@ class SendInstallmentReminders extends Command
 
         foreach ($purchases as $purchase) {
             foreach ($admins as $admin) {
-                $admin->notify(new InstallmentDueNotification($purchase));
+                $admin->notify(new SupplierInstallmentDueNotification($purchase));
             }
         }
 

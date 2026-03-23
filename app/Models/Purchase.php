@@ -73,7 +73,7 @@ class Purchase extends Model
 
     public function getNextInstallmentDateAttribute()
     {
-        if (!$this->isInstallment() || $this->isFullyPaid()) {
+        if (! $this->isInstallment() || $this->isFullyPaid()) {
             return null;
         }
 

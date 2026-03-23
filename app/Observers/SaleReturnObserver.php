@@ -13,7 +13,7 @@ class SaleReturnObserver
     {
         $today = now()->format('Ymd');
 
-        $lastSaleReturn = SaleReturn::where('number', 'like', $today . '-%')
+        $lastSaleReturn = SaleReturn::where('number', 'like', $today.'-%')
             ->orderByDesc('number')
             ->first();
 
@@ -24,7 +24,7 @@ class SaleReturnObserver
             $nextNumber = $lastSequence + 1;
         }
 
-        $saleReturn->number = $today . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+        $saleReturn->number = $today.'-'.str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
     }
 
     /**

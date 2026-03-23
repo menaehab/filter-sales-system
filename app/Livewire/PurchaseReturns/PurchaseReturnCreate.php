@@ -15,8 +15,11 @@ use Livewire\Component;
 class PurchaseReturnCreate extends Component
 {
     public string $purchase_number = '';
+
     public ?Purchase $purchase = null;
+
     public string $reason = '';
+
     public bool $cash_refund = false;
 
     /** @var array<int, array{product_id: int, product_name: string, cost_price: string, available_quantity: float, return_quantity: string, selected: bool}> */
@@ -34,6 +37,7 @@ class PurchaseReturnCreate extends Component
 
         if (! $purchase) {
             $this->addError('purchase_number', __('keywords.purchase_not_found'));
+
             return;
         }
 
@@ -87,7 +91,7 @@ class PurchaseReturnCreate extends Component
 
         foreach ($this->items as $i => $item) {
             $n = $i + 1;
-            $attrs["items.{$i}.return_quantity"] = __('keywords.quantity') . " #{$n}";
+            $attrs["items.{$i}.return_quantity"] = __('keywords.quantity')." #{$n}";
         }
 
         return $attrs;
@@ -97,6 +101,7 @@ class PurchaseReturnCreate extends Component
     {
         if ($this->selected_items_count === 0) {
             $this->addError('items', __('keywords.select_at_least_one_item'));
+
             return;
         }
 

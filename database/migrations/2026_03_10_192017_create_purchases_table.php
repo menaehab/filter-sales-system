@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -15,9 +16,9 @@ return new class extends Migration {
             $table->string('number')->unique();
             $table->string('supplier_name');
             $table->string('user_name');
-            $table->decimal('total_price',10, 2);
+            $table->decimal('total_price', 10, 2);
             $table->string('payment_type')->default('cash');
-            $table->decimal('installment_amount',10, 2)->nullable();
+            $table->decimal('installment_amount', 10, 2)->nullable();
             $table->unsignedInteger('installment_months')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();

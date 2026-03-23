@@ -16,17 +16,23 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class PurchaseManagement extends Component
 {
-    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
     public string $filterPaymentType = '';
+
     public string $filterStatus = '';
 
     // Payment modal
     public ?int $payPurchaseId = null;
+
     public string $payAmount = '';
+
     public string $payMethod = 'cash';
+
     public string $payNote = '';
+
     public ?int $payFromPurchaseId = null;
+
     public bool $printAfterPayment = false;
 
     public function mount()
@@ -51,7 +57,7 @@ class PurchaseManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['supplier_name', 'user_name','number'];
+        return ['supplier_name', 'user_name', 'number'];
     }
 
     protected function getWithRelations(): array
@@ -145,7 +151,7 @@ class PurchaseManagement extends Component
 
         if ($purchase->isInstallment() && $purchase->supplier_id) {
             $queue = $this->getSupplierInstallmentQueue($purchase->supplier_id);
-            $maxPayable = $queue->sum(fn(Purchase $item) => $item->remaining_amount);
+            $maxPayable = $queue->sum(fn (Purchase $item) => $item->remaining_amount);
             $remainingToAllocate = min($amount, $maxPayable);
 
             foreach ($queue as $queuedPurchase) {
@@ -215,7 +221,7 @@ class PurchaseManagement extends Component
             ->where('installment_months', '>', 0)
             ->orderBy('created_at')
             ->get()
-            ->filter(fn(Purchase $item) => $item->remaining_amount > 0)
+            ->filter(fn (Purchase $item) => $item->remaining_amount > 0)
             ->values();
     }
 

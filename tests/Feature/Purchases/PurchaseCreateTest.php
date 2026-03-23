@@ -35,15 +35,15 @@ it('creates a cash purchase and syncs inventory and payment records', function (
 
     $purchase = Purchase::with(['items', 'paymentAllocations'])->sole();
 
-        $this->assertEquals('cash', $purchase->payment_type);
-        $this->assertEquals(120.0, (float) $purchase->total_price);
-        $this->assertEquals(120.0, (float) $purchase->down_payment);
-        $this->assertNull($purchase->installment_months);
+    $this->assertEquals('cash', $purchase->payment_type);
+    $this->assertEquals(120.0, (float) $purchase->total_price);
+    $this->assertEquals(120.0, (float) $purchase->down_payment);
+    $this->assertNull($purchase->installment_months);
 
     $product->refresh();
 
-        $this->assertEquals(60.0, (float) $product->cost_price);
-        $this->assertEquals(5.0, (float) $product->quantity);
+    $this->assertEquals(60.0, (float) $product->cost_price);
+    $this->assertEquals(5.0, (float) $product->quantity);
 
     $this->assertDatabaseHas('purchase_items', [
         'purchase_id' => $purchase->id,

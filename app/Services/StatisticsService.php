@@ -229,7 +229,7 @@ class StatisticsService
             ->groupBy('date')
             ->orderBy('date')
             ->get()
-            ->map(fn($item) => [
+            ->map(fn ($item) => [
                 'date' => $item->date,
                 'total' => (float) $item->total,
             ])
@@ -330,7 +330,7 @@ class StatisticsService
         return $query->orderByDesc('total_quantity')
             ->limit($limit)
             ->get()
-            ->map(fn($item) => [
+            ->map(fn ($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'total_quantity' => (float) $item->total_quantity,
@@ -365,7 +365,7 @@ class StatisticsService
         return $query->orderByDesc('total_quantity')
             ->limit($limit)
             ->get()
-            ->map(fn($item) => [
+            ->map(fn ($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'total_quantity' => (float) $item->total_quantity,
@@ -481,7 +481,7 @@ class StatisticsService
             ->sortByDesc(fn (Customer $customer) => (float) $customer->balance)
             ->take($limit)
             ->values()
-            ->map(fn($customer) => [
+            ->map(fn ($customer) => [
                 'id' => $customer->id,
                 'name' => $customer->name,
                 'balance' => (float) $customer->balance,
@@ -500,7 +500,7 @@ class StatisticsService
             ->sortByDesc(fn (Supplier $supplier) => (float) $supplier->balance)
             ->take($limit)
             ->values()
-            ->map(fn($supplier) => [
+            ->map(fn ($supplier) => [
                 'id' => $supplier->id,
                 'name' => $supplier->name,
                 'balance' => (float) $supplier->balance,

@@ -14,6 +14,7 @@ class CustomerView extends Component
     use WithSearchAndPagination;
 
     public Customer $customer;
+
     public string $activeTab = 'sales';
 
     public function mount(Customer $customer): void
@@ -52,12 +53,20 @@ class CustomerView extends Component
             ->paginate($this->perPage);
     }
 
+    public function getFiltersProperty()
+    {
+        return $this->customer->waterFilters()
+            ->orderBy('created_at', 'desc')
+            ->paginate($this->perPage);
+    }
+
     public function render()
     {
         return view('livewire.customers.customer-view', [
             'sales' => $this->sales,
             'payments' => $this->payments,
             'returns' => $this->returns,
+            'filters' => $this->filters,
         ]);
     }
 }

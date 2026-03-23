@@ -14,7 +14,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class SaleReturnManagement extends Component
 {
-    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
     public function mount()
     {

@@ -15,7 +15,7 @@ use Livewire\Component;
 #[Layout('layouts.app', ['title' => 'categories_management'])]
 class CategoryManagement extends Component
 {
-    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery, HasValidationAttributes;
+    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
 
     public function mount()
     {

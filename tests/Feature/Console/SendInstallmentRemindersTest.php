@@ -5,7 +5,7 @@ use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use App\Models\SupplierPaymentAllocation;
 use App\Models\User;
-use App\Notifications\InstallmentDueNotification;
+use App\Notifications\SupplierInstallmentDueNotification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Permission;
@@ -21,7 +21,7 @@ it('sends reminders to admin users for due unpaid installments only', function (
     Carbon::setTestNow('2026-03-11 09:00:00');
 
     // ensure permissions exist just like the `actAsAdmin` helper does
-    (new \Database\Seeders\PermissionSeeder())->run();
+    (new \Database\Seeders\PermissionSeeder)->run();
     $permissions = Permission::all();
 
     // create admin role and attach all current permissions
@@ -106,15 +106,15 @@ it('sends reminders to admin users for due unpaid installments only', function (
         ->expectsOutput('Sent reminders for 1 installment(s).')
         ->assertExitCode(0);
 
-    Notification::assertSentTo($firstAdmin, InstallmentDueNotification::class, function (InstallmentDueNotification $notification) use ($duePurchase) {
+    Notification::assertSentTo($firstAdmin, SupplierInstallmentDueNotification::class, function (SupplierInstallmentDueNotification $notification) use ($duePurchase) {
         return $notification->purchase->is($duePurchase);
     });
 
-    Notification::assertSentTo($secondAdmin, InstallmentDueNotification::class, function (InstallmentDueNotification $notification) use ($duePurchase) {
+    Notification::assertSentTo($secondAdmin, SupplierInstallmentDueNotification::class, function (SupplierInstallmentDueNotification $notification) use ($duePurchase) {
         return $notification->purchase->is($duePurchase);
     });
 
-    Notification::assertNotSentTo($regularUser, InstallmentDueNotification::class);
+    Notification::assertNotSentTo($regularUser, SupplierInstallmentDueNotification::class);
 
     Carbon::setTestNow();
 });

@@ -14,7 +14,9 @@ use Livewire\Component;
 class SaleReturnEdit extends Component
 {
     public SaleReturn $saleReturn;
+
     public string $reason = '';
+
     public bool $cash_refund = false;
 
     /** @var array<int, array{product_id: int, product_name: string, sell_price: string, available_quantity: float, return_quantity: string, selected: bool, original_return_quantity: float}> */
@@ -80,7 +82,7 @@ class SaleReturnEdit extends Component
 
         foreach ($this->items as $i => $item) {
             $n = $i + 1;
-            $attrs["items.{$i}.return_quantity"] = __('keywords.quantity') . " #{$n}";
+            $attrs["items.{$i}.return_quantity"] = __('keywords.quantity')." #{$n}";
         }
 
         return $attrs;
@@ -90,6 +92,7 @@ class SaleReturnEdit extends Component
     {
         if ($this->selected_items_count === 0) {
             $this->addError('items', __('keywords.select_at_least_one_item'));
+
             return;
         }
 

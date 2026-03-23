@@ -40,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Password::defaults(
-            fn(): ?Password => app()->isProduction()
+            fn (): ?Password => app()->isProduction()
             ? Password::min(12)
                 ->mixedCase()
                 ->letters()
@@ -53,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
 
     protected function installmentReminder()
     {
-        $cacheKey = 'installment_reminder_sent_' . now()->toDateString();
+        $cacheKey = 'installment_reminder_sent_'.now()->toDateString();
         if (cache()->missing($cacheKey)) {
             Artisan::call('installments:remind');
             cache()->put($cacheKey, true, now()->endOfDay());

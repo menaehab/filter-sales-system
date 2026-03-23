@@ -13,7 +13,7 @@ class SaleObserver
     {
         $today = now()->format('Ymd');
 
-        $lastSale = Sale::where('number', 'like', $today . '-%')
+        $lastSale = Sale::where('number', 'like', $today.'-%')
             ->orderByDesc('number')
             ->first();
 
@@ -24,10 +24,13 @@ class SaleObserver
             $nextNumber = $lastSequence + 1;
         }
 
-        $sale->number = $today . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+        $sale->number = $today.'-'.str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
         $user = auth()->user();
-        $sale->user_id = $user?->id;
-        $sale->user_name = $user?->name;
+
+        if ($user) {
+            $sale->user_id ??= $user->id;
+            $sale->user_name ??= $user->name;
+        }
     }
 }

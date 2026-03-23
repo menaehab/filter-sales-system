@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('technician_name');
             $table->decimal('tds', 8, 2);
             $table->string('water_quality');
-            $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
+            $table->boolean('before_installment')->default(false);
+            $table->foreignId('water_filter_id')->constrained('water_filters')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 trait HasCrudQuery
 {
     abstract protected function getModelClass(): string;
+
     abstract protected function getSearchableFields(): array;
 
     protected function getWithRelations(): array
@@ -14,9 +15,7 @@ trait HasCrudQuery
         return [];
     }
 
-    protected function applyAdditionalFilters(Builder $query): void
-    {
-    }
+    protected function applyAdditionalFilters(Builder $query): void {}
 
     public function getItemsProperty()
     {

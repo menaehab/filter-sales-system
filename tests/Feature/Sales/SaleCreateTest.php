@@ -5,6 +5,7 @@ use App\Models\CustomerPayment;
 use App\Models\CustomerPaymentAllocation;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\WaterFilter;
 use App\Models\WaterReading;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
@@ -36,7 +37,7 @@ it('creates a cash sale and syncs inventory and payment records', function () {
         ]])
         ->call('save')
         ->assertHasNoErrors()
-        ->assertRedirect(route('sales'));
+        ->assertRedirect(route('sales.create'));
 
     $sale = Sale::with(['items', 'paymentAllocations'])->sole();
 
@@ -106,7 +107,7 @@ it('creates an installment sale with down payment and next installment date', fu
         ]])
         ->call('save')
         ->assertHasNoErrors()
-        ->assertRedirect(route('sales'));
+        ->assertRedirect(route('sales.create'));
 
     $sale = Sale::sole();
 
@@ -199,7 +200,7 @@ it('applies available customer credit to a new sale before cash payment', functi
         ]])
         ->call('save')
         ->assertHasNoErrors()
-        ->assertRedirect(route('sales'));
+        ->assertRedirect(route('sales.create'));
 
     $sale = Sale::whereKeyNot($oldSale->id)->latest('id')->first();
     $customer->refresh();
@@ -230,6 +231,12 @@ it('applies available customer credit to a new sale before cash payment', functi
 
 it('creates a sale and stores water reading when enabled', function () {
     $customer = Customer::create(['name' => 'Water Reading Customer']);
+    $filter = WaterFilter::create([
+        'filter_model' => 'Customer Filter',
+        'address' => 'Customer Address',
+        'customer_id' => $customer->id,
+    ]);
+
     $product = Product::factory()->create([
         'name' => 'Water Filter',
         'cost_price' => 70,
@@ -240,6 +247,7 @@ it('creates a sale and stores water reading when enabled', function () {
         ->set('customer_id', $customer->id)
         ->set('payment_type', 'cash')
         ->set('includeWaterReading', true)
+        ->set('water_filter_id', $filter->id)
         ->set('waterReading.technician_name', 'Technician A')
         ->set('waterReading.tds', '145')
         ->set('waterReading.water_quality', 'fair')
@@ -254,7 +262,7 @@ it('creates a sale and stores water reading when enabled', function () {
         ]])
         ->call('save')
         ->assertHasNoErrors()
-        ->assertRedirect(route('sales'));
+        ->assertRedirect(route('sales.create'));
 
     $sale = Sale::sole();
     $this->assertEquals(200.0, (float) $sale->total_price);
@@ -263,7 +271,7 @@ it('creates a sale and stores water reading when enabled', function () {
         'technician_name' => 'Technician A',
         'tds' => '145.00',
         'water_quality' => 'fair',
-        'customer_id' => $customer->id,
+        'water_filter_id' => $filter->id,
     ]);
 
     $this->assertEquals(1, WaterReading::query()->count());

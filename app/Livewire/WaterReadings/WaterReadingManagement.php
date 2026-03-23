@@ -16,12 +16,18 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class WaterReadingManagement extends Component
 {
-    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery, HasValidationAttributes;
+    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
 
     public $customerSlug = '';
+
     public $customerSearch = '';
+
+    public $customerModalSearch = '';
+
     public $waterQuality = '';
+
     public $customers;
+
     public $waterQualityOptions;
 
     public function mount()
@@ -50,8 +56,8 @@ class WaterReadingManagement extends Component
         return [
             'form.technician_name' => ['required', 'string', 'max:255'],
             'form.tds' => ['required', 'numeric', 'min:0'],
-            'form.water_quality' => ['required', 'in:' . implode(',', WaterQualityTypeEnum::values())],
-            'form.customer_id' => ['required', 'exists:customers,id'],
+            'form.water_quality' => ['required', 'in:'.implode(',', WaterQualityTypeEnum::values())],
+            'form.water_filter_id' => ['required', 'exists:water_filters,id'],
         ];
     }
 
@@ -61,7 +67,7 @@ class WaterReadingManagement extends Component
             'form.technician_name' => __('keywords.technician_name'),
             'form.tds' => __('keywords.tds'),
             'form.water_quality' => __('keywords.water_quality'),
-            'form.customer_id' => __('keywords.customer'),
+            'form.water_filter_id' => __('keywords.filter'),
         ];
     }
 
@@ -71,7 +77,7 @@ class WaterReadingManagement extends Component
             'technician_name' => '',
             'tds' => null,
             'water_quality' => null,
-            'customer_id' => null,
+            'water_filter_id' => null,
         ];
     }
 
@@ -98,7 +104,7 @@ class WaterReadingManagement extends Component
     protected function applyAdditionalFilters($query): void
     {
         if ($this->customerSlug) {
-            $query->whereHas('customer', fn ($q) => $q->where('slug', $this->customerSlug));
+            $query->whereHas('waterFilter.customer', fn ($q) => $q->where('slug', $this->customerSlug));
         }
 
         if ($this->waterQuality) {
@@ -131,7 +137,7 @@ class WaterReadingManagement extends Component
             'technician_name' => $waterReading->technician_name,
             'tds' => $waterReading->tds,
             'water_quality' => $waterReading->water_quality,
-            'customer_id' => $waterReading->customer_id,
+            'water_filter_id' => $waterReading->water_filter_id,
         ];
 
         $this->dispatch('open-modal-edit-water-reading');
@@ -173,12 +179,12 @@ class WaterReadingManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['technician_name', 'customer.name', 'customer.phone'];
+        return ['technician_name', 'waterFilter.customer.name', 'waterFilter.customer.phone'];
     }
 
     protected function getWithRelations(): array
     {
-        return ['customer'];
+        return ['waterFilter.customer'];
     }
 
     public function render()

@@ -17,7 +17,7 @@ use Spatie\Permission\Models\Permission;
 #[Layout('layouts.app', ['title' => 'users_management'])]
 class UserManagement extends Component
 {
-    use WithSearchAndPagination, HasForm, HasCrudModals, HasCrudQuery, HasValidationAttributes;
+    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
 
     public function mount()
     {
@@ -73,7 +73,7 @@ class UserManagement extends Component
     public function getPermissionOptionsProperty()
     {
         return Permission::pluck('name', 'name')
-            ->mapWithKeys(fn($name) => [$name => __('keywords.' . $name)])
+            ->mapWithKeys(fn ($name) => [$name => __('keywords.'.$name)])
             ->toArray();
     }
 
@@ -90,7 +90,7 @@ class UserManagement extends Component
             'password' => Hash::make($this->form['password']),
         ]);
 
-        if (!empty($this->form['permissions'])) {
+        if (! empty($this->form['permissions'])) {
             $user->syncPermissions($this->form['permissions']);
         }
 
@@ -136,7 +136,7 @@ class UserManagement extends Component
         $user = User::findOrFail($this->editId);
         $user->update($data);
 
-        if (!empty($this->form['permissions'])) {
+        if (! empty($this->form['permissions'])) {
             $user->syncPermissions($this->form['permissions']);
         } else {
             $user->syncPermissions([]);

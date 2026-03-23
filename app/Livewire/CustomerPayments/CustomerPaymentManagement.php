@@ -9,10 +9,10 @@ use App\Models\CustomerPayment;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('layouts.app',['title' => 'customer_payments'])]
+#[Layout('layouts.app', ['title' => 'customer_payments'])]
 class CustomerPaymentManagement extends Component
 {
-    use HasCrudModals, WithSearchAndPagination, HasCrudQuery;
+    use HasCrudModals, HasCrudQuery, WithSearchAndPagination;
 
     protected function getModelClass(): string
     {

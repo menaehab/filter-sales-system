@@ -85,7 +85,7 @@ it('paginates suppliers using per page selection', function () {
     $this->assertCount(5, $component->get('suppliers'));
 });
 
-it('show supplier details page',function(){
+it('show supplier details page', function () {
     $supplier = Supplier::factory()->create(['name' => 'John Doe', 'phone' => '01234567890']);
 
     Livewire::test('suppliers.supplier-details', ['supplier' => $supplier])

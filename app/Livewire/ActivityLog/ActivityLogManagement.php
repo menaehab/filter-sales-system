@@ -2,9 +2,9 @@
 
 namespace App\Livewire\ActivityLog;
 
-use App\Models\User;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\WithSearchAndPagination;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -14,12 +14,16 @@ use Spatie\Activitylog\Models\Activity;
 #[Layout('layouts.app', ['title' => 'activity_log_management'])]
 class ActivityLogManagement extends Component
 {
-    use WithSearchAndPagination, HasCrudQuery;
+    use HasCrudQuery, WithSearchAndPagination;
 
     public ?string $dateFrom = null;
+
     public ?string $dateTo = null;
+
     public ?string $activityType = null;
+
     public ?string $modelType = null;
+
     public ?string $causerId = null;
 
     public array $expandedRows = [];
@@ -162,8 +166,8 @@ class ActivityLogManagement extends Component
         $snake = Str::snake($baseName);
 
         foreach ([
-            'keywords.' . $snake,
-            'keywords.' . Str::plural($snake),
+            'keywords.'.$snake,
+            'keywords.'.Str::plural($snake),
         ] as $key) {
             $translated = __($key);
             if ($translated !== $key) {
@@ -176,7 +180,7 @@ class ActivityLogManagement extends Component
 
     public function translateEventType(string $event): string
     {
-        $key = 'keywords.' . Str::snake($event);
+        $key = 'keywords.'.Str::snake($event);
         $translated = __($key);
 
         if ($translated !== $key) {
@@ -189,7 +193,7 @@ class ActivityLogManagement extends Component
     public function translateAttributeLabel(string $attribute): string
     {
         $normalized = Str::snake(str_replace('.', '_', $attribute));
-        $key = 'keywords.' . $normalized;
+        $key = 'keywords.'.$normalized;
         $translated = __($key);
 
         if ($translated !== $key) {

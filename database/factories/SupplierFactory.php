@@ -18,7 +18,7 @@ class SupplierFactory extends Factory
     {
         return [
             'name' => $this->faker->company(),
-            'phone' => '01' . $this->faker->randomElement(['0', '1', '2', '5']) . $this->faker->numerify('########'),
+            'phone' => '01'.$this->faker->randomElement(['0', '1', '2', '5']).$this->faker->numerify('########'),
         ];
     }
 }
