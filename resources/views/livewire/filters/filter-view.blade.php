@@ -186,6 +186,54 @@
                     @endif
                 </div>
             </div>
+
+            <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                <div class="border-b bg-white px-5 py-4">
+                    <h3 class="text-sm font-semibold text-gray-900">{{ __('keywords.candle_changes_history') }}</h3>
+                </div>
+
+                @if ($candleChanges->isEmpty())
+                    <div class="px-5 py-8 text-center text-sm text-gray-500">
+                        {{ __('keywords.no_candle_changes_history') }}
+                    </div>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                        {{ __('keywords.candle') }}
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                        {{ __('keywords.changed_by') }}
+                                    </th>
+                                    <th
+                                        class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                        {{ __('keywords.changed_at') }}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach ($candleChanges as $change)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                            {{ $change->candle_name }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-700">
+                                            {{ $change->user?->name ?? __('keywords.not_specified_arabic') }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-500">
+                                            {{ $change->replaced_at?->format('Y-m-d H:i') }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 
