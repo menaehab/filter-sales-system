@@ -93,6 +93,15 @@ class FilterView extends Component
         ];
     }
 
+    public function getCandleChangesProperty()
+    {
+        return $this->filter->candleChanges()
+            ->with('user')
+            ->latest('replaced_at')
+            ->limit(20)
+            ->get();
+    }
+
     public function openAddReading(): void
     {
         $this->resetReadingForm();
@@ -150,7 +159,7 @@ class FilterView extends Component
         $this->authorize('manage_water_filters');
 
         if ($this->selectedCandle) {
-            $this->filter->markCandleReplaced($this->selectedCandle);
+            $this->filter->markCandleReplaced($this->selectedCandle, auth()->user());
             $this->filter->refresh();
         }
 
@@ -173,6 +182,7 @@ class FilterView extends Component
         return view('livewire.filters.filter-view', [
             'readings' => $this->readings,
             'candles' => $this->candles,
+            'candleChanges' => $this->candleChanges,
             'waterQualityOptions' => WaterQualityTypeEnum::cases(),
         ]);
     }

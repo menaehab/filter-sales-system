@@ -156,10 +156,16 @@ it('marks candle as replaced', function () {
 
     expect($filter->candle_1_replaced_at)->toBeNull();
 
-    $filter->markCandleReplaced('candle_1');
+    $filter->markCandleReplaced('candle_1', auth()->user());
     $filter->refresh();
 
     expect($filter->candle_1_replaced_at)->not->toBeNull();
+
+    $this->assertDatabaseHas('water_filter_candle_changes', [
+        'water_filter_id' => $filter->id,
+        'candle_key' => 'candle_1',
+        'user_id' => auth()->id(),
+    ]);
 });
 
 it('returns correct candle status colors', function () {

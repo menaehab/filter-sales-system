@@ -160,8 +160,9 @@ return [
     'activity_delete_all_notifications' => 'حذف جميع الإشعارات',
     'activity_send_customer_installment_reminder' => 'إرسال تذكير بقسط عميل مستحق',
     'activity_send_filter_candle_reminder' => 'إرسال تذكير بتغيير شمعة فلتر',
+    'activity_mark_filter_candle_replaced' => 'تسجيل تغيير شمعة فلتر',
     'activity_send_low_stock_alert' => 'إرسال تنبيه بمخزون منخفض',
-
+    'are_you_sure' => 'هل أنت متأكد؟',
     // Notification messages
     'notification_customer_installment_message' => 'قسط مستحق للعميل :customer بمبلغ :amount ج.م - فاتورة #:sale_number - المتبقي: :remaining ج.م',
     'notification_supplier_installment_message' => 'قسط مستحق للمورد :supplier بمبلغ :amount ج.م - المتبقي: :remaining ج.م',
@@ -459,8 +460,21 @@ return [
     'mark_candle_replaced' => 'تسجيل تغيير الشمعة',
     'mark_candle_replaced_confirmation' => 'هل تريد تسجيل تغيير هذه الشمعة؟ سيتم تحديث تاريخ التغيير إلى اليوم.',
     'click_to_mark_replaced' => 'اضغط لتسجيل تغيير الشمعة',
+    'candle_changes_history' => 'سجل تغييرات الشموع',
+    'no_candle_changes_history' => 'لا يوجد سجل تغييرات للشموع حتى الآن.',
+    'candle' => 'الشمعة',
+    'changed_by' => 'تم التغيير بواسطة',
+    'changed_at' => 'تاريخ التغيير',
     'type' => 'النوع',
     'confirm' => 'تأكيد',
+
+    // Sidebar groups
+    'sidebar_group_main' => 'الرئيسية',
+    'sidebar_group_sales' => 'المبيعات والتحصيل',
+    'sidebar_group_purchases' => 'المشتريات والمدفوعات',
+    'sidebar_group_people' => 'العملاء والموردين والفلاتر',
+    'sidebar_group_inventory' => 'المخزون والمصاريف',
+    'sidebar_group_system' => 'النظام والإدارة',
 
     // Damaged Products
     'damaged_products' => 'هالك المنتجات',

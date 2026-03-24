@@ -60,6 +60,11 @@ class WaterFilter extends Model
         return $this->hasMany(WaterReading::class);
     }
 
+    public function candleChanges()
+    {
+        return $this->hasMany(WaterFilterCandleChange::class);
+    }
+
     public function preInstallationReading()
     {
         return $this->readings()->where('before_installment', true)->oldest()->first();
@@ -178,20 +183,42 @@ class WaterFilter extends Model
         return 'success';
     }
 
-    public function markCandleReplaced(string $candleType): void
+    public function markCandleReplaced(string $candleType, ?User $user = null): void
     {
-        $field = match ($candleType) {
-            'candle_1' => 'candle_1_replaced_at',
-            'candle_2_3' => 'candle_2_3_replaced_at',
-            'candle_4' => 'candle_4_replaced_at',
-            'candle_5' => 'candle_5_replaced_at',
-            'candle_6' => 'candle_6_replaced_at',
-            'candle_7' => 'candle_7_replaced_at',
-            default => null,
-        };
+        $candleMap = [
+            'candle_1' => ['field' => 'candle_1_replaced_at', 'name' => __('keywords.candle_1')],
+            'candle_2_3' => ['field' => 'candle_2_3_replaced_at', 'name' => __('keywords.candle_2_3')],
+            'candle_4' => ['field' => 'candle_4_replaced_at', 'name' => __('keywords.candle_4')],
+            'candle_5' => ['field' => 'candle_5_replaced_at', 'name' => __('keywords.candle_5')],
+            'candle_6' => ['field' => 'candle_6_replaced_at', 'name' => __('keywords.candle_6')],
+            'candle_7' => ['field' => 'candle_7_replaced_at', 'name' => __('keywords.candle_7')],
+        ];
 
-        if ($field) {
-            $this->update([$field => now()]);
+        $candle = $candleMap[$candleType] ?? null;
+
+        if (! $candle) {
+            return;
         }
+
+        $replacedAt = now();
+
+        $this->update([$candle['field'] => $replacedAt]);
+
+        $this->candleChanges()->create([
+            'user_id' => $user?->id,
+            'candle_key' => $candleType,
+            'candle_name' => $candle['name'],
+            'replaced_at' => $replacedAt,
+        ]);
+
+        activity()
+            ->performedOn($this)
+            ->causedBy($user)
+            ->withProperties([
+                'candle_key' => $candleType,
+                'candle_name' => $candle['name'],
+                'replaced_at' => $replacedAt->toDateTimeString(),
+            ])
+            ->log(__('keywords.activity_mark_filter_candle_replaced'));
     }
 }
