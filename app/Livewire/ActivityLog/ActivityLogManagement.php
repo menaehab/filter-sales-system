@@ -168,6 +168,8 @@ class ActivityLogManagement extends Component
         foreach ([
             'keywords.'.$snake,
             'keywords.'.Str::plural($snake),
+            'keywords.'.$baseName,
+            'keywords.'.Str::plural($baseName),
         ] as $key) {
             $translated = __($key);
             if ($translated !== $key) {
@@ -178,8 +180,12 @@ class ActivityLogManagement extends Component
         return $baseName;
     }
 
-    public function translateEventType(string $event): string
+    public function translateEventType(?string $event): string
     {
+        if (blank($event)) {
+            return __('keywords.not_available');
+        }
+
         $key = 'keywords.'.Str::snake($event);
         $translated = __($key);
 
@@ -215,6 +221,14 @@ class ActivityLogManagement extends Component
 
         if (is_array($value)) {
             return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+
+        if (is_string($value) && strtotime($value) !== false) {
+            try {
+                return \Carbon\Carbon::parse($value)->diffForHumans();
+            } catch (\Exception $e) {
+                // Not a valid date string after all
+            }
         }
 
         return (string) $value;

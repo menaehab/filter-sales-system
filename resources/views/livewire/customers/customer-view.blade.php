@@ -170,7 +170,7 @@
                                                 {{ number_format($payment->amount, 2) }} {{ __('keywords.currency') }}
                                             </td>
                                             <td class="px-4 py-3 text-sm text-gray-600">
-                                                {{ $payment->payment_method === 'customer_credit' ? __('keywords.applied_customer_credit') : $payment->payment_method }}
+                                                {{ $payment->payment_method === 'customer_credit' ? __('keywords.applied_customer_credit') : __('keywords.' . $payment->payment_method) }}
                                             </td>
                                             <td class="px-4 py-3 text-sm text-gray-600">{{ $payment->note ?? '—' }}
                                             </td>

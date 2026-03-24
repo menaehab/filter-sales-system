@@ -22,11 +22,11 @@
             @click="sidebarOpen = false"></div>
 
         {{-- Sidebar --}}
-        <x-layouts.sidebar />
+        <x-layouts.partials.sidebar />
 
         {{-- Main content area --}}
         <div class="flex flex-1 flex-col min-w-0">
-            <x-layouts.topbar :title="$title" :unreadNotificationsCount="$unreadNotificationsCount" :latestNotifications="$latestNotifications" />
+            <x-layouts.partials.topbar :title="$title" :unreadNotificationsCount="$unreadNotificationsCount" :latestNotifications="$latestNotifications" />
 
             {{-- Page content --}}
             <main class="flex-1 overflow-y-auto p-4 sm:p-6">

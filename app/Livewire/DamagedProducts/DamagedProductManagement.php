@@ -27,6 +27,10 @@ class DamagedProductManagement extends Component
 
     public $formProductSearch = '';
 
+    public ?string $dateFrom = null;
+
+    public ?string $dateTo = null;
+
     public function mount()
     {
         $this->resetForm();
@@ -99,10 +103,28 @@ class DamagedProductManagement extends Component
         $this->productSearch = $this->products->firstWhere('slug', $this->productSlug)?->name ?? '';
     }
 
+    public function updatingDateFrom(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateTo(): void
+    {
+        $this->resetPage();
+    }
+
     protected function applyAdditionalFilters($query): void
     {
         if ($this->productSlug) {
             $query->whereHas('product', fn ($q) => $q->where('slug', $this->productSlug));
+        }
+
+        if (filled($this->dateFrom)) {
+            $query->whereDate('created_at', '>=', $this->dateFrom);
+        }
+
+        if (filled($this->dateTo)) {
+            $query->whereDate('created_at', '<=', $this->dateTo);
         }
     }
 

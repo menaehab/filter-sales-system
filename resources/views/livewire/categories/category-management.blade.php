@@ -21,10 +21,8 @@
                     <span class="text-sm font-medium text-gray-900">{{ $category->name }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
-                    <x-table-actions
-                        editAction="openEdit({{ $category->id }})"
-                        deleteAction="setDelete({{ $category->id }})"
-                    />
+                    <x-table-actions :viewUrl="route('products', ['category' => $category->slug])" editAction="openEdit({{ $category->id }})"
+                        deleteAction="setDelete({{ $category->id }})" />
                 </td>
             </tr>
         @empty

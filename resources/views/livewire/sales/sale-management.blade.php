@@ -25,10 +25,13 @@
                 <option value="partial">{{ __('keywords.partially_paid') }}</option>
                 <option value="unpaid">{{ __('keywords.unpaid') }}</option>
             </select>
+            <x-input type="date" name="dateFrom" wire:model.live="dateFrom" class="w-full sm:w-auto"
+                placeholder="{{ __('keywords.from_date') }}" />
+            <x-input type="date" name="dateTo" wire:model.live="dateTo" class="w-full sm:w-auto"
+                placeholder="{{ __('keywords.to_date') }}" />
         </x-search-toolbar>
 
         <x-data-table :searchable="false" :paginated="false" :headers="[
-            ['key' => 'id', 'label' => '#'],
             ['key' => 'number', 'label' => __('keywords.number')],
             ['key' => 'customer', 'label' => __('keywords.customer')],
             ['key' => 'total', 'label' => __('keywords.total_price')],
@@ -46,7 +49,8 @@
                         <span class="text-sm font-medium text-gray-900">{{ $sale->number }}</span>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
-                        <span class="text-sm font-medium text-gray-900">{{ $sale->dealer_name ?: ($sale->customer?->name ?? '—') }}</span>
+                        <span
+                            class="text-sm font-medium text-gray-900">{{ $sale->dealer_name ?: $sale->customer?->name ?? '—' }}</span>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 font-medium">
                         {{ number_format($sale->total_price, 2) }} {{ __('keywords.currency') }}
@@ -137,12 +141,14 @@
                                 <span>
                                     <i class="fas fa-coins me-1 text-amber-500"></i>
                                     {{ __('keywords.installment_value') }}:
-                                    <strong>{{ number_format($sale->installment_amount, 2) }} {{ __('keywords.currency') }}</strong>
+                                    <strong>{{ number_format($sale->installment_amount, 2) }}
+                                        {{ __('keywords.currency') }}</strong>
                                 </span>
                                 <span>
                                     <i class="fas fa-hashtag me-1 text-gray-400"></i>
                                     {{ __('keywords.paid_installments') }}:
-                                    <strong>{{ $sale->paid_installments_count }} / {{ $sale->installment_months }}</strong>
+                                    <strong>{{ $sale->paid_installments_count }} /
+                                        {{ $sale->installment_months }}</strong>
                                 </span>
                             </div>
                         </td>
@@ -166,26 +172,36 @@
                             <div class="rounded-lg bg-gray-50 p-4 space-y-2">
                                 <div class="flex justify-between text-sm">
                                     <span class="text-gray-500">{{ __('keywords.total_price') }}</span>
-                                    <span class="font-medium">{{ number_format($payingSale->total_price, 2) }} {{ __('keywords.currency') }}</span>
+                                    <span class="font-medium">{{ number_format($payingSale->total_price, 2) }}
+                                        {{ __('keywords.currency') }}</span>
                                 </div>
                                 <div class="flex justify-between text-sm">
                                     <span class="text-gray-500">{{ __('keywords.paid_amount') }}</span>
-                                    <span class="font-medium text-emerald-600">{{ number_format($payingSale->paid_amount, 2) }} {{ __('keywords.currency') }}</span>
+                                    <span
+                                        class="font-medium text-emerald-600">{{ number_format($payingSale->paid_amount, 2) }}
+                                        {{ __('keywords.currency') }}</span>
                                 </div>
                                 <div class="flex justify-between text-sm border-t pt-2">
-                                    <span class="text-gray-700 font-medium">{{ __('keywords.remaining_amount') }}</span>
-                                    <span class="font-bold text-red-600">{{ number_format($payingSale->remaining_amount, 2) }} {{ __('keywords.currency') }}</span>
+                                    <span
+                                        class="text-gray-700 font-medium">{{ __('keywords.remaining_amount') }}</span>
+                                    <span
+                                        class="font-bold text-red-600">{{ number_format($payingSale->remaining_amount, 2) }}
+                                        {{ __('keywords.currency') }}</span>
                                 </div>
                                 @if ($payingSale->isInstallment())
                                     <div class="flex justify-between text-sm border-t pt-2">
-                                        <span class="text-gray-700 font-medium">{{ __('keywords.installment_value') }}</span>
-                                        <span class="font-bold text-blue-600">{{ number_format($payingSale->installment_amount, 2) }} {{ __('keywords.currency') }}</span>
+                                        <span
+                                            class="text-gray-700 font-medium">{{ __('keywords.installment_value') }}</span>
+                                        <span
+                                            class="font-bold text-blue-600">{{ number_format($payingSale->installment_amount, 2) }}
+                                            {{ __('keywords.currency') }}</span>
                                     </div>
                                 @endif
                             </div>
 
                             @if ($payFromSaleId && $payFromSaleId !== $payingSale->id)
-                                <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                                <div
+                                    class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                                     {{ __('keywords.payment_allocated_oldest_first') }}
                                 </div>
                             @endif
@@ -210,7 +226,8 @@
                 </div>
             </x-slot:body>
             <x-slot:footer>
-                <x-button variant="secondary" @click="$dispatch('close-modal-pay-sale')">{{ __('keywords.cancel') }}</x-button>
+                <x-button variant="secondary"
+                    @click="$dispatch('close-modal-pay-sale')">{{ __('keywords.cancel') }}</x-button>
                 <x-button variant="primary" wire:click="submitPayment">
                     <i class="fas fa-check me-1"></i>
                     {{ __('keywords.confirm_payment') }}

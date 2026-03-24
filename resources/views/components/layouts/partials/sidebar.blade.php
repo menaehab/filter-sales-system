@@ -27,17 +27,41 @@
 
     {{-- Navigation --}}
     <nav class="flex-1 space-y-2 px-3 py-4 overflow-y-auto" x-data="{
-        openGroups: {
-            main: {{ request()->routeIs('home') ? 'true' : 'false' }},
-            sales: {{ request()->routeIs('sales.*') || request()->routeIs('sale-returns.*') || request()->routeIs('customer-payments*') ? 'true' : 'false' }},
-            purchases: {{ request()->routeIs('purchases.*') || request()->routeIs('purchase-returns.*') || request()->routeIs('supplier-payments*') ? 'true' : 'false' }},
-            people: {{ request()->routeIs('customers.*') || request()->routeIs('suppliers.*') || request()->routeIs('filters*') ? 'true' : 'false' }},
-            inventory: {{ request()->routeIs('categories.*') || request()->routeIs('products.*') || request()->routeIs('damaged-products*') || request()->routeIs('expenses*') ? 'true' : 'false' }},
-            system: {{ request()->routeIs('dashboard') || request()->routeIs('activities*') || request()->routeIs('users.*') ? 'true' : 'false' }},
-        },
-        toggleGroup(key) {
-            this.openGroups[key] = !this.openGroups[key];
-        }
+        init() {
+                const saved = localStorage.getItem('sidebarOpenGroups');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        this.openGroups = {
+                            main: parsed.main ?? this.openGroups.main,
+                            sales: parsed.sales ?? this.openGroups.sales,
+                            purchases: parsed.purchases ?? this.openGroups.purchases,
+                            people: parsed.people ?? this.openGroups.people,
+                            inventory: parsed.inventory ?? this.openGroups.inventory,
+                            system: parsed.system ?? this.openGroups.system,
+                        };
+                    } catch (
+                        e
+                    ) {
+                        // ignore invalid json
+                    }
+                }
+            },
+            save() {
+                localStorage.setItem('sidebarOpenGroups', JSON.stringify(this.openGroups));
+            },
+            openGroups: {
+                main: {{ request()->routeIs('home') ? 'true' : 'false' }},
+                sales: {{ request()->routeIs('sales.*') || request()->routeIs('sale-returns.*') || request()->routeIs('customer-payments*') ? 'true' : 'false' }},
+                purchases: {{ request()->routeIs('purchases.*') || request()->routeIs('purchase-returns.*') || request()->routeIs('supplier-payments*') ? 'true' : 'false' }},
+                people: {{ request()->routeIs('customers.*') || request()->routeIs('suppliers.*') || request()->routeIs('filters*') ? 'true' : 'false' }},
+                inventory: {{ request()->routeIs('categories.*') || request()->routeIs('products.*') || request()->routeIs('damaged-products*') || request()->routeIs('expenses*') ? 'true' : 'false' }},
+                system: {{ request()->routeIs('dashboard') || request()->routeIs('activities*') || request()->routeIs('users.*') ? 'true' : 'false' }},
+            },
+            toggleGroup(key) {
+                this.openGroups[key] = !this.openGroups[key];
+                this.save();
+            }
     }">
 
         <div class="space-y-1">

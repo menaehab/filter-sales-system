@@ -15,9 +15,23 @@ class PurchaseReturnManagement extends Component
 {
     use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
+    public ?string $dateFrom = null;
+
+    public ?string $dateTo = null;
+
     public function mount()
     {
         $this->resetForm();
+    }
+
+    public function updatingDateFrom(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateTo(): void
+    {
+        $this->resetPage();
     }
 
     protected function rules()

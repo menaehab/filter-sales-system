@@ -95,7 +95,7 @@
                                 <div>{{ __('keywords.interval') }}: {{ $candle['interval'] }}</div>
                                 @if ($candle['replaced_at'])
                                     <div>{{ __('keywords.last_replaced') }}:
-                                        {{ $candle['replaced_at']->format('Y-m-d') }}</div>
+                                        {{ $candle['replaced_at']->diffForHumans() }}</div>
                                 @endif
                                 @if ($candle['next_date'])
                                     <div>{{ __('keywords.next_date') }}: {{ $candle['next_date']->format('Y-m-d') }}

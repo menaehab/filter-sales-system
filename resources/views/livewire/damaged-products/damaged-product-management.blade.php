@@ -11,36 +11,37 @@
 
     <x-search-toolbar>
         <div x-data="{
-                open: false,
-                search: @entangle('productSearch'),
-                selected: @entangle('productSlug'),
-                get filtered() {
-                    const all = @js($this->products->map(fn($p) => ['name' => $p->name, 'slug' => $p->slug, 'category' => $p->category?->name])->toArray());
-                    const query = this.search.toLowerCase().trim();
-
-                    if (!query) {
-                        return all.slice(0, 50);
-                    }
-
-                    return all.filter(p => p.name.toLowerCase().includes(query));
-                },
-                select(product) {
-                    this.search = product.name;
-                    this.selected = product.slug;
-                    this.open = false;
+            open: false,
+            search: @entangle('productSearch'),
+            selected: @entangle('productSlug'),
+            get filtered() {
+                const all = @js($this->products->map(fn($p) => ['name' => $p->name, 'slug' => $p->slug, 'category' => $p->category?->name])->toArray());
+                const query = this.search.toLowerCase().trim();
+        
+                if (!query) {
+                    return all.slice(0, 50);
                 }
-            }"
-            class="relative w-full sm:max-w-xs">
-            <input type="text" x-model="search" @focus="open = true" @click="open = true"
-                @click.outside="open = false" placeholder="{{ __('keywords.search_product') }}"
+        
+                return all.filter(p => p.name.toLowerCase().includes(query));
+            },
+            select(product) {
+                this.search = product.name;
+                this.selected = product.slug;
+                this.open = false;
+            }
+        }" class="relative w-full sm:max-w-xs">
+            <input type="text" x-model="search" @focus="open = true" @click="open = true" @click.outside="open = false"
+                placeholder="{{ __('keywords.search_product') }}"
                 class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 ps-3 pe-8 text-sm text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
 
             <input type="hidden" wire:model.live="productSlug" />
 
-            <div x-show="open" x-cloak class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+            <div x-show="open" x-cloak
+                class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                 <div class="max-h-52 overflow-y-auto">
                     <template x-for="product in filtered" :key="product.slug">
-                        <button type="button" @click="select(product)" class="block w-full px-3 py-2 text-start text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700">
+                        <button type="button" @click="select(product)"
+                            class="block w-full px-3 py-2 text-start text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700">
                             <div class="flex items-center justify-between">
                                 <span x-text="product.name"></span>
                                 <span class="text-xs text-gray-500" x-text="product.category"></span>
@@ -53,6 +54,10 @@
                 </div>
             </div>
         </div>
+        <x-input type="date" name="dateFrom" wire:model.live="dateFrom" class="w-full sm:w-auto"
+            placeholder="{{ __('keywords.from_date') }}" />
+        <x-input type="date" name="dateTo" wire:model.live="dateTo" class="w-full sm:w-auto"
+            placeholder="{{ __('keywords.to_date') }}" />
     </x-search-toolbar>
 
     {{-- damaged_products table --}}
@@ -74,7 +79,8 @@
                     <span class="text-sm text-gray-900">{{ $damaged_product->quantity }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
-                    <span class="text-sm text-gray-900">{{ number_format($damaged_product->cost_price, 2) }} {{ __('keywords.currency') }}</span>
+                    <span class="text-sm text-gray-900">{{ number_format($damaged_product->cost_price, 2) }}
+                        {{ __('keywords.currency') }}</span>
                 </td>
                 <td class="px-4 py-3 max-w-xs">
                     <span class="text-sm text-gray-900 truncate block">{{ $damaged_product->reason ?: '-' }}</span>
@@ -86,8 +92,8 @@
                     <span class="text-sm text-gray-900">{{ $damaged_product->created_at?->format('Y-m-d') }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
-                    <x-table-actions editAction="openEdit({{ $damaged_product->id }})" :canEdit="auth()->user()->can('manage_damaged_products')" :canDelete="auth()->user()->can('manage_damaged_products')"
-                        deleteAction="setDelete({{ $damaged_product->id }})" />
+                    <x-table-actions editAction="openEdit({{ $damaged_product->id }})" :canEdit="auth()->user()->can('manage_damaged_products')"
+                        :canDelete="auth()->user()->can('manage_damaged_products')" deleteAction="setDelete({{ $damaged_product->id }})" />
                 </td>
             </tr>
         @empty
@@ -103,23 +109,23 @@
             <x-slot:body>
                 <div class="space-y-5">
                     <div x-data="{
-                            open: false,
-                            search: @entangle('formProductSearch'),
-                            selected: @entangle('form.product_id'),
-                            products: @js($this->products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'category' => $p->category?->name, 'quantity' => $p->quantity, 'cost_price' => $p->cost_price])->toArray()),
-                            get filtered() {
-                                const query = (this.search || '').toString().toLowerCase().trim();
-                                if (!query) {
-                                    return this.products.slice(0, 50);
-                                }
-                                return this.products.filter(p => p.name.toLowerCase().includes(query));
-                            },
-                            select(product) {
-                                this.selected = product.id;
-                                this.search = product.name;
-                                this.open = false;
-                            },
-                        }" class="relative">
+                        open: false,
+                        search: @entangle('formProductSearch'),
+                        selected: @entangle('form.product_id'),
+                        products: @js($this->products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'category' => $p->category?->name, 'quantity' => $p->quantity, 'cost_price' => $p->cost_price])->toArray()),
+                        get filtered() {
+                            const query = (this.search || '').toString().toLowerCase().trim();
+                            if (!query) {
+                                return this.products.slice(0, 50);
+                            }
+                            return this.products.filter(p => p.name.toLowerCase().includes(query));
+                        },
+                        select(product) {
+                            this.selected = product.id;
+                            this.search = product.name;
+                            this.open = false;
+                        },
+                    }" class="relative">
                         <label class="mb-1.5 block text-sm font-medium text-gray-700">
                             {{ __('keywords.product') }} <span class="text-red-500">*</span>
                         </label>
@@ -130,7 +136,8 @@
                         @error('form.product_id')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
-                        <div x-show="open" x-cloak class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+                        <div x-show="open" x-cloak
+                            class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                             <div class="max-h-52 overflow-y-auto">
                                 <template x-for="product in filtered" :key="product.id">
                                     <button type="button" @click="select(product)"
@@ -154,7 +161,8 @@
                     </div>
 
                     <x-input type="number" name="form.quantity" label="{{ __('keywords.quantity') }}"
-                        placeholder="{{ __('keywords.enter_quantity') }}" wire:model.blur="form.quantity" min="1" required />
+                        placeholder="{{ __('keywords.enter_quantity') }}" wire:model.blur="form.quantity" min="1"
+                        required />
 
                     <x-textarea name="form.reason" label="{{ __('keywords.reason') }}"
                         placeholder="{{ __('keywords.enter_reason') }}" wire:model.blur="form.reason" rows="3" />
@@ -172,23 +180,23 @@
             <x-slot:body>
                 <div class="space-y-5">
                     <div x-data="{
-                            open: false,
-                            search: @entangle('formProductSearch'),
-                            selected: @entangle('form.product_id'),
-                            products: @js($this->products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'category' => $p->category?->name, 'quantity' => $p->quantity, 'cost_price' => $p->cost_price])->toArray()),
-                            get filtered() {
-                                const query = (this.search || '').toString().toLowerCase().trim();
-                                if (!query) {
-                                    return this.products.slice(0, 50);
-                                }
-                                return this.products.filter(p => p.name.toLowerCase().includes(query));
-                            },
-                            select(product) {
-                                this.selected = product.id;
-                                this.search = product.name;
-                                this.open = false;
-                            },
-                        }" class="relative">
+                        open: false,
+                        search: @entangle('formProductSearch'),
+                        selected: @entangle('form.product_id'),
+                        products: @js($this->products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'category' => $p->category?->name, 'quantity' => $p->quantity, 'cost_price' => $p->cost_price])->toArray()),
+                        get filtered() {
+                            const query = (this.search || '').toString().toLowerCase().trim();
+                            if (!query) {
+                                return this.products.slice(0, 50);
+                            }
+                            return this.products.filter(p => p.name.toLowerCase().includes(query));
+                        },
+                        select(product) {
+                            this.selected = product.id;
+                            this.search = product.name;
+                            this.open = false;
+                        },
+                    }" class="relative">
                         <label class="mb-1.5 block text-sm font-medium text-gray-700">
                             {{ __('keywords.product') }} <span class="text-red-500">*</span>
                         </label>
@@ -199,7 +207,8 @@
                         @error('form.product_id')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
-                        <div x-show="open" x-cloak class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+                        <div x-show="open" x-cloak
+                            class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                             <div class="max-h-52 overflow-y-auto">
                                 <template x-for="product in filtered" :key="product.id">
                                     <button type="button" @click="select(product)"
@@ -223,7 +232,8 @@
                     </div>
 
                     <x-input type="number" name="form.quantity" label="{{ __('keywords.quantity') }}"
-                        placeholder="{{ __('keywords.enter_quantity') }}" wire:model.blur="form.quantity" min="1" required />
+                        placeholder="{{ __('keywords.enter_quantity') }}" wire:model.blur="form.quantity" min="1"
+                        required />
 
                     <x-textarea name="form.reason" label="{{ __('keywords.reason') }}"
                         placeholder="{{ __('keywords.enter_reason') }}" wire:model.blur="form.reason" rows="3" />

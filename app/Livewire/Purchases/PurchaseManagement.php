@@ -22,6 +22,10 @@ class PurchaseManagement extends Component
 
     public string $filterStatus = '';
 
+    public ?string $dateFrom = null;
+
+    public ?string $dateTo = null;
+
     // Payment modal
     public ?int $payPurchaseId = null;
 
@@ -82,6 +86,14 @@ class PurchaseManagement extends Component
                 $q->where('installment_months', '>', 0);
             })->whereRaw('COALESCE((SELECT SUM(amount) FROM supplier_payment_allocations WHERE supplier_payment_allocations.purchase_id = purchases.id), 0) = 0');
         }
+
+        if (filled($this->dateFrom)) {
+            $query->whereDate('created_at', '>=', $this->dateFrom);
+        }
+
+        if (filled($this->dateTo)) {
+            $query->whereDate('created_at', '<=', $this->dateTo);
+        }
     }
 
     public function queryString(): array
@@ -90,7 +102,19 @@ class PurchaseManagement extends Component
             'search' => ['except' => ''],
             'filterPaymentType' => ['except' => '', 'as' => 'payment_type'],
             'filterStatus' => ['except' => '', 'as' => 'status'],
+            'dateFrom' => ['except' => '', 'as' => 'from'],
+            'dateTo' => ['except' => '', 'as' => 'to'],
         ];
+    }
+
+    public function updatingDateFrom(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateTo(): void
+    {
+        $this->resetPage();
     }
 
     public function getPurchasesProperty()

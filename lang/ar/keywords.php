@@ -217,7 +217,7 @@ return [
     'delete_customer_payment_confirmation' => 'هل أنت متأكد أنك تريد حذف هذه المدفوعة؟ سيتم حذف التوزيعات المرتبطة بها أيضاً.',
     'manage_purchase_returns' => 'إدارة مرتجع المشتريات',
     'view_purchase_returns' => 'عرض مرتجع المشتريات',
-
+    'WaterFilter' => 'فلتر ماء',
     // Payment
     'payment_type' => 'طريقة الدفع',
     'pay_customer_payments' => 'سداد مدفوعات العملاء',
@@ -334,6 +334,7 @@ return [
     'edit_purchase_return_description' => 'تعديل بيانات مرتجع فاتورة الشراء.',
     'update_purchase_return' => 'تحديث المرتجع',
     'purchase_return_updated' => 'تم تحديث مرتجع الشراء بنجاح.',
+    'water_filter' => 'فلتر ماء',
 
     // Sale Returns
     'sale_returns' => 'مرتجعات المبيعات',
@@ -450,6 +451,12 @@ return [
     'candle_6' => 'الشمعة السادسة',
     'candle_7' => 'الشمعة السابعة',
     'candle_4_high_tds' => 'الشمعة الرابعة (TDS مرتفع)',
+    'candle_1_replaced_at' => 'تاريخ تغيير الشمعة الأولى',
+    'candle_2_3_replaced_at' => 'تاريخ تغيير الشمعتين الثانية والثالثة',
+    'candle_4_replaced_at' => 'تاريخ تغيير الشمعة الرابعة',
+    'candle_5_replaced_at' => 'تاريخ تغيير الشمعة الخامسة',
+    'candle_6_replaced_at' => 'تاريخ تغيير الشمعة السادسة',
+    'candle_7_replaced_at' => 'تاريخ تغيير الشمعة السابعة',
     'candle_ok' => 'سليمة',
     'candle_due_soon' => 'قريبة',
     'candle_needs_replacement' => 'تحتاج تغيير',
