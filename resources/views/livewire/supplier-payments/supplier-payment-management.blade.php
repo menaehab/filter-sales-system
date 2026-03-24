@@ -4,6 +4,10 @@
 
     <x-search-toolbar>
         <x-input name="search" wire:model.live="search" placeholder="{{ __('keywords.search') }}" class="min-w-37.5" />
+        <x-input type="date" name="dateFrom" wire:model.live="dateFrom" class="w-full sm:w-auto"
+            placeholder="{{ __('keywords.from_date') }}" />
+        <x-input type="date" name="dateTo" wire:model.live="dateTo" class="w-full sm:w-auto"
+            placeholder="{{ __('keywords.to_date') }}" />
     </x-search-toolbar>
 
     <x-data-table :searchable="false" :paginated="false" :headers="[
@@ -23,18 +27,18 @@
                     <span class="text-sm text-gray-900">{{ $payment->user?->name ?? '—' }}</span>
                 </td>
                 <td class="px-4 py-3">
-                    <span class="text-sm font-medium text-gray-900">{{ $payment->allocations->pluck('purchase.number')->filter()->join(', ') ?: '—' }}</span>
+                    <span
+                        class="text-sm font-medium text-gray-900">{{ $payment->allocations->pluck('purchase.number')->filter()->join(', ') ?: '—' }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
-                    <span class="text-sm text-gray-700">{{ $payment->payment_method === 'supplier_credit' ? __('keywords.applied_supplier_credit') : $payment->payment_method }}</span>
+                    <span
+                        class="text-sm text-gray-700">{{ $payment->payment_method === 'supplier_credit' ? __('keywords.applied_supplier_credit') : __('keywords.' . $payment->payment_method) }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-sm text-emerald-600 font-medium">
                     {{ number_format($payment->amount, 2) }} {{ __('keywords.currency') }}
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
-                    <x-table-actions
-                        :canDelete="auth()->user()->can('manage_supplier_payment_allocations')"
-                        deleteAction="setDelete({{ $payment->id }})" />
+                    <x-table-actions :canDelete="auth()->user()->can('manage_supplier_payment_allocations')" deleteAction="setDelete({{ $payment->id }})" />
                 </td>
             </tr>
         @empty

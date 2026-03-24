@@ -14,9 +14,23 @@ class SupplierPaymentManagement extends Component
 {
     use HasCrudModals, HasCrudQuery, WithSearchAndPagination;
 
+    public ?string $dateFrom = null;
+
+    public ?string $dateTo = null;
+
     protected function getModelClass(): string
     {
         return SupplierPayment::class;
+    }
+
+    public function updatingDateFrom(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateTo(): void
+    {
+        $this->resetPage();
     }
 
     protected function getSearchableFields(): array

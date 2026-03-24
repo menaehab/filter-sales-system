@@ -10,10 +10,14 @@
         @endcanany
     </x-page-header>
 
-    <x-search-toolbar />
+    <x-search-toolbar>
+        <x-input type="date" name="dateFrom" wire:model.live="dateFrom" class="w-full sm:w-auto"
+            placeholder="{{ __('keywords.from_date') }}" />
+        <x-input type="date" name="dateTo" wire:model.live="dateTo" class="w-full sm:w-auto"
+            placeholder="{{ __('keywords.to_date') }}" />
+    </x-search-toolbar>
 
     <x-data-table :searchable="false" :paginated="false" :headers="[
-        ['key' => 'id', 'label' => '#'],
         ['key' => 'number', 'label' => __('keywords.number')],
         ['key' => 'purchase', 'label' => __('keywords.purchase_number')],
         ['key' => 'total', 'label' => __('keywords.total_return_price')],
@@ -29,7 +33,8 @@
                     <span class="text-sm font-medium text-gray-900">{{ $return->number }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
-                    <a href="{{ route('purchases.show', $return->purchase) }}" class="text-sm font-medium text-emerald-600 hover:text-emerald-700">
+                    <a href="{{ route('purchases.show', $return->purchase) }}"
+                        class="text-sm font-medium text-emerald-600 hover:text-emerald-700">
                         {{ $return->purchase->number }}
                     </a>
                 </td>

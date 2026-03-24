@@ -22,12 +22,16 @@
             <option value="">{{ __('keywords.all_statuses') }}</option>
             <option value="paid">{{ __('keywords.fully_paid') }}</option>
             <option value="partial">{{ __('keywords.partially_paid') }}</option>
+            <option value="unpaid">{{ __('keywords.unpaid') }}</option>
         </select>
+        <x-input type="date" name="dateFrom" wire:model.live="dateFrom" class="w-full sm:w-auto"
+            placeholder="{{ __('keywords.from_date') }}" />
+        <x-input type="date" name="dateTo" wire:model.live="dateTo" class="w-full sm:w-auto"
+            placeholder="{{ __('keywords.to_date') }}" />
     </x-search-toolbar>
 
     {{-- Purchases table --}}
     <x-data-table :searchable="false" :paginated="false" :headers="[
-        ['key' => 'id', 'label' => '#'],
         ['key' => 'number', 'label' => __('keywords.number')],
         ['key' => 'supplier', 'label' => __('keywords.supplier')],
         ['key' => 'total', 'label' => __('keywords.total_price')],

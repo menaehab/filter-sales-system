@@ -75,6 +75,7 @@
     <x-data-table :searchable="false" :paginated="false" :headers="[
         ['label' => __('keywords.activity_type'), 'key' => 'event'],
         ['label' => __('keywords.model_type'), 'key' => 'subject_type'],
+        ['label' => 'ID', 'key' => 'subject_id'],
         ['label' => __('keywords.performed_by'), 'key' => 'causer'],
         ['label' => __('keywords.date'), 'key' => 'created_at'],
         ['label' => __('keywords.actions'), 'key' => 'actions', 'sortable' => false],
@@ -101,6 +102,11 @@
                     <span class="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
                         {{ $this->translateModelType($activity->subject_type) }}
                     </span>
+                </td>
+
+                {{-- Subject ID --}}
+                <td class="px-5 py-4">
+                    <span class="text-sm text-gray-600">{{ $activity->subject_id ?? '-' }}</span>
                 </td>
 
                 {{-- Performed By --}}

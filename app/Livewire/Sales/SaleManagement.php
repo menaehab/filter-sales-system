@@ -23,6 +23,10 @@ class SaleManagement extends Component
 
     public string $filterStatus = '';
 
+    public ?string $dateFrom = null;
+
+    public ?string $dateTo = null;
+
     public ?int $paySaleId = null;
 
     public string $payAmount = '';
@@ -82,6 +86,14 @@ class SaleManagement extends Component
                 $q->where('installment_months', '>', 0);
             })->whereRaw('COALESCE((SELECT SUM(amount) FROM customer_payment_allocations WHERE customer_payment_allocations.sale_id = sales.id), 0) = 0');
         }
+
+        if (filled($this->dateFrom)) {
+            $query->whereDate('created_at', '>=', $this->dateFrom);
+        }
+
+        if (filled($this->dateTo)) {
+            $query->whereDate('created_at', '<=', $this->dateTo);
+        }
     }
 
     public function queryString(): array
@@ -90,7 +102,19 @@ class SaleManagement extends Component
             'search' => ['except' => ''],
             'filterPaymentType' => ['except' => '', 'as' => 'payment_type'],
             'filterStatus' => ['except' => '', 'as' => 'status'],
+            'dateFrom' => ['except' => '', 'as' => 'from'],
+            'dateTo' => ['except' => '', 'as' => 'to'],
         ];
+    }
+
+    public function updatingDateFrom(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateTo(): void
+    {
+        $this->resetPage();
     }
 
     public function getSalesProperty()

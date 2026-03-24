@@ -1,11 +1,13 @@
 <div class="max-w-3xl mx-auto p-8 bg-white">
     {{-- Print and Back Buttons --}}
     <div class="no-print flex items-center justify-between mb-6 border-b pb-4">
-        <a href="{{ route('purchases') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+        <a href="{{ route('purchases') }}"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
             <i class="fas fa-arrow-right"></i>
             <span>{{ __('keywords.back') }}</span>
         </a>
-        <button onclick="window.print()" class="inline-flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
+        <button onclick="window.print()"
+            class="inline-flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
             <i class="fas fa-print"></i>
             <span>{{ __('keywords.print') }}</span>
         </button>
@@ -22,27 +24,33 @@
         <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
             <div>
                 <p class="mb-2"><strong>{{ __('keywords.voucher_number') }}:</strong> {{ $payment->id }}</p>
-                <p class="mb-2"><strong>{{ __('keywords.date') }}:</strong> {{ $payment->created_at->format('Y-m-d') }}</p>
-                <p class="mb-2"><strong>{{ __('keywords.time') }}:</strong> {{ $payment->created_at->format('H:i') }}</p>
+                <p class="mb-2"><strong>{{ __('keywords.date') }}:</strong>
+                    {{ $payment->created_at->format('Y-m-d') }}</p>
+                <p class="mb-2"><strong>{{ __('keywords.time') }}:</strong> {{ $payment->created_at->format('H:i') }}
+                </p>
             </div>
             <div>
-                <p class="mb-2"><strong>{{ __('keywords.supplier') }}:</strong> {{ $payment->supplier?->name ?? '—' }}</p>
-                @if($payment->supplier?->phone)
+                <p class="mb-2"><strong>{{ __('keywords.supplier') }}:</strong>
+                    {{ $payment->supplier?->name ?? '—' }}</p>
+                @if ($payment->supplier?->phone)
                     <p class="mb-2"><strong>{{ __('keywords.phone') }}:</strong> {{ $payment->supplier->phone }}</p>
                 @endif
                 <p class="mb-2"><strong>{{ __('keywords.payment_method') }}:</strong>
                     @switch($payment->payment_method)
                         @case('cash')
                             {{ __('keywords.cash') }}
-                            @break
+                        @break
+
                         @case('bank_transfer')
                             {{ __('keywords.bank_transfer') }}
-                            @break
+                        @break
+
                         @case('supplier_credit')
                             {{ __('keywords.supplier_credit') }}
-                            @break
+                        @break
+
                         @default
-                            {{ $payment->payment_method }}
+                            {{ __('keywords.' . $payment->payment_method) }}
                     @endswitch
                 </p>
             </div>
@@ -51,30 +59,37 @@
         {{-- Payment Amount Box --}}
         <div class="border-2 border-black bg-gray-50 p-6 mb-6 text-center">
             <p class="text-sm text-gray-600 mb-2">{{ __('keywords.paid_amount') }}</p>
-            <p class="text-4xl font-bold text-red-600">{{ number_format($payment->amount, 2) }} {{ __('keywords.currency') }}</p>
+            <p class="text-4xl font-bold text-red-600">{{ number_format($payment->amount, 2) }}
+                {{ __('keywords.currency') }}</p>
         </div>
 
         {{-- Allocations Table --}}
-        @if($payment->allocations->count() > 0)
+        @if ($payment->allocations->count() > 0)
             <div class="mb-6">
-                <h3 class="text-sm font-semibold mb-3 border-b border-black pb-2">{{ __('keywords.payment_allocations') }}</h3>
+                <h3 class="text-sm font-semibold mb-3 border-b border-black pb-2">
+                    {{ __('keywords.payment_allocations') }}</h3>
                 <table class="w-full border-collapse border border-black text-sm">
                     <thead class="bg-gray-100">
                         <tr>
-                            <th class="border border-black px-3 py-2 text-start">{{ __('keywords.invoice_number') }}</th>
+                            <th class="border border-black px-3 py-2 text-start">{{ __('keywords.invoice_number') }}
+                            </th>
                             <th class="border border-black px-3 py-2 text-end">{{ __('keywords.invoice_total') }}</th>
                             <th class="border border-black px-3 py-2 text-end">{{ __('keywords.paid_amount') }}</th>
-                            <th class="border border-black px-3 py-2 text-end">{{ __('keywords.remaining_amount') }}</th>
+                            <th class="border border-black px-3 py-2 text-end">{{ __('keywords.remaining_amount') }}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($payment->allocations as $allocation)
-                            @if($allocation->purchase)
+                        @foreach ($payment->allocations as $allocation)
+                            @if ($allocation->purchase)
                                 <tr>
                                     <td class="border border-black px-3 py-2">{{ $allocation->purchase->number }}</td>
-                                    <td class="border border-black px-3 py-2 text-end">{{ number_format($allocation->purchase->total_price, 2) }}</td>
-                                    <td class="border border-black px-3 py-2 text-end font-semibold text-red-600">{{ number_format($allocation->amount, 2) }}</td>
-                                    <td class="border border-black px-3 py-2 text-end {{ $allocation->purchase->remaining_amount > 0 ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
+                                    <td class="border border-black px-3 py-2 text-end">
+                                        {{ number_format($allocation->purchase->total_price, 2) }}</td>
+                                    <td class="border border-black px-3 py-2 text-end font-semibold text-red-600">
+                                        {{ number_format($allocation->amount, 2) }}</td>
+                                    <td
+                                        class="border border-black px-3 py-2 text-end {{ $allocation->purchase->remaining_amount > 0 ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
                                         {{ number_format($allocation->purchase->remaining_amount, 2) }}
                                     </td>
                                 </tr>
@@ -86,18 +101,19 @@
         @endif
 
         {{-- Note --}}
-        @if($payment->note)
+        @if ($payment->note)
             <div class="mb-6 p-3 bg-gray-50 border border-gray-300 rounded-lg">
                 <p class="text-sm"><strong>{{ __('keywords.note') }}:</strong> {{ $payment->note }}</p>
             </div>
         @endif
 
         {{-- Supplier Balance --}}
-        @if($payment->supplier)
+        @if ($payment->supplier)
             <div class="border-t-2 border-black pt-4 mb-4">
                 <div class="text-center">
                     <p class="text-sm text-gray-600 mb-1">{{ __('keywords.supplier_balance') }}</p>
-                    <p class="text-2xl font-bold {{ $payment->supplier->balance > 0 ? 'text-red-600' : 'text-green-600' }}">
+                    <p
+                        class="text-2xl font-bold {{ $payment->supplier->balance > 0 ? 'text-red-600' : 'text-green-600' }}">
                         {{ number_format($payment->supplier->balance, 2) }} {{ __('keywords.currency') }}
                     </p>
                 </div>

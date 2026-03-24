@@ -2,7 +2,7 @@
     <div class="flex flex-col items-center">
         {{-- Logo --}}
         <div
-            class="flex h-32 w-32 items-center justify-center rounded-2xl shadow-xl bg-gradient-to-br from-green-400 to-green-600 hover:scale-105 transition-transform duration-300">
+            class="flex h-32 w-32 items-center justify-center rounded-2xl shadow-xl bg-gradient-to-br from-white to-gray-100 hover:scale-105 transition-transform duration-300">
             <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="h-24 w-24 object-contain rounded-lg">
         </div>
 
