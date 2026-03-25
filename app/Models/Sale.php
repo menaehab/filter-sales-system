@@ -13,14 +13,21 @@ class Sale extends Model
 {
     use HasFactory, HasLogActivity;
 
+    protected $casts = [
+        'with_vat' => 'boolean',
+    ];
+
     protected $fillable = [
         'number',
         'dealer_name',
         'user_name',
         'total_price',
         'payment_type',
+        'discount_value',
+        'interest_rate',
         'installment_amount',
         'installment_months',
+        'with_vat',
         'customer_id',
         'user_id',
     ];
@@ -48,6 +55,64 @@ class Sale extends Model
     public function getPaidAmountAttribute(): float
     {
         return (float) $this->paymentAllocations->sum('amount');
+    }
+
+    public function getItemsSubtotalAttribute(): float
+    {
+        $items = $this->relationLoaded('items') ? $this->items : $this->items()->get();
+
+        return (float) $items->map(function ($item) {
+            return (float) $item->sell_price * (float) $item->quantity;
+        })->sum();
+    }
+
+    public function getVatAmountAttribute(): float
+    {
+        if (! $this->with_vat) {
+            return 0;
+        }
+
+        return round($this->items_subtotal * 0.14, 2);
+    }
+
+    public function getSubtotalAfterVatAttribute(): float
+    {
+        return $this->items_subtotal + $this->vat_amount;
+    }
+
+    public function getAppliedCustomerCreditAmountAttribute(): float
+    {
+        return (float) $this->paymentAllocations()
+            ->whereHas('customerPayment', function ($query) {
+                $query->where('payment_method', 'customer_credit');
+            })
+            ->sum('amount');
+    }
+
+    public function getInstallmentSurchargeTotalAttribute(): float
+    {
+        $months = (int) ($this->installment_months ?: 0);
+        if (! $this->isInstallment() || $months < 3) {
+            return 0;
+        }
+
+        return $months * 100;
+    }
+
+    public function getInstallmentBaseAmountAttribute(): float
+    {
+        return max(0, $this->subtotal_after_vat - $this->down_payment - $this->applied_customer_credit_amount);
+    }
+
+    public function getInterestAmountAttribute(): float
+    {
+        if (! $this->isInstallment()) {
+            return 0;
+        }
+
+        $rate = max(0, (float) ($this->interest_rate ?: 0));
+
+        return round($this->installment_base_amount * ($rate / 100), 2);
     }
 
     public function getRemainingAmountAttribute(): float

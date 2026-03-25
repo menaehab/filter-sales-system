@@ -138,8 +138,19 @@
             <div class="border-t border-gray-200 bg-gray-50 p-5">
                 <div class="space-y-2 text-sm">
                     <div class="flex items-center justify-between text-gray-500">
-                        <span>{{ __('keywords.total_price') }}</span>
-                        <span>{{ number_format($this->total_price, 2) }} {{ __('keywords.currency') }}</span>
+                        <span>{{ __('keywords.subtotal') }}</span>
+                        <span>{{ number_format($this->base_total, 2) }} {{ __('keywords.currency') }}</span>
+                    </div>
+                    @if ($with_vat)
+                        <div class="flex items-center justify-between text-gray-500">
+                            <span>{{ __('keywords.vat_amount') }} (14%)</span>
+                            <span>+ {{ number_format($this->vat_amount, 2) }} {{ __('keywords.currency') }}</span>
+                        </div>
+                    @endif
+                    <div class="flex items-center justify-between text-gray-900">
+                        <span>{{ __('keywords.invoice_total') }}</span>
+                        <span class="font-semibold">{{ number_format($this->total_price, 2) }}
+                            {{ __('keywords.currency') }}</span>
                     </div>
                     @if ($this->applied_customer_credit > 0)
                         <div class="flex items-center justify-between text-emerald-600">
@@ -233,6 +244,12 @@
 
                 <x-input name="dealer_name" label="{{ __('keywords.dealer_name') }}"
                     placeholder="{{ __('keywords.dealer_name') }}" wire:model.live="dealer_name" />
+
+                <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                    <input type="checkbox" wire:model.live="with_vat"
+                        class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    <span>{{ __('keywords.apply_vat') }}</span>
+                </label>
 
                 <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
                     <input type="checkbox" wire:model.live="includeWaterReading"
@@ -384,7 +401,7 @@
                 </div>
 
                 @if ($payment_type === 'installment')
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <x-input name="down_payment" label="{{ __('keywords.down_payment') }}" placeholder="0.00"
                             wire:model.live="down_payment" type="number" step="0.01" required />
 
@@ -392,13 +409,29 @@
                             placeholder="{{ __('keywords.enter_months_count') }}"
                             wire:model.live="installment_months" type="number" min="1" max="60"
                             required />
+
+                        <x-input name="interest_rate" label="{{ __('keywords.interest_rate') }}" placeholder="0"
+                            wire:model.live="interest_rate" type="number" step="0.01" min="0"
+                            max="100" required />
                     </div>
                 @endif
 
                 <div class="rounded-lg bg-gray-50 p-4 space-y-2 text-sm">
                     <div class="flex justify-between">
-                        <span class="text-gray-500">{{ __('keywords.total_price') }}</span>
-                        <span class="font-medium">{{ number_format($this->total_price, 2) }}
+                        <span class="text-gray-500">{{ __('keywords.subtotal') }}</span>
+                        <span class="font-medium">{{ number_format($this->base_total, 2) }}
+                            {{ __('keywords.currency') }}</span>
+                    </div>
+                    @if ($with_vat)
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">{{ __('keywords.vat_amount') }} (14%)</span>
+                            <span class="font-medium">+ {{ number_format($this->vat_amount, 2) }}
+                                {{ __('keywords.currency') }}</span>
+                        </div>
+                    @endif
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">{{ __('keywords.total_after_vat') }}</span>
+                        <span class="font-medium">{{ number_format($this->subtotal_after_vat, 2) }}
                             {{ __('keywords.currency') }}</span>
                     </div>
                     @if ($this->applied_customer_credit > 0)
@@ -421,6 +454,29 @@
                                 class="font-medium text-red-600">{{ number_format($this->remaining_after_down_payment, 2) }}
                                 {{ __('keywords.currency') }}</span>
                         </div>
+                        @if ((float) ($interest_rate ?: 0) > 0)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('keywords.interest_amount') }}</span>
+                                <span class="font-medium text-amber-600">+
+                                    {{ number_format($this->interest_amount, 2) }}
+                                    {{ __('keywords.currency') }}</span>
+                            </div>
+                        @endif
+                        @if ($this->installment_months_surcharge_total > 0)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('keywords.installment_monthly_fee') }}</span>
+                                <span class="font-medium text-amber-600">+
+                                    {{ number_format($this->installment_months_surcharge_total, 2) }}
+                                    {{ __('keywords.currency') }}</span>
+                            </div>
+                            <p class="text-xs text-gray-500">{{ __('keywords.installment_monthly_fee_hint') }}</p>
+                        @endif
+                        <div class="flex justify-between border-t pt-2">
+                            <span
+                                class="text-gray-700 font-medium">{{ __('keywords.installment_financed_total') }}</span>
+                            <span class="font-bold text-gray-900">{{ number_format($this->installment_total, 2) }}
+                                {{ __('keywords.currency') }}</span>
+                        </div>
                         @if ((int) ($installment_months ?: 0) > 0)
                             <div class="flex justify-between border-t pt-2">
                                 <span
@@ -431,6 +487,12 @@
                             </div>
                         @endif
                     @endif
+
+                    <div class="flex justify-between border-t pt-2">
+                        <span class="text-gray-700 font-medium">{{ __('keywords.invoice_total') }}</span>
+                        <span class="font-bold text-gray-900">{{ number_format($this->total_price, 2) }}
+                            {{ __('keywords.currency') }}</span>
+                    </div>
                 </div>
 
                 <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">

@@ -20,6 +20,10 @@ use Livewire\Component;
 #[Layout('layouts.app', ['title' => 'pos'])]
 class SaleCreate extends Component
 {
+    private const VAT_RATE = 14;
+
+    private const INSTALLMENT_MONTHLY_SURCHARGE = 100;
+
     public ?int $customer_id = null;
 
     public string $payment_type = 'cash';
@@ -27,6 +31,10 @@ class SaleCreate extends Component
     public string $down_payment = '0';
 
     public string $installment_months = '';
+
+    public string $interest_rate = '0';
+
+    public bool $with_vat = false;
 
     public string $customerSearch = '';
 
@@ -72,6 +80,7 @@ class SaleCreate extends Component
         if ($value !== 'installment') {
             $this->down_payment = '0';
             $this->installment_months = '';
+            $this->interest_rate = '0';
         }
     }
 
@@ -267,11 +276,30 @@ class SaleCreate extends Component
         $this->dispatch('open-modal-sale-payment');
     }
 
-    public function getTotalPriceProperty(): float
+    public function getBaseTotalProperty(): float
     {
         return collect($this->cart)->sum(function ($item) {
             return ((float) ($item['sell_price'] ?: 0)) * ((float) ($item['quantity'] ?: 0));
         });
+    }
+
+    public function getVatAmountProperty(): float
+    {
+        if (! $this->with_vat) {
+            return 0;
+        }
+
+        return round($this->base_total * (self::VAT_RATE / 100), 2);
+    }
+
+    public function getSubtotalAfterVatProperty(): float
+    {
+        return $this->base_total + $this->vat_amount;
+    }
+
+    public function getTotalPriceProperty(): float
+    {
+        return $this->grand_total;
     }
 
     public function getCartCountProperty(): float
@@ -295,21 +323,55 @@ class SaleCreate extends Component
 
     public function getAppliedCustomerCreditProperty(): float
     {
-        return min($this->total_price, $this->available_customer_credit);
+        return min($this->subtotal_after_vat, $this->available_customer_credit);
     }
 
     public function getCashAmountDueProperty(): float
     {
         if ($this->payment_type === 'installment') {
-            return min((float) ($this->down_payment ?: 0), max(0, $this->total_price - $this->applied_customer_credit));
+            return min((float) ($this->down_payment ?: 0), max(0, $this->subtotal_after_vat - $this->applied_customer_credit));
         }
 
-        return max(0, $this->total_price - $this->applied_customer_credit);
+        return max(0, $this->subtotal_after_vat - $this->applied_customer_credit);
     }
 
     public function getRemainingAfterDownPaymentProperty(): float
     {
-        return max(0, $this->total_price - $this->applied_customer_credit - $this->cash_amount_due);
+        return max(0, $this->subtotal_after_vat - $this->applied_customer_credit - $this->cash_amount_due);
+    }
+
+    public function getInterestAmountProperty(): float
+    {
+        if ($this->payment_type !== 'installment') {
+            return 0;
+        }
+
+        $rate = max(0, (float) ($this->interest_rate ?: 0));
+
+        return round($this->remaining_after_down_payment * ($rate / 100), 2);
+    }
+
+    public function getInstallmentMonthsSurchargeTotalProperty(): float
+    {
+        if ($this->payment_type !== 'installment') {
+            return 0;
+        }
+
+        $months = (int) ($this->installment_months ?: 0);
+        if ($months < 3) {
+            return 0;
+        }
+
+        return $months * self::INSTALLMENT_MONTHLY_SURCHARGE;
+    }
+
+    public function getInstallmentTotalProperty(): float
+    {
+        if ($this->payment_type !== 'installment') {
+            return 0;
+        }
+
+        return $this->remaining_after_down_payment + $this->interest_amount + $this->installment_months_surcharge_total;
     }
 
     public function getInstallmentAmountProperty(): float
@@ -319,7 +381,16 @@ class SaleCreate extends Component
             return 0;
         }
 
-        return round($this->remaining_after_down_payment / $months, 2);
+        return round($this->installment_total / $months, 2);
+    }
+
+    public function getGrandTotalProperty(): float
+    {
+        if ($this->payment_type !== 'installment') {
+            return $this->subtotal_after_vat;
+        }
+
+        return $this->subtotal_after_vat + $this->interest_amount + $this->installment_months_surcharge_total;
     }
 
     protected function rules(): array
@@ -328,9 +399,11 @@ class SaleCreate extends Component
             'customer_id' => 'required|exists:customers,id',
             'dealer_name' => 'nullable|string|max:255',
             'includeWaterReading' => 'boolean',
+            'with_vat' => 'boolean',
             'payment_type' => 'required|in:cash,installment',
             'down_payment' => 'required_if:payment_type,installment|numeric|min:0',
             'installment_months' => 'required_if:payment_type,installment|nullable|integer|min:1|max:60',
+            'interest_rate' => 'required_if:payment_type,installment|nullable|numeric|min:0|max:100',
             'cart' => 'required|array|min:1',
             'cart.*.product_id' => 'required|exists:products,id',
             'cart.*.sell_price' => 'required|numeric|min:0.01',
@@ -366,8 +439,10 @@ class SaleCreate extends Component
         $attrs = [
             'customer_id' => __('keywords.customer'),
             'payment_type' => __('keywords.payment_type'),
+            'with_vat' => __('keywords.apply_vat'),
             'down_payment' => __('keywords.down_payment'),
             'installment_months' => __('keywords.installment_months'),
+            'interest_rate' => __('keywords.interest_rate'),
             'dealer_name' => __('keywords.dealer_name'),
             'water_filter_id' => __('keywords.filter'),
             'newFilter.filter_model' => __('keywords.filter_model'),
@@ -392,27 +467,38 @@ class SaleCreate extends Component
         $this->validate();
 
         $customer = Customer::findOrFail($this->customer_id);
-        $totalPrice = $this->total_price;
+        $subtotalAfterVat = $this->subtotal_after_vat;
         $isInstallment = $this->payment_type === 'installment';
-        $appliedCredit = min($customer->available_credit, $totalPrice);
-        $downPayment = $isInstallment
-            ? min((float) $this->down_payment, max(0, $totalPrice - $appliedCredit))
-            : max(0, $totalPrice - $appliedCredit);
         $months = $isInstallment ? (int) $this->installment_months : null;
+        $interestRate = $isInstallment ? max(0, (float) ($this->interest_rate ?: 0)) : null;
+        $appliedCredit = min($customer->available_credit, $subtotalAfterVat);
+        $downPayment = $isInstallment
+            ? min((float) $this->down_payment, max(0, $subtotalAfterVat - $appliedCredit))
+            : max(0, $subtotalAfterVat - $appliedCredit);
+        $installmentBase = max(0, $subtotalAfterVat - $appliedCredit - $downPayment);
+        $interestAmount = $isInstallment
+            ? round($installmentBase * (($interestRate ?? 0) / 100), 2)
+            : 0;
+        $installmentMonthsSurchargeTotal = $isInstallment && $months >= 3
+            ? $months * self::INSTALLMENT_MONTHLY_SURCHARGE
+            : 0;
         $installmentAmount = $isInstallment && $months > 0
-            ? round(max(0, $totalPrice - $appliedCredit - $downPayment) / $months, 2)
+            ? round(($installmentBase + $interestAmount + $installmentMonthsSurchargeTotal) / $months, 2)
             : null;
+        $totalPrice = $subtotalAfterVat + $interestAmount + $installmentMonthsSurchargeTotal;
 
         $saleNumber = null;
 
-        DB::transaction(function () use ($customer, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount, $appliedCredit, &$saleNumber) {
+        DB::transaction(function () use ($customer, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount, $appliedCredit, $interestRate, &$saleNumber) {
             $sale = Sale::create([
                 'dealer_name' => $this->dealer_name ?? null,
                 'user_name' => auth()->user()->name,
                 'total_price' => $totalPrice,
                 'payment_type' => $isInstallment ? 'installment' : 'cash',
+                'interest_rate' => $interestRate,
                 'installment_amount' => $installmentAmount,
                 'installment_months' => $months,
+                'with_vat' => $this->with_vat,
                 'user_id' => auth()->id(),
                 'customer_id' => $customer->id,
             ]);
