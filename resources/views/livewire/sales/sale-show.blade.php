@@ -48,6 +48,18 @@
 
                 <div class="border-t pt-3 space-y-2">
                     <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">{{ __('keywords.subtotal') }}</span>
+                        <span class="font-medium text-gray-900">{{ number_format($sale->items_subtotal, 2) }}
+                            {{ __('keywords.currency') }}</span>
+                    </div>
+                    @if ($sale->with_vat)
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">{{ __('keywords.vat_amount') }} (14%)</span>
+                            <span class="font-medium text-gray-900">+
+                                {{ number_format($sale->vat_amount, 2) }} {{ __('keywords.currency') }}</span>
+                        </div>
+                    @endif
+                    <div class="flex justify-between text-sm">
                         <span class="text-gray-500">{{ __('keywords.total_price') }}</span>
                         <span class="font-bold text-gray-900">{{ number_format($sale->total_price, 2) }}
                             {{ __('keywords.currency') }}</span>
@@ -95,6 +107,26 @@
                         <span class="font-medium text-blue-600">{{ number_format($sale->installment_amount, 2) }}
                             {{ __('keywords.currency') }}</span>
                     </div>
+                    @if ((float) ($sale->interest_rate ?: 0) > 0)
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">{{ __('keywords.interest_rate') }}</span>
+                            <span
+                                class="font-medium text-gray-900">{{ rtrim(rtrim(number_format((float) $sale->interest_rate, 2), '0'), '.') }}%</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">{{ __('keywords.interest_amount') }}</span>
+                            <span class="font-medium text-amber-600">{{ number_format($sale->interest_amount, 2) }}
+                                {{ __('keywords.currency') }}</span>
+                        </div>
+                    @endif
+                    @if ($sale->installment_surcharge_total > 0)
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">{{ __('keywords.installment_monthly_fee') }}</span>
+                            <span
+                                class="font-medium text-amber-600">{{ number_format($sale->installment_surcharge_total, 2) }}
+                                {{ __('keywords.currency') }}</span>
+                        </div>
+                    @endif
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">{{ __('keywords.installment_months') }}</span>
                         <span class="font-medium text-gray-900">{{ $sale->installment_months }}</span>

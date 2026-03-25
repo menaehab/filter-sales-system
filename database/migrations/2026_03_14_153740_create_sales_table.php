@@ -18,8 +18,11 @@ return new class extends Migration
             $table->string('user_name');
             $table->decimal('total_price', 15, 2);
             $table->string('payment_type');
+            $table->decimal('discount_value', 10, 2)->nullable();
+            $table->decimal('interest_rate', 5, 2)->nullable();
             $table->decimal('installment_amount', 10, 2)->nullable();
             $table->unsignedInteger('installment_months')->nullable();
+            $table->boolean('with_vat')->default(false);
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
             $table->timestamps();
