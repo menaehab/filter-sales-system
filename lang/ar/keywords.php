@@ -256,6 +256,8 @@ return [
     'cash_payment' => 'دفعة نقدية',
     'amount' => 'المبلغ',
     'enter_amount' => 'أدخل المبلغ',
+    'discount' => 'الخصم',
+    'total_after_discount' => 'الإجمالي بعد الخصم',
     'payment_method' => 'وسيلة الدفع',
     'select_payment_method' => 'اختر وسيلة الدفع',
     'note' => 'ملاحظة',

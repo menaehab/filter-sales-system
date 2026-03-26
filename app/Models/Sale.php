@@ -66,18 +66,23 @@ class Sale extends Model
         })->sum();
     }
 
+    public function getTotalAfterDiscountAttribute(): float
+    {
+        return max(0, $this->items_subtotal - (float) $this->discount_value);
+    }
+
     public function getVatAmountAttribute(): float
     {
         if (! $this->with_vat) {
             return 0;
         }
 
-        return round($this->items_subtotal * 0.14, 2);
+        return round($this->total_after_discount * 0.14, 2);
     }
 
     public function getSubtotalAfterVatAttribute(): float
     {
-        return $this->items_subtotal + $this->vat_amount;
+        return $this->total_after_discount + $this->vat_amount;
     }
 
     public function getAppliedCustomerCreditAmountAttribute(): float

@@ -44,7 +44,6 @@
         ]">
             @forelse ($this->sales as $sale)
                 <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ $sale->id }}</td>
                     <td class="whitespace-nowrap px-4 py-3">
                         <span class="text-sm font-medium text-gray-900">{{ $sale->number }}</span>
                     </td>

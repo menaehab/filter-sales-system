@@ -34,6 +34,8 @@ class SaleCreate extends Component
 
     public string $interest_rate = '0';
 
+    public string $discount = '0';
+
     public bool $with_vat = false;
 
     public string $customerSearch = '';
@@ -200,7 +202,10 @@ class SaleCreate extends Component
             return;
         }
 
-        $next = (int) ($this->cart[$index]['quantity'] ?: 0) + $delta;
+        $current = (int) ($this->cart[$index]['quantity'] ?: 0);
+        $available = (int) $this->cart[$index]['available_quantity'];
+
+        $next = $current + $delta;
 
         if ($next <= 0) {
             $this->removeFromCart($index);
@@ -208,11 +213,20 @@ class SaleCreate extends Component
             return;
         }
 
-        $this->cart[$index]['quantity'] = (string) $next;
+        if ($next > $available) {
+            $this->cart[$index]['quantity'] = (string) $available;
 
-        if ($next > (int) $this->cart[$index]['available_quantity']) {
-            session()->flash('warning', __('keywords.low_stock_warning').': '.$this->cart[$index]['product_name'].' ('.__('keywords.available').': '.$this->cart[$index]['available_quantity'].')');
+            session()->flash(
+                'warning',
+                __('keywords.low_stock_warning').': '.
+                $this->cart[$index]['product_name'].
+                ' ('.__('keywords.available').': '.$available.')'
+            );
+
+            return;
         }
+
+        $this->cart[$index]['quantity'] = (string) $next;
     }
 
     public function clearCart(): void
@@ -289,12 +303,24 @@ class SaleCreate extends Component
             return 0;
         }
 
-        return round($this->base_total * (self::VAT_RATE / 100), 2);
+        return round($this->total_after_discount * (self::VAT_RATE / 100), 2);
+    }
+
+    public function getDiscountAmountProperty(): float
+    {
+        $discount = max(0, (float) ($this->discount ?: 0));
+
+        return min($this->base_total, $discount);
+    }
+
+    public function getTotalAfterDiscountProperty(): float
+    {
+        return max(0, $this->base_total - $this->discount_amount);
     }
 
     public function getSubtotalAfterVatProperty(): float
     {
-        return $this->base_total + $this->vat_amount;
+        return $this->total_after_discount + $this->vat_amount;
     }
 
     public function getTotalPriceProperty(): float
@@ -404,6 +430,7 @@ class SaleCreate extends Component
             'down_payment' => 'required_if:payment_type,installment|numeric|min:0',
             'installment_months' => 'required_if:payment_type,installment|nullable|integer|min:1|max:60',
             'interest_rate' => 'required_if:payment_type,installment|nullable|numeric|min:0|max:100',
+            'discount' => 'nullable|numeric|min:0',
             'cart' => 'required|array|min:1',
             'cart.*.product_id' => 'required|exists:products,id',
             'cart.*.sell_price' => 'required|numeric|min:0.01',
@@ -443,6 +470,7 @@ class SaleCreate extends Component
             'down_payment' => __('keywords.down_payment'),
             'installment_months' => __('keywords.installment_months'),
             'interest_rate' => __('keywords.interest_rate'),
+            'discount' => __('keywords.discount'),
             'dealer_name' => __('keywords.dealer_name'),
             'water_filter_id' => __('keywords.filter'),
             'newFilter.filter_model' => __('keywords.filter_model'),
@@ -467,7 +495,11 @@ class SaleCreate extends Component
         $this->validate();
 
         $customer = Customer::findOrFail($this->customer_id);
-        $subtotalAfterVat = $this->subtotal_after_vat;
+        $baseTotal = $this->base_total;
+        $discountAmount = min($baseTotal, max(0, (float) ($this->discount ?: 0)));
+        $totalAfterDiscount = max(0, $baseTotal - $discountAmount);
+        $vatAmount = $this->with_vat ? round($totalAfterDiscount * (self::VAT_RATE / 100), 2) : 0;
+        $subtotalAfterVat = $totalAfterDiscount + $vatAmount;
         $isInstallment = $this->payment_type === 'installment';
         $months = $isInstallment ? (int) $this->installment_months : null;
         $interestRate = $isInstallment ? max(0, (float) ($this->interest_rate ?: 0)) : null;
@@ -489,12 +521,13 @@ class SaleCreate extends Component
 
         $saleNumber = null;
 
-        DB::transaction(function () use ($customer, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount, $appliedCredit, $interestRate, &$saleNumber) {
+        DB::transaction(function () use ($customer, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount, $appliedCredit, $interestRate, $discountAmount, &$saleNumber) {
             $sale = Sale::create([
                 'dealer_name' => $this->dealer_name ?? null,
                 'user_name' => auth()->user()->name,
                 'total_price' => $totalPrice,
                 'payment_type' => $isInstallment ? 'installment' : 'cash',
+                'discount_value' => $discountAmount,
                 'interest_rate' => $interestRate,
                 'installment_amount' => $installmentAmount,
                 'installment_months' => $months,

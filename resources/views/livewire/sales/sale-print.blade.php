@@ -91,6 +91,18 @@
                         <span class="font-semibold">{{ number_format($sale->items_subtotal, 2) }}
                             {{ __('keywords.currency') }}</span>
                     </div>
+                    @if ($sale->discount_value > 0)
+                        <div class="flex justify-between">
+                            <span>{{ __('keywords.discount') }}:</span>
+                            <span class="font-semibold text-red-600">- {{ number_format($sale->discount_value, 2) }}
+                                {{ __('keywords.currency') }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>{{ __('keywords.total_after_discount') }}:</span>
+                            <span class="font-semibold">{{ number_format($sale->total_after_discount, 2) }}
+                                {{ __('keywords.currency') }}</span>
+                        </div>
+                    @endif
                     @if ($sale->with_vat)
                         <div class="flex justify-between">
                             <span>{{ __('keywords.vat_amount') }} (14%):</span>
