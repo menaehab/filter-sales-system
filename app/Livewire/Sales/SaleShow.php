@@ -48,19 +48,7 @@ class SaleShow extends Component
         $this->paySaleId = $sale->id;
         $this->payFromSaleId = null;
 
-        if ($sale->isInstallment() && $sale->customer_id) {
-            $oldestUnpaid = $this->getCustomerInstallmentQueue($sale->customer_id)->first();
-
-            if ($oldestUnpaid) {
-                $this->payFromSaleId = $oldestUnpaid->id;
-                $defaultInstallment = (float) ($oldestUnpaid->installment_amount ?: $oldestUnpaid->remaining_amount);
-                $this->payAmount = (string) min($defaultInstallment, $oldestUnpaid->remaining_amount);
-            } else {
-                $this->payAmount = (string) $sale->remaining_amount;
-            }
-        } else {
-            $this->payAmount = (string) $sale->remaining_amount;
-        }
+        $this->payAmount = (string) $sale->remaining_amount;
 
         $this->payMethod = 'cash';
         $this->payNote = '';
@@ -87,37 +75,14 @@ class SaleShow extends Component
         }
 
         $allocations = [];
+        $maxPayable = $sale->remaining_amount;
+        $amount = min($amount, $maxPayable);
 
-        if ($sale->isInstallment() && $sale->customer_id) {
-            $queue = $this->getCustomerInstallmentQueue($sale->customer_id);
-            $maxPayable = $queue->sum(fn (Sale $item) => $item->remaining_amount);
-            $remainingToAllocate = min($amount, $maxPayable);
-
-            foreach ($queue as $queuedSale) {
-                if ($remainingToAllocate <= 0) {
-                    break;
-                }
-
-                $payable = min($queuedSale->remaining_amount, $remainingToAllocate);
-
-                if ($payable > 0) {
-                    $allocations[] = [
-                        'sale_id' => $queuedSale->id,
-                        'amount' => $payable,
-                    ];
-                    $remainingToAllocate -= $payable;
-                }
-            }
-        } else {
-            $maxPayable = $sale->remaining_amount;
-            $amount = min($amount, $maxPayable);
-
-            if ($amount > 0) {
-                $allocations[] = [
-                    'sale_id' => $sale->id,
-                    'amount' => $amount,
-                ];
-            }
+        if ($amount > 0) {
+            $allocations[] = [
+                'sale_id' => $sale->id,
+                'amount' => $amount,
+            ];
         }
 
         $totalAllocated = collect($allocations)->sum('amount');
@@ -157,17 +122,6 @@ class SaleShow extends Component
         if ($printAfterPayment) {
             $this->redirect(route('customer-payments.print', $paymentId), navigate: true);
         }
-    }
-
-    protected function getCustomerInstallmentQueue(int $customerId)
-    {
-        return Sale::with('paymentAllocations')
-            ->where('customer_id', $customerId)
-            ->where('installment_months', '>', 0)
-            ->orderBy('created_at')
-            ->get()
-            ->filter(fn (Sale $item) => $item->remaining_amount > 0)
-            ->values();
     }
 
     public function resetPayForm(): void

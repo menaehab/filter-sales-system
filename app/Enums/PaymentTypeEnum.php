@@ -15,8 +15,18 @@ enum PaymentTypeEnum: string
         };
     }
 
-    public function values()
+    public static function values(): array
     {
         return array_column(self::cases(), 'value');
+    }
+
+    public function isCash(): bool
+    {
+        return $this === self::CASH;
+    }
+
+    public function isInstallment(): bool
+    {
+        return $this === self::INSTALLMENT;
     }
 }

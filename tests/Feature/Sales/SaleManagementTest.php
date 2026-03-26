@@ -12,8 +12,8 @@ beforeEach(function () {
 });
 
 it('filters sales by search, payment type, and status', function () {
-    $northCustomer = Customer::create(['name' => 'North Customer']);
-    $eastCustomer = Customer::create(['name' => 'East Customer']);
+    $northCustomer = Customer::factory()->create(['name' => 'North Customer']);
+    $eastCustomer = Customer::factory()->create(['name' => 'East Customer']);
 
     $paidSale = Sale::create([
         'dealer_name' => 'North Dealer',
@@ -100,10 +100,10 @@ it('filters sales by search, payment type, and status', function () {
     $this->assertSame([$unpaidSale->id], collect($component->get('sales')->items())->pluck('id')->all());
 });
 
-it('allocates customer payments to the oldest unpaid installment sales first', function () {
+it('allocates customer payments directly to the specified sale', function () {
     Carbon::setTestNow('2026-03-11 09:00:00');
 
-    $customer = Customer::create(['name' => 'Queued Customer']);
+    $customer = Customer::factory()->create(['name' => 'Queued Customer']);
 
     $oldestSale = Sale::create([
         'dealer_name' => 'Old Dealer',
@@ -135,10 +135,10 @@ it('allocates customer payments to the oldest unpaid installment sales first', f
         ->call('openPayModal', $newerSale->id);
 
     $this->assertEquals($newerSale->id, $component->get('paySaleId'));
-    $this->assertEquals($oldestSale->id, $component->get('payFromSaleId'));
-    $this->assertEquals(100.0, (float) $component->get('payAmount'));
+    $this->assertNull($component->get('payFromSaleId'));
+    $this->assertEquals(200.0, (float) $component->get('payAmount'));
 
-    $component->set('payAmount', '330')
+    $component->set('payAmount', '200')
         ->set('payMethod', 'bank_transfer')
         ->set('payNote', 'Wire transfer')
         ->call('submitPayment')
@@ -150,36 +150,35 @@ it('allocates customer payments to the oldest unpaid installment sales first', f
     $this->assertDatabaseHas('customer_payments', [
         'id' => $payment->id,
         'customer_id' => $customer->id,
-        'amount' => '330.00',
+        'amount' => '200.00',
         'payment_method' => 'bank_transfer',
         'note' => 'Wire transfer',
     ]);
 
-    $this->assertDatabaseHas('customer_payment_allocations', [
+    $this->assertDatabaseMissing('customer_payment_allocations', [
         'customer_payment_id' => $payment->id,
         'sale_id' => $oldestSale->id,
-        'amount' => '300.00',
     ]);
 
     $this->assertDatabaseHas('customer_payment_allocations', [
         'customer_payment_id' => $payment->id,
         'sale_id' => $newerSale->id,
-        'amount' => '30.00',
+        'amount' => '200.00',
     ]);
 
     $oldestSale->refresh();
     $newerSale->refresh();
 
-    $this->assertTrue($oldestSale->isFullyPaid());
-    $this->assertNull($oldestSale->next_installment_date);
-    $this->assertFalse($newerSale->isFullyPaid());
-    $this->assertEquals('2026-04-11', $newerSale->next_installment_date?->toDateString());
+    $this->assertFalse($oldestSale->isFullyPaid());
+    $this->assertEquals('2026-04-11', $oldestSale->next_installment_date?->toDateString());
+    $this->assertTrue($newerSale->isFullyPaid());
+    $this->assertNull($newerSale->next_installment_date);
 
     Carbon::setTestNow();
 });
 
 it('deletes a sale from the management component', function () {
-    $customer = Customer::create(['name' => 'Delete Customer']);
+    $customer = Customer::factory()->create(['name' => 'Delete Customer']);
 
     $sale = Sale::create([
         'dealer_name' => 'Dealer',
@@ -201,7 +200,7 @@ it('deletes a sale from the management component', function () {
 });
 
 it('deletes orphaned customer payments when deleting a sale', function () {
-    $customer = Customer::create(['name' => 'Paid Customer']);
+    $customer = Customer::factory()->create(['name' => 'Paid Customer']);
 
     $sale = Sale::create([
         'dealer_name' => 'Dealer',
@@ -240,7 +239,7 @@ it('deletes orphaned customer payments when deleting a sale', function () {
 });
 
 it('keeps shared customer payments when deleting one sale', function () {
-    $customer = Customer::create(['name' => 'Shared Customer']);
+    $customer = Customer::factory()->create(['name' => 'Shared Customer']);
 
     $firstSale = Sale::create([
         'dealer_name' => 'First Dealer',

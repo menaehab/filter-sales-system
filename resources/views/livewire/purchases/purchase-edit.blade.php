@@ -20,7 +20,7 @@
             <div class="p-6">
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
-                        <x-select name="supplier_id" label="{{ __('keywords.supplier') }}" :options="$suppliers"
+                        <x-select name="supplier_id" label="{{ __('keywords.supplier') }}" :options="$this->suppliers"
                             wire:model.live="supplier_id" :placeholder="__('keywords.select_supplier')" required />
                         <button type="button" wire:click="openCreateSupplierModal"
                             class="mt-1.5 text-xs text-emerald-600 hover:text-emerald-700 font-medium">
@@ -90,7 +90,7 @@
                         wire:key="item-{{ $index }}">
                         <div class="flex-1 min-w-0">
                             <x-select name="items.{{ $index }}.product_id" label="{{ __('keywords.product') }}"
-                                :options="$products" wire:model.live="items.{{ $index }}.product_id"
+                                :options="$this->products" wire:model.live="items.{{ $index }}.product_id"
                                 :placeholder="__('keywords.select_product')" required />
                             <button type="button" wire:click="openCreateProductModal({{ $index }})"
                                 class="mt-1.5 text-xs text-emerald-600 hover:text-emerald-700 font-medium">
@@ -178,7 +178,7 @@
         </div>
 
         {{-- Payment History --}}
-        @if ($purchase->paymentAllocations->count() > 0)
+        @if ($this->purchase->paymentAllocations->count() > 0)
             <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div class="border-b border-gray-200 px-6 py-4">
                     <h3 class="text-base font-semibold text-gray-900">
@@ -205,7 +205,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            @foreach ($purchase->paymentAllocations as $i => $allocation)
+                            @foreach ($this->purchase->paymentAllocations as $i => $allocation)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $i + 1 }}</td>
                                     <td class="px-4 py-3 text-sm font-medium text-emerald-600">
@@ -243,7 +243,7 @@
 
                         <div>
                             <x-select name="newProduct.category_id" label="{{ __('keywords.category') }}"
-                                :options="$categories" wire:model="newProduct.category_id" :placeholder="__('keywords.select_category')" required />
+                                :options="$this->categories" wire:model="newProduct.category_id" :placeholder="__('keywords.select_category')" required />
                             <button type="button" @click="$dispatch('open-modal-create-category-inline')"
                                 class="mt-1.5 text-xs text-emerald-600 hover:text-emerald-700 font-medium">
                                 <i class="fas fa-folder-plus me-1"></i>

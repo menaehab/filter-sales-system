@@ -2,13 +2,11 @@
 
 namespace App\Livewire\SaleReturns;
 
-use App\Models\Product;
-use App\Models\ProductMovement;
+use App\Actions\SaleReturns\CreateSaleReturnAction;
 use App\Models\Sale;
-use App\Models\SaleReturn;
-use App\Models\SaleReturnItem;
-use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -16,7 +14,8 @@ class SaleReturnCreate extends Component
 {
     public string $sale_number = '';
 
-    public ?Sale $sale = null;
+    #[Locked]
+    public ?int $saleId = null;
 
     public string $reason = '';
 
@@ -35,14 +34,14 @@ class SaleReturnCreate extends Component
 
         $sale = Sale::with(['items.product', 'customer'])->where('number', $this->sale_number)->first();
 
-        if (! $sale) {
+        if (!$sale) {
             $this->addError('sale_number', __('keywords.sale_not_found'));
-
             return;
         }
 
-        $this->sale = $sale;
+        $this->saleId = $sale->id;
         $this->items = $sale->items->map(fn ($item) => [
+            'sale_item_id' => $item->id,
             'product_id' => $item->product_id,
             'product_name' => $item->product?->name ?? __('keywords.not_specified'),
             'sell_price' => (string) $item->sell_price,
@@ -52,97 +51,65 @@ class SaleReturnCreate extends Component
         ])->toArray();
     }
 
-    public function getTotalReturnPriceProperty(): float
+    #[Computed]
+    public function sale(): ?Sale
+    {
+        if (!$this->saleId) {
+            return null;
+        }
+
+        return Sale::with(['items.product', 'customer'])->find($this->saleId);
+    }
+
+    #[Computed]
+    public function totalReturnPrice(): float
     {
         return collect($this->items)
             ->filter(fn ($item) => $item['selected'])
             ->sum(fn ($item) => ((float) ($item['sell_price'] ?: 0)) * ((float) ($item['return_quantity'] ?: 0)));
     }
 
-    public function getSelectedItemsCountProperty(): int
+    #[Computed]
+    public function selectedItemsCount(): int
     {
         return collect($this->items)->filter(fn ($item) => $item['selected'])->count();
     }
 
-    protected function rules(): array
+    public function save(CreateSaleReturnAction $action): void
     {
-        $rules = [
-            'sale_number' => 'required',
-            'reason' => 'nullable|string|max:1000',
-            'cash_refund' => 'boolean',
-        ];
-
-        foreach ($this->items as $i => $item) {
-            if ($item['selected']) {
-                $rules["items.{$i}.return_quantity"] = "required|integer|min:1|max:{$item['available_quantity']}";
-            }
-        }
-
-        return $rules;
-    }
-
-    protected function validationAttributes(): array
-    {
-        $attrs = [
-            'sale_number' => __('keywords.sale_number'),
-            'reason' => __('keywords.reason'),
-            'cash_refund' => __('keywords.cash_refund'),
-        ];
-
-        foreach ($this->items as $i => $item) {
-            $n = $i + 1;
-            $attrs["items.{$i}.return_quantity"] = __('keywords.quantity')." #{$n}";
-        }
-
-        return $attrs;
-    }
-
-    public function save(): void
-    {
-        if ($this->selected_items_count === 0) {
+        if ($this->selectedItemsCount === 0) {
             $this->addError('items', __('keywords.select_at_least_one_item'));
-
             return;
         }
 
-        $this->validate();
+        $request = new \App\Http\Requests\SaleReturns\CreateSaleReturnRequest();
 
-        DB::transaction(function () {
-            $totalPrice = $this->total_return_price;
+        $dataToValidate = [
+            'sale_id' => $this->saleId,
+            'items' => $this->items,
+            'reason' => $this->reason,
+            'cash_refund' => $this->cash_refund,
+        ];
 
-            $saleReturn = SaleReturn::create([
-                'total_price' => $totalPrice,
-                'reason' => $this->reason ?: null,
-                'cash_refund' => $this->cash_refund,
-                'sale_id' => $this->sale->id,
-                'user_id' => auth()->id(),
-            ]);
+        $validator = \Illuminate\Support\Facades\Validator::make(
+            $dataToValidate,
+            $request->rules(),
+            $request->messages(),
+            $request->attributes()
+        );
 
-            foreach ($this->items as $item) {
-                if (! $item['selected'] || (float) ($item['return_quantity'] ?: 0) <= 0) {
-                    continue;
-                }
+        if ($validator->fails()) {
+            $this->setErrorBag($validator->getMessageBag());
+            return;
+        }
 
-                $quantity = (int) $item['return_quantity'];
+        $validated = $validator->validated();
 
-                SaleReturnItem::create([
-                    'sell_price' => (float) $item['sell_price'],
-                    'quantity' => $quantity,
-                    'sale_return_id' => $saleReturn->id,
-                    'product_id' => $item['product_id'],
-                ]);
-
-                $product = Product::findOrFail($item['product_id']);
-                $product->increment('quantity', $quantity);
-
-                ProductMovement::create([
-                    'quantity' => $quantity,
-                    'movable_type' => SaleReturn::class,
-                    'movable_id' => $saleReturn->id,
-                    'product_id' => $item['product_id'],
-                ]);
-            }
-        });
+        $action->execute($validated['sale_id'], [
+            'items' => $this->items,
+            'reason' => $validated['reason'] ?? '',
+            'cash_refund' => $validated['cash_refund'] ?? false,
+        ]);
 
         session()->flash('success', __('keywords.sale_return_created'));
         $this->redirect(route('sale-returns'), navigate: true);
@@ -150,7 +117,7 @@ class SaleReturnCreate extends Component
 
     private function resetSale(): void
     {
-        $this->sale = null;
+        $this->saleId = null;
         $this->items = [];
         $this->resetErrorBag('sale_number');
     }

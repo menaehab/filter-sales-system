@@ -2,46 +2,54 @@
 
 namespace App\Livewire\DamagedProducts;
 
+use App\Actions\DamagedProducts\CreateDamagedProductAction;
+use App\Actions\DamagedProducts\DeleteDamagedProductAction;
+use App\Actions\DamagedProducts\UpdateDamagedProductAction;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
-use App\Livewire\Traits\HasValidationAttributes;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\DamagedProduct;
 use App\Models\Product;
-use App\Models\ProductMovement;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app', ['title' => 'damaged_products_management'])]
 class DamagedProductManagement extends Component
 {
-    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
-    public $productSlug = '';
+    public string $productSlug = '';
 
-    public $productSearch = '';
+    public string $productSearch = '';
 
-    public $products;
-
-    public $formProductSearch = '';
+    public string $formProductSearch = '';
 
     public ?string $dateFrom = null;
 
     public ?string $dateTo = null;
 
-    public function mount()
+    public function mount(): void
     {
         $this->resetForm();
-        $this->products = Product::with('category')->orderBy('name')->get();
 
         if ($this->productSlug) {
-            $this->productSearch = $this->products->firstWhere('slug', $this->productSlug)?->name ?? '';
+            $product = $this->products->firstWhere('slug', $this->productSlug);
+            $this->productSearch = $product?->name ?? '';
         }
     }
 
-    public function getDamagedProductsProperty()
+    #[Computed]
+    public function products(): Collection
+    {
+        return Product::with('category')->orderBy('name')->get();
+    }
+
+    #[Computed]
+    public function damagedProducts(): LengthAwarePaginator
     {
         return $this->items;
     }
@@ -49,35 +57,6 @@ class DamagedProductManagement extends Component
     protected function getModelClass(): string
     {
         return DamagedProduct::class;
-    }
-
-    protected function rules()
-    {
-        $maxQuantity = $this->form['product_id']
-            ? Product::find($this->form['product_id'])?->quantity ?? 0
-            : 0;
-
-        if ($this->editId) {
-            $existingDamage = DamagedProduct::find($this->editId);
-            if ($existingDamage && $existingDamage->product_id == $this->form['product_id']) {
-                $maxQuantity += $existingDamage->quantity;
-            }
-        }
-
-        return [
-            'form.product_id' => ['required', 'exists:products,id'],
-            'form.quantity' => ['required', 'integer', 'min:1', 'max:'.$maxQuantity],
-            'form.reason' => ['nullable', 'string', 'max:1000'],
-        ];
-    }
-
-    protected function validationAttributes(): array
-    {
-        return [
-            'form.product_id' => __('keywords.product'),
-            'form.quantity' => __('keywords.quantity'),
-            'form.reason' => __('keywords.reason'),
-        ];
     }
 
     protected function getDefaultForm(): array
@@ -96,11 +75,11 @@ class DamagedProductManagement extends Component
         ];
     }
 
-    public function updatingProductSlug()
+    public function updatingProductSlug(): void
     {
         $this->resetPage();
-
-        $this->productSearch = $this->products->firstWhere('slug', $this->productSlug)?->name ?? '';
+        $product = $this->products->firstWhere('slug', $this->productSlug);
+        $this->productSearch = $product?->name ?? '';
     }
 
     public function updatingDateFrom(): void
@@ -128,101 +107,54 @@ class DamagedProductManagement extends Component
         }
     }
 
-    public function create()
+    public function create(CreateDamagedProductAction $action): void
     {
         $this->authorizeManageDamagedProducts();
 
-        $this->validate();
+        $request = new \App\Http\Requests\DamagedProducts\CreateDamagedProductRequest;
+        $request->merge($this->form);
+        $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
 
-        DB::transaction(function () {
-            $product = Product::findOrFail($this->form['product_id']);
-
-            $damage = DamagedProduct::create([
-                'product_id' => $this->form['product_id'],
-                'cost_price' => $product->cost_price,
-                'quantity' => $this->form['quantity'],
-                'reason' => $this->form['reason'],
-                'user_id' => auth()->id(),
-            ]);
-
-            $product->decrement('quantity', $this->form['quantity']);
-
-            ProductMovement::create([
-                'quantity' => -$this->form['quantity'],
-                'movable_type' => DamagedProduct::class,
-                'movable_id' => $damage->id,
-                'product_id' => $this->form['product_id'],
-            ]);
-        });
-
-        $this->products = Product::with('category')->orderBy('name')->get();
+        $action->execute($validated['form']);
 
         $this->resetForm();
         $this->formProductSearch = '';
         $this->dispatch('close-modal-create-damaged-product');
         $this->resetPage();
+        unset($this->products);
     }
 
-    public function openEdit($id)
+    public function openEdit(int $id): void
     {
         $this->authorizeManageDamagedProducts();
 
         $damagedProduct = DamagedProduct::with('product')->findOrFail($id);
 
         $this->editId = $damagedProduct->id;
-
         $this->form = [
             'product_id' => $damagedProduct->product_id,
             'quantity' => $damagedProduct->quantity,
             'reason' => $damagedProduct->reason,
         ];
-
         $this->formProductSearch = $damagedProduct->product->name;
 
         $this->dispatch('open-modal-edit-damaged-product');
     }
 
-    public function updateDamagedProduct()
+    public function updateDamagedProduct(UpdateDamagedProductAction $action): void
     {
         $this->authorizeManageDamagedProducts();
 
-        $this->validate();
+        $request = new \App\Http\Requests\DamagedProducts\UpdateDamagedProductRequest;
+        $request->merge($this->form);
+        $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
 
-        DB::transaction(function () {
-            $damagedProduct = DamagedProduct::findOrFail($this->editId);
-            $oldQuantity = $damagedProduct->quantity;
-            $oldProductId = $damagedProduct->product_id;
-
-            $product = Product::findOrFail($this->form['product_id']);
-
-            if ($oldProductId == $this->form['product_id']) {
-                $quantityDiff = $this->form['quantity'] - $oldQuantity;
-                $product->decrement('quantity', $quantityDiff);
-            } else {
-                Product::find($oldProductId)?->increment('quantity', $oldQuantity);
-                $product->decrement('quantity', $this->form['quantity']);
-            }
-
-            $damagedProduct->update([
-                'product_id' => $this->form['product_id'],
-                'cost_price' => $product->cost_price,
-                'quantity' => $this->form['quantity'],
-                'reason' => $this->form['reason'],
-            ]);
-
-            ProductMovement::where('movable_type', DamagedProduct::class)
-                ->where('movable_id', $damagedProduct->id)
-                ->delete();
-
-            ProductMovement::create([
-                'quantity' => -$this->form['quantity'],
-                'movable_type' => DamagedProduct::class,
-                'movable_id' => $damagedProduct->id,
-                'product_id' => $this->form['product_id'],
-            ]);
-        });
-
-        $this->products = Product::with('category')->orderBy('name')->get();
+        $damagedProduct = DamagedProduct::findOrFail($this->editId);
+        $action->execute($damagedProduct, $validated['form']);
 
         $this->resetForm();
         $this->formProductSearch = '';
@@ -230,39 +162,30 @@ class DamagedProductManagement extends Component
 
         $this->dispatch('close-modal-edit-damaged-product');
         $this->resetPage();
+        unset($this->products);
     }
 
-    public function setDelete($id)
+    public function setDelete(int $id): void
+    {
+        $this->authorizeManageDamagedProducts();
+        $this->deleteId = $id;
+        $this->dispatch('open-modal-delete-damaged-product');
+    }
+
+    public function delete(DeleteDamagedProductAction $action): void
     {
         $this->authorizeManageDamagedProducts();
 
-        $this->openDeleteModal($id, 'open-modal-delete-damaged-product');
-    }
+        $damagedProduct = DamagedProduct::find($this->deleteId);
 
-    public function delete()
-    {
-        $this->authorizeManageDamagedProducts();
-
-        DB::transaction(function () {
-            $damagedProduct = DamagedProduct::find($this->deleteId);
-
-            if ($damagedProduct) {
-                $damagedProduct->product?->increment('quantity', $damagedProduct->quantity);
-
-                ProductMovement::where('movable_type', DamagedProduct::class)
-                    ->where('movable_id', $damagedProduct->id)
-                    ->delete();
-
-                $damagedProduct->delete();
-            }
-        });
-
-        $this->products = Product::with('category')->orderBy('name')->get();
+        if ($damagedProduct) {
+            $action->execute($damagedProduct);
+        }
 
         $this->deleteId = null;
-
         $this->dispatch('close-modal-delete-damaged-product');
         $this->resetPage();
+        unset($this->products);
     }
 
     protected function getSearchableFields(): array
@@ -280,8 +203,8 @@ class DamagedProductManagement extends Component
         return view('livewire.damaged-products.damaged-product-management');
     }
 
-    public function authorizeManageDamagedProducts()
+    private function authorizeManageDamagedProducts(): void
     {
-        return auth()->user()->can('manage_damaged_products');
+        abort_unless(auth()->user()->can('manage_damaged_products'), 403);
     }
 }

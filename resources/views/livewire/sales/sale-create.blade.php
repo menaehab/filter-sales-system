@@ -33,7 +33,7 @@
 
             <div class="flex-1 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 p-4">
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-                    @forelse ($products as $product)
+                    @forelse ($this->products as $product)
                         <button wire:click="addToCart({{ $product->id }})"
                             class="group flex flex-col rounded-xl border border-gray-200 bg-white p-3 text-start shadow-sm transition-all hover:border-emerald-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
                             <span
@@ -199,7 +199,7 @@
                     <div x-show="open" x-cloak
                         class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                         <div class="max-h-52 overflow-y-auto">
-                            @forelse ($customers as $id => $name)
+                            @forelse ($this->customers as $id => $name)
                                 <button type="button"
                                     wire:click="selectCustomer({{ $id }}, '{{ addslashes($name) }}')"
                                     @click="open = false"

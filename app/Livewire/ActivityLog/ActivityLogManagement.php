@@ -5,8 +5,11 @@ namespace App\Livewire\ActivityLog;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Spatie\Activitylog\Models\Activity;
@@ -84,7 +87,8 @@ class ActivityLogManagement extends Component
         return 'desc';
     }
 
-    public function getActivitiesProperty()
+    #[Computed]
+    public function activities(): LengthAwarePaginator
     {
         return $this->buildQuery()
             ->with(['causer', 'subject'])
@@ -117,10 +121,10 @@ class ActivityLogManagement extends Component
         $this->resetPage();
     }
 
-    public function toggleRow(int $id)
+    public function toggleRow(int $id): void
     {
         if (in_array($id, $this->expandedRows)) {
-            $this->expandedRows = array_diff($this->expandedRows, [$id]);
+            $this->expandedRows = array_values(array_diff($this->expandedRows, [$id]));
         } else {
             $this->expandedRows[] = $id;
         }
@@ -131,7 +135,8 @@ class ActivityLogManagement extends Component
         return in_array($id, $this->expandedRows);
     }
 
-    public function getAvailableModelsProperty(): array
+    #[Computed]
+    public function availableModels(): array
     {
         return Activity::query()
             ->distinct()
@@ -141,7 +146,8 @@ class ActivityLogManagement extends Component
             ->toArray();
     }
 
-    public function getAvailableEventsProperty(): array
+    #[Computed]
+    public function availableEvents(): array
     {
         return Activity::query()
             ->distinct()
@@ -151,7 +157,8 @@ class ActivityLogManagement extends Component
             ->toArray();
     }
 
-    public function getAvailableUsersProperty()
+    #[Computed]
+    public function availableUsers(): Collection
     {
         return User::query()->select(['id', 'name'])->orderBy('name')->get();
     }
@@ -227,7 +234,7 @@ class ActivityLogManagement extends Component
             try {
                 return \Carbon\Carbon::parse($value)->diffForHumans();
             } catch (\Exception $e) {
-                // Not a valid date string after all
+                // Not a valid date string
             }
         }
 

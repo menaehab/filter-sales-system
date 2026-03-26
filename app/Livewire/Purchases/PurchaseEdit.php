@@ -2,20 +2,24 @@
 
 namespace App\Livewire\Purchases;
 
+use App\Actions\Categories\CreateCategoryAction;
+use App\Actions\Products\CreateProductAction;
+use App\Actions\Purchases\UpdatePurchaseAction;
+use App\Actions\Suppliers\CreateSupplierAction;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductMovement;
 use App\Models\Purchase;
-use App\Models\PurchaseItem;
 use App\Models\Supplier;
-use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class PurchaseEdit extends Component
 {
-    public Purchase $purchase;
+    #[Locked]
+    public int $purchaseId;
 
     public ?int $supplier_id = null;
 
@@ -46,10 +50,9 @@ class PurchaseEdit extends Component
 
     public ?int $targetItemIndexForNewProduct = null;
 
-    public function mount(Purchase $purchase)
+    public function mount(Purchase $purchase): void
     {
-        $this->purchase = $purchase->load(['items', 'paymentAllocations.supplierPayment']);
-
+        $this->purchaseId = $purchase->id;
         $this->supplier_id = $purchase->supplier_id;
         $this->payment_type = $purchase->isInstallment() ? 'installment' : 'cash';
         $this->down_payment = (string) $purchase->down_payment;
@@ -65,6 +68,13 @@ class PurchaseEdit extends Component
         if (empty($this->items)) {
             $this->addItem();
         }
+    }
+
+    #[Computed]
+    public function purchase(): Purchase
+    {
+        return Purchase::with(['items', 'paymentAllocations.supplierPayment'])
+            ->findOrFail($this->purchaseId);
     }
 
     public function addItem()
@@ -111,7 +121,7 @@ class PurchaseEdit extends Component
         $this->dispatch('open-modal-create-supplier-inline');
     }
 
-    public function createSupplierInline(): void
+    public function createSupplierInline(CreateSupplierAction $action): void
     {
         $this->validate([
             'newSupplier.name' => ['required', 'string', 'max:255'],
@@ -121,7 +131,7 @@ class PurchaseEdit extends Component
             'newSupplier.phone' => __('keywords.phone'),
         ]);
 
-        $supplier = Supplier::create([
+        $supplier = $action->execute([
             'name' => $this->newSupplier['name'],
             'phone' => $this->newSupplier['phone'] ?: null,
         ]);
@@ -145,7 +155,7 @@ class PurchaseEdit extends Component
         $this->dispatch('open-modal-create-product-inline');
     }
 
-    public function createCategoryInline(): void
+    public function createCategoryInline(CreateCategoryAction $action): void
     {
         $this->validate([
             'newCategory.name' => ['required', 'string', 'max:255', 'unique:categories,name'],
@@ -153,9 +163,7 @@ class PurchaseEdit extends Component
             'newCategory.name' => __('keywords.category'),
         ]);
 
-        $category = Category::create([
-            'name' => $this->newCategory['name'],
-        ]);
+        $category = $action->execute(['name' => $this->newCategory['name']]);
 
         $this->newCategory['name'] = '';
         $this->newProduct['category_id'] = (string) $category->id;
@@ -163,7 +171,7 @@ class PurchaseEdit extends Component
         $this->dispatch('close-modal-create-category-inline');
     }
 
-    public function createProductInline(): void
+    public function createProductInline(CreateProductAction $action): void
     {
         $this->validate([
             'newProduct.name' => ['required', 'string', 'max:255'],
@@ -179,7 +187,7 @@ class PurchaseEdit extends Component
             'newProduct.category_id' => __('keywords.category'),
         ]);
 
-        $product = Product::create([
+        $product = $action->execute([
             'name' => $this->newProduct['name'],
             'description' => $this->newProduct['description'] ?: null,
             'cost_price' => (float) $this->newProduct['cost_price'],
@@ -197,133 +205,71 @@ class PurchaseEdit extends Component
         $this->dispatch('close-modal-create-product-inline');
     }
 
-    public function getTotalPriceProperty(): float
+    #[Computed]
+    public function totalPrice(): float
     {
         return collect($this->items)->sum(function ($item) {
             return ((float) ($item['cost_price'] ?: 0)) * ((float) ($item['quantity'] ?: 0));
         });
     }
 
-    public function getRemainingAfterDownPaymentProperty(): float
+    #[Computed]
+    public function remainingAfterDownPayment(): float
     {
-        return max(0, $this->total_price - (float) ($this->down_payment ?: 0));
+        return max(0, $this->totalPrice - (float) ($this->down_payment ?: 0));
     }
 
-    public function getInstallmentAmountProperty(): float
+    #[Computed]
+    public function installmentAmount(): float
     {
         $months = (int) ($this->installment_months ?: 0);
         if ($months <= 0) {
             return 0;
         }
 
-        return round($this->remaining_after_down_payment / $months, 2);
+        return round($this->remainingAfterDownPayment / $months, 2);
     }
 
-    protected function rules(): array
+    #[Computed]
+    public function suppliers(): array
     {
-        return [
-            'supplier_id' => 'required|exists:suppliers,id',
-            'payment_type' => 'required|in:cash,installment',
-            'down_payment' => 'required_if:payment_type,installment|numeric|min:0',
-            'installment_months' => 'required_if:payment_type,installment|nullable|integer|min:1|max:60',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.cost_price' => 'required|numeric|min:0.01',
-            'items.*.quantity' => 'required|integer|min:1',
+        return Supplier::orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    #[Computed]
+    public function products(): array
+    {
+        return Product::orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    #[Computed]
+    public function categories(): array
+    {
+        return Category::orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    public function update(UpdatePurchaseAction $action): void
+    {
+        $request = new \App\Http\Requests\Purchases\UpdatePurchaseRequest;
+
+        // Temporarily add form property for validation
+        $this->form = [
+            'supplier_id' => $this->supplier_id,
+            'payment_type' => $this->payment_type,
+            'down_payment' => $this->down_payment,
+            'installment_months' => $this->installment_months,
+            'items' => $this->items,
         ];
-    }
 
-    protected function validationAttributes(): array
-    {
-        $attrs = [
-            'supplier_id' => __('keywords.supplier'),
-            'payment_type' => __('keywords.payment_type'),
-            'down_payment' => __('keywords.down_payment'),
-            'installment_months' => __('keywords.installment_months'),
-        ];
+        $validated = $this->validate($request->rules(), $request->messages(), $request->attributes());
 
-        foreach ($this->items as $i => $item) {
-            $n = $i + 1;
-            $attrs["items.{$i}.product_id"] = __('keywords.product')." #{$n}";
-            $attrs["items.{$i}.cost_price"] = __('keywords.cost_price')." #{$n}";
-            $attrs["items.{$i}.quantity"] = __('keywords.quantity')." #{$n}";
-        }
+        $action->execute($this->purchase, $validated);
 
-        return $attrs;
-    }
-
-    public function update()
-    {
-        $this->validate();
-
-        $supplier = Supplier::findOrFail($this->supplier_id);
-        $totalPrice = $this->total_price;
-        $isInstallment = $this->payment_type === 'installment';
-        $downPayment = $isInstallment ? (float) $this->down_payment : $totalPrice;
-        $months = $isInstallment ? (int) $this->installment_months : null;
-        $installmentAmount = $isInstallment ? $this->installment_amount : null;
-
-        DB::transaction(function () use ($supplier, $totalPrice, $isInstallment, $months, $installmentAmount) {
-            // Reverse old stock changes
-            foreach ($this->purchase->items as $oldItem) {
-                $product = Product::find($oldItem->product_id);
-                if ($product) {
-                    $product->decrement('quantity', $oldItem->quantity);
-                }
-            }
-
-            // Delete old items and movements
-            ProductMovement::where('movable_type', Purchase::class)
-                ->where('movable_id', $this->purchase->id)
-                ->delete();
-            $this->purchase->items()->delete();
-
-            $this->purchase->update([
-                'supplier_name' => $supplier->name,
-                'total_price' => $totalPrice,
-                'payment_type' => $isInstallment ? 'installment' : 'cash',
-                'installment_amount' => $installmentAmount,
-                'installment_months' => $months,
-                'supplier_id' => $supplier->id,
-            ]);
-
-            // Create new items
-            foreach ($this->items as $item) {
-                $product = Product::findOrFail($item['product_id']);
-
-                PurchaseItem::create([
-                    'product_name' => $product->name,
-                    'cost_price' => (float) $item['cost_price'],
-                    'quantity' => (int) $item['quantity'],
-                    'purchase_id' => $this->purchase->id,
-                    'product_id' => $product->id,
-                ]);
-
-                // Keep product cost price synced with latest purchase cost.
-                $product->update([
-                    'cost_price' => (float) $item['cost_price'],
-                ]);
-
-                $product->increment('quantity', (int) $item['quantity']);
-
-                ProductMovement::create([
-                    'quantity' => (int) $item['quantity'],
-                    'movable_type' => Purchase::class,
-                    'movable_id' => $this->purchase->id,
-                    'product_id' => $product->id,
-                ]);
-            }
-        });
-
-        return $this->redirect(route('purchases'), navigate: true);
+        $this->redirect(route('purchases'), navigate: true);
     }
 
     public function render()
     {
-        return view('livewire.purchases.purchase-edit', [
-            'suppliers' => Supplier::orderBy('name')->pluck('name', 'id')->all(),
-            'products' => Product::orderBy('name')->pluck('name', 'id')->all(),
-            'categories' => Category::orderBy('name')->pluck('name', 'id')->all(),
-        ]);
+        return view('livewire.purchases.purchase-edit');
     }
 }

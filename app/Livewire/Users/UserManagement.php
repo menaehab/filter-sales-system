@@ -2,14 +2,16 @@
 
 namespace App\Livewire\Users;
 
+use App\Actions\Users\CreateUserAction;
+use App\Actions\Users\DeleteUserAction;
+use App\Actions\Users\UpdateUserAction;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
-use App\Livewire\Traits\HasValidationAttributes;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Spatie\Permission\Models\Permission;
@@ -17,35 +19,11 @@ use Spatie\Permission\Models\Permission;
 #[Layout('layouts.app', ['title' => 'users_management'])]
 class UserManagement extends Component
 {
-    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
-    public function mount()
+    public function mount(): void
     {
         $this->resetForm();
-    }
-
-    protected function rules()
-    {
-        return [
-            'form.name' => ['required', 'string', 'max:255'],
-            'form.email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->editId), 'required_without:form.phone'],
-            'form.phone' => ['nullable', 'string', 'max:11', 'regex:/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}$/', Rule::unique('users', 'phone')->ignore($this->editId), 'required_without:form.email'],
-            'form.password' => $this->editId ? ['nullable', 'string', 'min:8', 'confirmed'] : ['required', 'string', 'min:8', 'confirmed'],
-            'form.permissions' => ['array'],
-            'form.permissions.*' => ['string', 'exists:permissions,name'],
-        ];
-    }
-
-    protected function validationAttributes(): array
-    {
-        return [
-            'form.name' => __('keywords.name'),
-            'form.email' => __('keywords.email'),
-            'form.phone' => __('keywords.phone'),
-            'form.password' => __('keywords.password'),
-            'form.password_confirmation' => __('keywords.confirm_password'),
-            'form.permissions' => __('keywords.permissions'),
-        ];
     }
 
     protected function getDefaultForm(): array
@@ -70,43 +48,55 @@ class UserManagement extends Component
         return ['name', 'email', 'phone'];
     }
 
-    public function getPermissionOptionsProperty()
+    #[Computed]
+    public function permissionOptions(): array
     {
         return Permission::pluck('name', 'name')
             ->mapWithKeys(fn ($name) => [$name => __('keywords.'.$name)])
             ->toArray();
     }
 
-    public function create()
+    #[Computed]
+    public function users(): LengthAwarePaginator
+    {
+        return $this->items;
+    }
+
+    private function mapRules(array $rules): array
+    {
+        return collect($rules)->mapWithKeys(function ($rule, $key) {
+            $rule = is_array($rule) ? $rule : explode('|', $rule);
+            $rule = array_map(function ($r) {
+                if (is_string($r) && str_starts_with($r, 'required_without:')) {
+                    return 'required_without:form.' . substr($r, 17);
+                }
+                return $r;
+            }, $rule);
+            return ["form.{$key}" => $rule];
+        })->toArray();
+    }
+
+    public function create(CreateUserAction $action): void
     {
         $this->editId = null;
 
-        $this->validate();
+        $request = new \App\Http\Requests\Users\CreateUserRequest;
+        $rules = $this->mapRules($request->rules());
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
 
-        $user = User::create([
-            'name' => $this->form['name'],
-            'email' => $this->form['email'],
-            'phone' => $this->form['phone'] ?: null,
-            'password' => Hash::make($this->form['password']),
-        ]);
-
-        if (! empty($this->form['permissions'])) {
-            $user->syncPermissions($this->form['permissions']);
-        }
+        $action->execute($validated['form']);
 
         $this->resetForm();
-
         $this->dispatch('close-modal-create-user');
-
         $this->resetPage();
     }
 
-    public function openEdit($id)
+    public function openEdit(int $id): void
     {
         $user = User::findOrFail($id);
 
         $this->editId = $id;
-
         $this->form = [
             'name' => $user->name,
             'email' => $user->email,
@@ -119,61 +109,51 @@ class UserManagement extends Component
         $this->dispatch('open-modal-edit-user');
     }
 
-    public function updateUser()
+    public function updateUser(UpdateUserAction $action): void
     {
-        $this->validate();
+        // Add the user ID to the form data for unique validation
+        $this->form['id'] = $this->editId;
 
-        $data = [
-            'name' => $this->form['name'],
-            'email' => $this->form['email'],
-            'phone' => $this->form['phone'] ?: null,
-        ];
+        $request = new \App\Http\Requests\Users\UpdateUserRequest;
+        $request->merge($this->form);
 
-        if ($this->form['password']) {
-            $data['password'] = Hash::make($this->form['password']);
-        }
+        $rules = $this->mapRules($request->rules());
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
 
         $user = User::findOrFail($this->editId);
-        $user->update($data);
-
-        if (! empty($this->form['permissions'])) {
-            $user->syncPermissions($this->form['permissions']);
-        } else {
-            $user->syncPermissions([]);
-        }
+        $action->execute($user, $validated['form']);
 
         $this->resetForm();
         $this->editId = null;
 
         $this->dispatch('close-modal-edit-user');
-
         $this->resetPage();
     }
 
-    public function openDelete($id)
+    public function openDelete(int $id): void
     {
-        $this->openDeleteModal($id, 'open-modal-delete-user');
+        $this->deleteId = $id;
+        $this->dispatch('open-modal-delete-user');
     }
 
-    public function setDelete($id)
+    public function setDelete(int $id): void
     {
-        $this->openDeleteModal($id, 'open-modal-delete-user');
+        $this->deleteId = $id;
+        $this->dispatch('open-modal-delete-user');
     }
 
-    public function delete()
+    public function delete(DeleteUserAction $action): void
     {
-        User::findOrFail($this->deleteId)->delete();
+        $user = User::find($this->deleteId);
+
+        if ($user) {
+            $action->execute($user);
+        }
 
         $this->deleteId = null;
-
         $this->dispatch('close-modal-delete-user');
-
         $this->resetPage();
-    }
-
-    public function getUsersProperty()
-    {
-        return $this->items;
     }
 
     public function render()

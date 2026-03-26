@@ -7,6 +7,8 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\StatisticsService;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -24,151 +26,169 @@ class Dashboard extends Component
 
     public string $chartPeriod = 'day';
 
-    public function boot(StatisticsService $statsService)
+    public function boot(StatisticsService $statsService): void
     {
         $this->statsService = $statsService;
     }
 
-    // Main KPIs
-    public function getTotalSalesProperty(): float
+    #[Computed]
+    public function totalSales(): float
     {
         return $this->statsService->getTotalSales($this->dateFrom, $this->dateTo);
     }
 
-    public function getTotalPurchasesProperty(): float
+    #[Computed]
+    public function totalPurchases(): float
     {
         return $this->statsService->getTotalPurchases($this->dateFrom, $this->dateTo);
     }
 
-    public function getTotalExpensesProperty(): float
+    #[Computed]
+    public function totalExpenses(): float
     {
         return $this->statsService->getTotalExpenses($this->dateFrom, $this->dateTo);
     }
 
-    public function getNetProfitProperty(): float
+    #[Computed]
+    public function netProfit(): float
     {
         return $this->statsService->getNetProfit($this->dateFrom, $this->dateTo);
     }
 
-    public function getTotalCustomerPaymentsProperty(): float
+    #[Computed]
+    public function totalCustomerPayments(): float
     {
         return $this->statsService->getTotalCustomerPayments($this->dateFrom, $this->dateTo);
     }
 
-    public function getTotalSupplierPaymentsProperty(): float
+    #[Computed]
+    public function totalSupplierPayments(): float
     {
         return $this->statsService->getTotalSupplierPayments($this->dateFrom, $this->dateTo);
     }
 
-    public function getOutstandingCustomerBalancesProperty(): float
+    #[Computed]
+    public function outstandingCustomerBalances(): float
     {
         return $this->statsService->getOutstandingCustomerBalances();
     }
 
-    public function getOutstandingSupplierBalancesProperty(): float
+    #[Computed]
+    public function outstandingSupplierBalances(): float
     {
         return $this->statsService->getOutstandingSupplierBalances();
     }
 
-    // Cash Flow
-    public function getCashFlowProperty(): array
+    #[Computed]
+    public function cashFlow(): array
     {
         return $this->statsService->getCashFlow($this->dateFrom, $this->dateTo);
     }
 
-    // Charts Data
-    public function getSalesOverTimeProperty(): array
+    #[Computed]
+    public function salesOverTime(): array
     {
         return $this->statsService->getSalesOverTime($this->dateFrom, $this->dateTo, $this->chartPeriod);
     }
 
-    public function getProfitOverTimeProperty(): array
+    #[Computed]
+    public function profitOverTime(): array
     {
         return $this->statsService->getProfitOverTime($this->dateFrom, $this->dateTo, $this->chartPeriod);
     }
 
-    public function getTopSellingProductsProperty(): array
+    #[Computed]
+    public function topSellingProducts(): array
     {
         return $this->statsService->getTopSellingProducts(10, $this->dateFrom, $this->dateTo);
     }
 
-    public function getMostPurchasedProductsProperty(): array
+    #[Computed]
+    public function mostPurchasedProducts(): array
     {
         return $this->statsService->getMostPurchasedProducts(10, $this->dateFrom, $this->dateTo);
     }
 
-    // Return & Damage Statistics
-    public function getReturnStatisticsProperty(): array
+    #[Computed]
+    public function returnStatistics(): array
     {
         return $this->statsService->getReturnStatistics($this->dateFrom, $this->dateTo);
     }
 
-    public function getDamageStatisticsProperty(): array
+    #[Computed]
+    public function damageStatistics(): array
     {
         return $this->statsService->getDamageStatistics($this->dateFrom, $this->dateTo);
     }
 
-    // Payment Statistics
-    public function getPaymentStatisticsProperty(): array
+    #[Computed]
+    public function paymentStatistics(): array
     {
         return $this->statsService->getPaymentStatistics($this->dateFrom, $this->dateTo);
     }
 
-    // Revenue vs Expenses
-    public function getRevenueVsExpensesProperty(): array
+    #[Computed]
+    public function revenueVsExpenses(): array
     {
         return $this->statsService->getRevenueVsExpenses($this->dateFrom, $this->dateTo);
     }
 
-    // Top Customers & Suppliers
-    public function getTopCustomersByBalanceProperty(): array
+    #[Computed]
+    public function topCustomersByBalance(): array
     {
         return $this->statsService->getTopCustomersByBalance(5);
     }
 
-    public function getTopSuppliersByBalanceProperty(): array
+    #[Computed]
+    public function topSuppliersByBalance(): array
     {
         return $this->statsService->getTopSuppliersByBalance(5);
     }
 
-    // Invoice Counts
-    public function getInvoiceCountsProperty(): array
+    #[Computed]
+    public function invoiceCounts(): array
     {
         return $this->statsService->getInvoiceCounts($this->dateFrom, $this->dateTo);
     }
 
-    // Existing Properties
-    public function getTotalProductsProperty(): int
+    #[Computed]
+    public function totalProducts(): int
     {
         return Product::count();
     }
 
-    public function getTotalCategoriesProperty(): int
+    #[Computed]
+    public function totalCategories(): int
     {
         return Category::count();
     }
 
-    public function getTotalCustomersProperty(): int
+    #[Computed]
+    public function totalCustomers(): int
     {
         return Customer::count();
     }
 
-    public function getTotalSuppliersProperty(): int
+    #[Computed]
+    public function totalSuppliers(): int
     {
         return Supplier::count();
     }
 
-    public function getTotalStockProperty(): int
+    #[Computed]
+    public function totalStock(): int
     {
         return (int) Product::sum('quantity');
     }
 
-    public function getLowStockCountProperty(): int
+    #[Computed]
+    public function lowStockCount(): int
     {
         return Product::where('quantity', '<=', 5)->count();
     }
 
-    public function getLowStockProductsProperty()
+    #[Computed]
+    public function lowStockProducts(): Collection
     {
         return Product::with('category')
             ->where('quantity', '<=', 5)
@@ -177,7 +197,8 @@ class Dashboard extends Component
             ->get();
     }
 
-    public function getRecentProductsProperty()
+    #[Computed]
+    public function recentProducts(): Collection
     {
         return Product::with('category')
             ->latest()
@@ -185,7 +206,8 @@ class Dashboard extends Component
             ->get();
     }
 
-    public function getTopCategoriesProperty()
+    #[Computed]
+    public function topCategories(): Collection
     {
         return Category::withCount('products')
             ->orderByDesc('products_count')
@@ -193,7 +215,7 @@ class Dashboard extends Component
             ->get();
     }
 
-    public function setChartPeriod(string $period)
+    public function setChartPeriod(string $period): void
     {
         $this->chartPeriod = $period;
     }

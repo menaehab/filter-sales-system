@@ -2,15 +2,11 @@
 
 namespace App\Livewire\Purchases;
 
+use App\Actions\Purchases\CreatePurchaseAction;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductMovement;
-use App\Models\Purchase;
-use App\Models\PurchaseItem;
 use App\Models\Supplier;
-use App\Models\SupplierPayment;
-use App\Models\SupplierPaymentAllocation;
-use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -48,12 +44,16 @@ class PurchaseCreate extends Component
 
     public ?int $targetItemIndexForNewProduct = null;
 
-    public function mount()
+    public function mount(): void
     {
         $this->addItem();
     }
 
-    public function addItem()
+    // ==========================================
+    // ITEM MANAGEMENT
+    // ==========================================
+
+    public function addItem(): void
     {
         $this->items[] = [
             'product_id' => '',
@@ -63,7 +63,7 @@ class PurchaseCreate extends Component
         ];
     }
 
-    public function removeItem(int $index)
+    public function removeItem(int $index): void
     {
         if (count($this->items) > 1) {
             array_splice($this->items, $index, 1);
@@ -71,9 +71,8 @@ class PurchaseCreate extends Component
         }
     }
 
-    public function updatedItems($value, $key)
+    public function updatedItems($value, $key): void
     {
-        // key format: "0.product_id"
         $parts = explode('.', $key);
         if (count($parts) === 2 && $parts[1] === 'product_id') {
             $index = (int) $parts[0];
@@ -88,13 +87,13 @@ class PurchaseCreate extends Component
         }
     }
 
+    // ==========================================
+    // INLINE CREATE MODALS
+    // ==========================================
+
     public function openCreateSupplierModal(): void
     {
-        $this->newSupplier = [
-            'name' => '',
-            'phone' => '',
-        ];
-
+        $this->newSupplier = ['name' => '', 'phone' => ''];
         $this->dispatch('open-modal-create-supplier-inline');
     }
 
@@ -120,7 +119,6 @@ class PurchaseCreate extends Component
     public function openCreateProductModal(?int $index = null): void
     {
         $this->targetItemIndexForNewProduct = $index;
-
         $this->newProduct = [
             'name' => '',
             'description' => '',
@@ -128,7 +126,6 @@ class PurchaseCreate extends Component
             'min_quantity' => '0',
             'category_id' => '',
         ];
-
         $this->dispatch('open-modal-create-product-inline');
     }
 
@@ -140,13 +137,10 @@ class PurchaseCreate extends Component
             'newCategory.name' => __('keywords.category'),
         ]);
 
-        $category = Category::create([
-            'name' => $this->newCategory['name'],
-        ]);
+        $category = Category::create(['name' => $this->newCategory['name']]);
 
         $this->newCategory['name'] = '';
         $this->newProduct['category_id'] = (string) $category->id;
-
         $this->dispatch('close-modal-create-category-inline');
     }
 
@@ -184,14 +178,20 @@ class PurchaseCreate extends Component
         $this->dispatch('close-modal-create-product-inline');
     }
 
-    public function getTotalPriceProperty(): float
+    // ==========================================
+    // COMPUTED PROPERTIES
+    // ==========================================
+
+    #[Computed]
+    public function totalPrice(): float
     {
         return collect($this->items)->sum(function ($item) {
-            return ((float) ($item['cost_price'] ?: 0)) * ((float) ($item['quantity'] ?: 0));
+            return ((float) ($item['cost_price'] ?? 0)) * ((int) ($item['quantity'] ?? 0));
         });
     }
 
-    public function getSelectedSupplierProperty(): ?Supplier
+    #[Computed]
+    public function selectedSupplier(): ?Supplier
     {
         if (! $this->supplier_id) {
             return null;
@@ -200,179 +200,99 @@ class PurchaseCreate extends Component
         return Supplier::find($this->supplier_id);
     }
 
-    public function getAvailableSupplierCreditProperty(): float
+    #[Computed]
+    public function availableSupplierCredit(): float
     {
         return $this->selectedSupplier?->available_credit ?? 0;
     }
 
-    public function getAppliedSupplierCreditProperty(): float
+    #[Computed]
+    public function appliedSupplierCredit(): float
     {
-        return min($this->total_price, $this->available_supplier_credit);
+        return min($this->totalPrice, $this->availableSupplierCredit);
     }
 
-    public function getCashAmountDueProperty(): float
+    #[Computed]
+    public function cashAmountDue(): float
     {
         if ($this->payment_type === 'installment') {
-            return min((float) ($this->down_payment ?: 0), max(0, $this->total_price - $this->applied_supplier_credit));
+            return min((float) ($this->down_payment ?? 0), max(0, $this->totalPrice - $this->appliedSupplierCredit));
         }
 
-        return max(0, $this->total_price - $this->applied_supplier_credit);
+        return max(0, $this->totalPrice - $this->appliedSupplierCredit);
     }
 
-    public function getRemainingAfterDownPaymentProperty(): float
+    #[Computed]
+    public function remainingAfterDownPayment(): float
     {
-        return max(0, $this->total_price - $this->applied_supplier_credit - $this->cash_amount_due);
+        return max(0, $this->totalPrice - $this->appliedSupplierCredit - $this->cashAmountDue);
     }
 
-    public function getInstallmentAmountProperty(): float
+    #[Computed]
+    public function installmentAmount(): float
     {
-        $months = (int) ($this->installment_months ?: 0);
+        $months = (int) ($this->installment_months ?? 0);
         if ($months <= 0) {
             return 0;
         }
 
-        return round($this->remaining_after_down_payment / $months, 2);
+        return round($this->remainingAfterDownPayment / $months, 2);
     }
 
-    protected function rules(): array
+    #[Computed]
+    public function suppliers(): array
     {
-        return [
-            'supplier_id' => 'required|exists:suppliers,id',
-            'payment_type' => 'required|in:cash,installment',
-            'down_payment' => 'required_if:payment_type,installment|numeric|min:0',
-            'installment_months' => 'required_if:payment_type,installment|nullable|integer|min:1|max:60',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.cost_price' => 'required|numeric|min:0.01',
-            'items.*.quantity' => 'required|integer|min:1',
-        ];
+        return Supplier::orderBy('name')->pluck('name', 'id')->all();
     }
 
-    protected function validationAttributes(): array
+    #[Computed]
+    public function products(): array
     {
-        $attrs = [
-            'supplier_id' => __('keywords.supplier'),
-            'payment_type' => __('keywords.payment_type'),
-            'down_payment' => __('keywords.down_payment'),
-            'installment_months' => __('keywords.installment_months'),
+        return Product::orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    #[Computed]
+    public function categories(): array
+    {
+        return Category::orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    // ==========================================
+    // SAVE ACTION
+    // ==========================================
+
+    public function save(CreatePurchaseAction $action): void
+    {
+        $request = new \App\Http\Requests\Purchases\CreatePurchaseRequest;
+
+        // Temporarily add form property for validation
+        $this->form = [
+            'supplier_id' => $this->supplier_id,
+            'payment_type' => $this->payment_type,
+            'down_payment' => $this->down_payment,
+            'installment_months' => $this->installment_months,
+            'items' => $this->items,
         ];
 
-        foreach ($this->items as $i => $item) {
-            $n = $i + 1;
-            $attrs["items.{$i}.product_id"] = __('keywords.product')." #{$n}";
-            $attrs["items.{$i}.cost_price"] = __('keywords.cost_price')." #{$n}";
-            $attrs["items.{$i}.quantity"] = __('keywords.quantity')." #{$n}";
+        $validated = $this->validate($request->rules(), $request->messages(), $request->attributes());
+
+        $purchase = $action->execute($validated);
+
+        if ($this->printAfterSave && $purchase->number) {
+            $this->redirect(route('purchases.print', $purchase->number), navigate: true);
+
+            return;
         }
 
-        return $attrs;
-    }
-
-    public function save()
-    {
-        $this->validate();
-
-        $supplier = Supplier::findOrFail($this->supplier_id);
-        $totalPrice = $this->total_price;
-        $isInstallment = $this->payment_type === 'installment';
-        $appliedCredit = min($supplier->available_credit, $totalPrice);
-        $downPayment = $isInstallment
-            ? min((float) $this->down_payment, max(0, $totalPrice - $appliedCredit))
-            : max(0, $totalPrice - $appliedCredit);
-        $months = $isInstallment ? (int) $this->installment_months : null;
-        $installmentAmount = $isInstallment && $months > 0 ? round(max(0, $totalPrice - $appliedCredit - $downPayment) / $months, 2) : null;
-
-        $purchaseNumber = null;
-
-        DB::transaction(function () use ($supplier, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount, $appliedCredit, &$purchaseNumber) {
-            $purchase = Purchase::create([
-                'supplier_name' => $supplier->name,
-                'user_name' => auth()->user()->name,
-                'total_price' => $totalPrice,
-                'payment_type' => $isInstallment ? 'installment' : 'cash',
-                'installment_amount' => $installmentAmount,
-                'installment_months' => $months,
-                'user_id' => auth()->id(),
-                'supplier_id' => $supplier->id,
-            ]);
-
-            $purchaseNumber = $purchase->number;
-
-            foreach ($this->items as $item) {
-                $product = Product::findOrFail($item['product_id']);
-
-                PurchaseItem::create([
-                    'product_name' => $product->name,
-                    'cost_price' => (float) $item['cost_price'],
-                    'quantity' => (int) $item['quantity'],
-                    'purchase_id' => $purchase->id,
-                    'product_id' => $product->id,
-                ]);
-
-                // Keep product cost price synced with latest purchase cost.
-                $product->update([
-                    'cost_price' => (float) $item['cost_price'],
-                ]);
-
-                // Update product stock
-                $product->increment('quantity', (int) $item['quantity']);
-
-                // Record product movement
-                ProductMovement::create([
-                    'quantity' => (int) $item['quantity'],
-                    'movable_type' => Purchase::class,
-                    'movable_id' => $purchase->id,
-                    'product_id' => $product->id,
-                ]);
-            }
-
-            // Record actual cash paid now.
-            if ($downPayment > 0) {
-                $payment = SupplierPayment::create([
-                    'amount' => $downPayment,
-                    'payment_method' => 'cash',
-                    'note' => $isInstallment ? __('keywords.down_payment') : __('keywords.cash_payment'),
-                    'supplier_id' => $supplier->id,
-                    'user_id' => auth()->id(),
-                ]);
-
-                SupplierPaymentAllocation::create([
-                    'amount' => $downPayment,
-                    'supplier_payment_id' => $payment->id,
-                    'purchase_id' => $purchase->id,
-                ]);
-            }
-
-            // Apply any existing supplier credit from previous non-cash returns.
-            if ($appliedCredit > 0) {
-                $creditPayment = SupplierPayment::create([
-                    'amount' => $appliedCredit,
-                    'payment_method' => 'supplier_credit',
-                    'note' => __('keywords.applied_supplier_credit'),
-                    'supplier_id' => $supplier->id,
-                    'user_id' => auth()->id(),
-                ]);
-
-                SupplierPaymentAllocation::create([
-                    'amount' => $appliedCredit,
-                    'supplier_payment_id' => $creditPayment->id,
-                    'purchase_id' => $purchase->id,
-                ]);
-            }
-        });
-
-        if ($this->printAfterSave && $purchaseNumber) {
-            return $this->redirect(route('purchases.print', $purchaseNumber), navigate: true);
-        }
-
-        return $this->redirect(route('purchases'), navigate: true);
+        $this->redirect(route('purchases'), navigate: true);
     }
 
     public function render()
     {
         return view('livewire.purchases.purchase-create', [
-            'suppliers' => Supplier::orderBy('name')->pluck('name', 'id')->all(),
-            'products' => Product::orderBy('name')->pluck('name', 'id')->all(),
-            'categories' => Category::orderBy('name')->pluck('name', 'id')->all(),
+            'suppliers' => $this->suppliers,
+            'products' => $this->products,
+            'categories' => $this->categories,
         ]);
     }
 }

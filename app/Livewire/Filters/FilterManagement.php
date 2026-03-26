@@ -2,22 +2,24 @@
 
 namespace App\Livewire\Filters;
 
+use App\Actions\WaterFilters\CreateWaterFilterAction;
+use App\Actions\WaterFilters\DeleteWaterFilterAction;
+use App\Actions\WaterFilters\UpdateWaterFilterAction;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
-use App\Livewire\Traits\HasValidationAttributes;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Customer;
 use App\Models\WaterFilter;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class FilterManagement extends Component
 {
-    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
-
-    public $customers;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
     public $customerSlug = '';
 
@@ -25,32 +27,13 @@ class FilterManagement extends Component
 
     public $customerModalSearch = '';
 
-    public function mount()
+    public function mount(): void
     {
         $this->resetForm();
-        $this->customers = Customer::orderBy('name')->get();
 
         if ($this->customerSlug) {
             $this->customerSearch = $this->customers->firstWhere('slug', $this->customerSlug)?->name ?? '';
         }
-    }
-
-    protected function rules()
-    {
-        return [
-            'form.filter_model' => 'required|string|max:255',
-            'form.address' => 'required|string|max:255',
-            'form.customer_id' => 'required|exists:customers,id',
-        ];
-    }
-
-    protected function validationAttributes(): array
-    {
-        return [
-            'form.filter_model' => __('keywords.filter_model'),
-            'form.address' => __('keywords.address'),
-            'form.customer_id' => __('keywords.customer'),
-        ];
     }
 
     protected function getDefaultForm(): array
@@ -84,7 +67,7 @@ class FilterManagement extends Component
         ];
     }
 
-    public function updatingCustomerSlug()
+    public function updatingCustomerSlug(): void
     {
         $this->resetPage();
         $this->customerSearch = $this->customers->firstWhere('slug', $this->customerSlug)?->name ?? '';
@@ -97,24 +80,33 @@ class FilterManagement extends Component
         }
     }
 
-    public function create()
+    public function create(CreateWaterFilterAction $action): void
     {
         $this->authorizeManageFilters();
 
-        $this->validate();
-        WaterFilter::create($this->form);
+        $request = new \App\Http\Requests\WaterFilters\CreateWaterFilterRequest;
+        $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
+
+        $action->execute($validated['form']);
         $this->resetForm();
         $this->customerModalSearch = '';
         $this->dispatch('close-modal-create-filter');
         $this->resetPage();
     }
 
-    public function updateFilter()
+    public function updateFilter(UpdateWaterFilterAction $action): void
     {
         $this->authorizeManageFilters();
 
-        $this->validate();
-        WaterFilter::findOrFail($this->editId)->update($this->form);
+        $request = new \App\Http\Requests\WaterFilters\UpdateWaterFilterRequest;
+        $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
+
+        $filter = WaterFilter::findOrFail($this->editId);
+        $action->execute($filter, $validated['form']);
         $this->resetForm();
         $this->editId = null;
         $this->customerModalSearch = '';
@@ -122,14 +114,14 @@ class FilterManagement extends Component
         $this->resetPage();
     }
 
-    public function setDelete($id)
+    public function setDelete($id): void
     {
         $this->authorizeManageFilters();
 
         $this->openDeleteModal($id, 'open-modal-delete-filter');
     }
 
-    public function openEdit($id)
+    public function openEdit($id): void
     {
         $this->authorizeManageFilters();
 
@@ -146,19 +138,29 @@ class FilterManagement extends Component
         $this->customerModalSearch = $filter->customer?->name ?? '';
     }
 
-    public function delete()
+    public function delete(DeleteWaterFilterAction $action): void
     {
         $this->authorizeManageFilters();
 
-        WaterFilter::findOrFail($this->deleteId)->delete();
+        $filter = WaterFilter::find($this->deleteId);
+        if ($filter) {
+            $action->execute($filter);
+        }
         $this->deleteId = null;
         $this->dispatch('close-modal-delete-filter');
         $this->resetPage();
     }
 
-    public function getFiltersProperty()
+    #[Computed]
+    public function filters()
     {
         return $this->items;
+    }
+
+    #[Computed]
+    public function customers(): Collection
+    {
+        return Customer::orderBy('name')->get();
     }
 
     public function render()

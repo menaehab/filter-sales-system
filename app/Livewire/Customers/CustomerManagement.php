@@ -2,43 +2,26 @@
 
 namespace App\Livewire\Customers;
 
+use App\Actions\Customers\CreateCustomerAction;
+use App\Actions\Customers\DeleteCustomerAction;
+use App\Actions\Customers\UpdateCustomerAction;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
-use App\Livewire\Traits\HasValidationAttributes;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Customer;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app', ['title' => 'customers_management'])]
 class CustomerManagement extends Component
 {
-    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
-    public function mount()
+    public function mount(): void
     {
         $this->resetForm();
-    }
-
-    protected function rules()
-    {
-        return [
-            'form.name' => 'required|string|max:255',
-            'form.phone' => ['nullable', 'string', 'max:11', 'regex:/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}$/'],
-            'form.national_number' => ['nullable', 'string', 'max:14', 'min:14'],
-            'form.address' => 'nullable|string|max:255',
-        ];
-    }
-
-    protected function validationAttributes(): array
-    {
-        return [
-            'form.name' => __('keywords.name'),
-            'form.phone' => __('keywords.phone'),
-            'form.national_number' => __('keywords.national_number'),
-            'form.address' => __('keywords.address'),
-        ];
     }
 
     protected function getDefaultForm(): array
@@ -61,34 +44,43 @@ class CustomerManagement extends Component
         return ['name', 'phone', 'national_number', 'address'];
     }
 
-    public function create()
+    public function create(CreateCustomerAction $action): void
     {
         $this->authorizeManageCustomers();
 
-        $this->validate();
-        Customer::create($this->form);
+        $request = new \App\Http\Requests\Customers\CreateCustomerRequest;
+        $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
+
+        $action->execute($validated['form']);
         $this->resetForm();
         $this->dispatch('close-modal-create-customer');
     }
 
-    public function updateCustomer()
+    public function updateCustomer(UpdateCustomerAction $action): void
     {
         $this->authorizeManageCustomers();
 
-        $this->validate();
-        Customer::findOrFail($this->editId)->update($this->form);
+        $request = new \App\Http\Requests\Customers\UpdateCustomerRequest;
+        $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
+
+        $customer = Customer::findOrFail($this->editId);
+        $action->execute($customer, $validated['form']);
         $this->editId = null;
         $this->dispatch('close-modal-edit-customer');
     }
 
-    public function setDelete($id)
+    public function setDelete($id): void
     {
         $this->authorizeManageCustomers();
 
         $this->openDeleteModal($id, 'open-modal-delete-customer');
     }
 
-    public function openEdit($id)
+    public function openEdit($id): void
     {
         $this->authorizeManageCustomers();
 
@@ -104,17 +96,21 @@ class CustomerManagement extends Component
         ];
     }
 
-    public function delete()
+    public function delete(DeleteCustomerAction $action): void
     {
         $this->authorizeManageCustomers();
 
-        Customer::findOrFail($this->deleteId)->delete();
+        $customer = Customer::find($this->deleteId);
+        if ($customer) {
+            $action->execute($customer);
+        }
         $this->deleteId = null;
         $this->dispatch('close-modal-delete-customer');
         $this->resetPage();
     }
 
-    public function getCustomersProperty()
+    #[Computed]
+    public function customers()
     {
         return $this->items;
     }

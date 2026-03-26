@@ -48,19 +48,7 @@ class PurchaseShow extends Component
         $this->payPurchaseId = $purchase->id;
         $this->payFromPurchaseId = null;
 
-        if ($purchase->isInstallment() && $purchase->supplier_id) {
-            $oldestUnpaid = $this->getSupplierInstallmentQueue($purchase->supplier_id)->first();
-
-            if ($oldestUnpaid) {
-                $this->payFromPurchaseId = $oldestUnpaid->id;
-                $defaultInstallment = (float) ($oldestUnpaid->installment_amount ?: $oldestUnpaid->remaining_amount);
-                $this->payAmount = (string) min($defaultInstallment, $oldestUnpaid->remaining_amount);
-            } else {
-                $this->payAmount = (string) $purchase->remaining_amount;
-            }
-        } else {
-            $this->payAmount = (string) $purchase->remaining_amount;
-        }
+        $this->payAmount = (string) $purchase->remaining_amount;
 
         $this->payMethod = 'cash';
         $this->payNote = '';
@@ -89,36 +77,14 @@ class PurchaseShow extends Component
 
         $allocations = [];
 
-        if ($purchase->isInstallment() && $purchase->supplier_id) {
-            $queue = $this->getSupplierInstallmentQueue($purchase->supplier_id);
-            $maxPayable = $queue->sum(fn (Purchase $item) => $item->remaining_amount);
-            $remainingToAllocate = min($amount, $maxPayable);
+        $maxPayable = $purchase->remaining_amount;
+        $amount = min($amount, $maxPayable);
 
-            foreach ($queue as $queuedPurchase) {
-                if ($remainingToAllocate <= 0) {
-                    break;
-                }
-
-                $payable = min($queuedPurchase->remaining_amount, $remainingToAllocate);
-
-                if ($payable > 0) {
-                    $allocations[] = [
-                        'purchase_id' => $queuedPurchase->id,
-                        'amount' => $payable,
-                    ];
-                    $remainingToAllocate -= $payable;
-                }
-            }
-        } else {
-            $maxPayable = $purchase->remaining_amount;
-            $amount = min($amount, $maxPayable);
-
-            if ($amount > 0) {
-                $allocations[] = [
-                    'purchase_id' => $purchase->id,
-                    'amount' => $amount,
-                ];
-            }
+        if ($amount > 0) {
+            $allocations[] = [
+                'purchase_id' => $purchase->id,
+                'amount' => $amount,
+            ];
         }
 
         $totalAllocated = collect($allocations)->sum('amount');
@@ -158,17 +124,6 @@ class PurchaseShow extends Component
         if ($printAfterPayment) {
             $this->redirect(route('supplier-payments.print', $paymentId), navigate: true);
         }
-    }
-
-    protected function getSupplierInstallmentQueue(int $supplierId)
-    {
-        return Purchase::with('paymentAllocations')
-            ->where('supplier_id', $supplierId)
-            ->where('installment_months', '>', 0)
-            ->orderBy('created_at')
-            ->get()
-            ->filter(fn (Purchase $item) => $item->remaining_amount > 0)
-            ->values();
     }
 
     public function resetPayForm(): void

@@ -2,38 +2,28 @@
 
 namespace App\Livewire\Categories;
 
+use App\Actions\Categories\CreateCategoryAction;
+use App\Actions\Categories\DeleteCategoryAction;
+use App\Actions\Categories\UpdateCategoryAction;
+use App\Http\Requests\Categories\CreateCategoryRequest;
+use App\Http\Requests\Categories\UpdateCategoryRequest;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
-use App\Livewire\Traits\HasValidationAttributes;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Category;
-use Illuminate\Validation\Rule;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app', ['title' => 'categories_management'])]
 class CategoryManagement extends Component
 {
-    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
-    public function mount()
+    public function mount(): void
     {
         $this->resetForm();
-    }
-
-    protected function rules()
-    {
-        return [
-            'form.name' => ['required', 'string', 'max:255', Rule::unique('categories', 'name')->ignore($this->editId)],
-        ];
-    }
-
-    protected function validationAttributes(): array
-    {
-        return [
-            'form.name' => __('keywords.name'),
-        ];
     }
 
     protected function getDefaultForm(): array
@@ -53,13 +43,18 @@ class CategoryManagement extends Component
         return ['name'];
     }
 
-    public function create()
+    public function create(CreateCategoryAction $action): void
     {
         $this->editId = null;
 
-        $this->validate();
+        $request = new CreateCategoryRequest();
+        // Map form.* rules to match $this->form array structure
+        $rules = collect($request->rules())->mapWithKeys(fn($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn($attr, $key) => ["form.{$key}" => $attr])->toArray();
 
-        Category::create($this->form);
+        $validated = $this->validate($rules, $request->messages(), $attributes);
+
+        $action->execute($validated['form']);
 
         $this->resetForm();
 
@@ -68,7 +63,7 @@ class CategoryManagement extends Component
         $this->resetPage();
     }
 
-    public function openEdit($id)
+    public function openEdit($id): void
     {
         $category = Category::findOrFail($id);
 
@@ -79,11 +74,18 @@ class CategoryManagement extends Component
         $this->dispatch('open-modal-edit-category');
     }
 
-    public function updateCategory()
+    public function updateCategory(UpdateCategoryAction $action): void
     {
-        $this->validate();
+        $request = new UpdateCategoryRequest();
+        $request->merge(['id' => $this->editId]);
+        // Map form.* rules to match $this->form array structure
+        $rules = collect($request->rules())->mapWithKeys(fn($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn($attr, $key) => ["form.{$key}" => $attr])->toArray();
 
-        Category::findOrFail($this->editId)->update($this->form);
+        $validated = $this->validate($rules, $request->messages(), $attributes);
+
+        $category = Category::findOrFail($this->editId);
+        $action->execute($category, $validated['form']);
 
         $this->resetForm();
         $this->editId = null;
@@ -93,14 +95,17 @@ class CategoryManagement extends Component
         $this->resetPage();
     }
 
-    public function setDelete($id)
+    public function setDelete($id): void
     {
         $this->openDeleteModal($id, 'open-modal-delete-category');
     }
 
-    public function delete()
+    public function delete(DeleteCategoryAction $action): void
     {
-        Category::find($this->deleteId)?->delete();
+        $category = Category::find($this->deleteId);
+        if ($category) {
+            $action->execute($category);
+        }
 
         $this->deleteId = null;
 
@@ -109,7 +114,8 @@ class CategoryManagement extends Component
         $this->resetPage();
     }
 
-    public function getCategoriesProperty()
+    #[Computed]
+    public function categories()
     {
         return $this->items;
     }

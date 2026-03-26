@@ -25,7 +25,7 @@
                             required />
                     </div>
 
-                    @if ($sale)
+                    @if ($this->sale)
                         <div class="sm:col-span-2">
                             <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-4 space-y-2">
                                 <div class="flex items-center gap-2 text-sm font-medium text-emerald-800">
@@ -35,20 +35,20 @@
                                 <div class="grid grid-cols-2 gap-2 text-sm">
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.customer') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ $sale->customer?->name ?? '—' }}</span>
+                                        <span class="font-medium text-gray-900">{{ $this->sale->customer?->name ?? '—' }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.dealer_name') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ $sale->dealer_name ?: '—' }}</span>
+                                        <span class="font-medium text-gray-900">{{ $this->sale->dealer_name ?: '—' }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.total_price') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ number_format($sale->total_price, 2) }}
+                                        <span class="font-medium text-gray-900">{{ number_format($this->sale->total_price, 2) }}
                                             {{ __('keywords.currency') }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.sale_items') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ $sale->items->count() }}
+                                        <span class="font-medium text-gray-900">{{ $this->sale->items->count() }}
                                             {{ __('keywords.items') }}</span>
                                     </div>
                                 </div>
@@ -60,7 +60,7 @@
         </div>
 
         {{-- Sale Items for Return --}}
-        @if ($sale && count($items) > 0)
+        @if ($this->sale && count($items) > 0)
             <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div class="border-b border-gray-200 px-6 py-4">
                     <h3 class="text-base font-semibold text-gray-900">

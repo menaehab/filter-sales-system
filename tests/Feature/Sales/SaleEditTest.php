@@ -14,8 +14,8 @@ beforeEach(function () {
 });
 
 it('updates a sale and recalculates stock and movements', function () {
-    $oldCustomer = Customer::create(['name' => 'Old Customer']);
-    $newCustomer = Customer::create(['name' => 'New Customer']);
+    $oldCustomer = Customer::factory()->create(['name' => 'Old Customer']);
+    $newCustomer = Customer::factory()->create(['name' => 'New Customer']);
 
     $oldProduct = Product::factory()->create([
         'name' => 'Old Product',
@@ -117,7 +117,7 @@ it('updates a sale and recalculates stock and movements', function () {
 });
 
 it('validates edited sale data before updating', function () {
-    $customer = Customer::create(['name' => 'Edit Customer']);
+    $customer = Customer::factory()->create(['name' => 'Edit Customer']);
     $product = Product::factory()->create(['quantity' => 5]);
 
     $sale = Sale::create([

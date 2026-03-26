@@ -2,16 +2,19 @@
 
 namespace App\Livewire\Sales;
 
+use App\Actions\Sales\DeleteSaleAction;
+use App\Enums\SaleStatusEnum;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\CustomerPayment;
 use App\Models\CustomerPaymentAllocation;
-use App\Models\ProductMovement;
 use App\Models\Sale;
 use Illuminate\Database\Eloquent\Builder;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -27,6 +30,8 @@ class SaleManagement extends Component
 
     public ?string $dateTo = null;
 
+    // Payment modal state - only primitive types
+    #[Locked]
     public ?int $paySaleId = null;
 
     public string $payAmount = '';
@@ -39,12 +44,12 @@ class SaleManagement extends Component
 
     public bool $printAfterPayment = false;
 
-    public function mount()
+    public function mount(): void
     {
         $this->resetForm();
     }
 
-    protected function rules()
+    protected function rules(): array
     {
         return [];
     }
@@ -75,18 +80,27 @@ class SaleManagement extends Component
             $query->where('payment_type', $this->filterPaymentType);
         }
 
-        if ($this->filterStatus === 'paid') {
-            $query->whereRaw('total_price <= COALESCE((SELECT SUM(amount) FROM customer_payment_allocations WHERE customer_payment_allocations.sale_id = sales.id), 0)');
-        } elseif ($this->filterStatus === 'partial') {
-            $query->where('installment_months', '>', 0)
-                ->whereRaw('COALESCE((SELECT SUM(amount) FROM customer_payment_allocations WHERE customer_payment_allocations.sale_id = sales.id), 0) > 0')
-                ->whereRaw('total_price > COALESCE((SELECT SUM(amount) FROM customer_payment_allocations WHERE customer_payment_allocations.sale_id = sales.id), 0)');
-        } elseif ($this->filterStatus === 'unpaid') {
-            $query->where(function ($q) {
-                $q->where('installment_months', '>', 0);
-            })->whereRaw('COALESCE((SELECT SUM(amount) FROM customer_payment_allocations WHERE customer_payment_allocations.sale_id = sales.id), 0) = 0');
-        }
+        $this->applyStatusFilter($query);
+        $this->applyDateFilters($query);
+    }
 
+    private function applyStatusFilter(Builder $query): void
+    {
+        match ($this->filterStatus) {
+            SaleStatusEnum::PAID->value => $query->whereRaw(
+                'total_price <= COALESCE((SELECT SUM(amount) FROM customer_payment_allocations WHERE customer_payment_allocations.sale_id = sales.id), 0)'
+            ),
+            SaleStatusEnum::PARTIAL->value => $query->where('installment_months', '>', 0)
+                ->whereRaw('COALESCE((SELECT SUM(amount) FROM customer_payment_allocations WHERE customer_payment_allocations.sale_id = sales.id), 0) > 0')
+                ->whereRaw('total_price > COALESCE((SELECT SUM(amount) FROM customer_payment_allocations WHERE customer_payment_allocations.sale_id = sales.id), 0)'),
+            SaleStatusEnum::UNPAID->value => $query->where(fn ($q) => $q->where('installment_months', '>', 0))
+                ->whereRaw('COALESCE((SELECT SUM(amount) FROM customer_payment_allocations WHERE customer_payment_allocations.sale_id = sales.id), 0) = 0'),
+            default => null,
+        };
+    }
+
+    private function applyDateFilters(Builder $query): void
+    {
         if (filled($this->dateFrom)) {
             $query->whereDate('created_at', '>=', $this->dateFrom);
         }
@@ -117,10 +131,20 @@ class SaleManagement extends Component
         $this->resetPage();
     }
 
-    public function getSalesProperty()
+    // ==========================================
+    // COMPUTED PROPERTIES
+    // ==========================================
+
+    #[Computed]
+    public function sales()
     {
         return $this->items;
     }
+
+
+    // ==========================================
+    // PAYMENT MODAL ACTIONS
+    // ==========================================
 
     public function openPayModal(int $id): void
     {
@@ -131,19 +155,7 @@ class SaleManagement extends Component
         $this->paySaleId = $sale->id;
         $this->payFromSaleId = null;
 
-        if ($sale->isInstallment() && $sale->customer_id) {
-            $oldestUnpaid = $this->getCustomerInstallmentQueue($sale->customer_id)->first();
-
-            if ($oldestUnpaid) {
-                $this->payFromSaleId = $oldestUnpaid->id;
-                $defaultInstallment = (float) ($oldestUnpaid->installment_amount ?: $oldestUnpaid->remaining_amount);
-                $this->payAmount = (string) min($defaultInstallment, $oldestUnpaid->remaining_amount);
-            } else {
-                $this->payAmount = (string) $sale->remaining_amount;
-            }
-        } else {
-            $this->payAmount = (string) $sale->remaining_amount;
-        }
+        $this->payAmount = (string) $sale->remaining_amount;
 
         $this->payMethod = 'cash';
         $this->payNote = '';
@@ -169,40 +181,7 @@ class SaleManagement extends Component
             return;
         }
 
-        $allocations = [];
-
-        if ($sale->isInstallment() && $sale->customer_id) {
-            $queue = $this->getCustomerInstallmentQueue($sale->customer_id);
-            $maxPayable = $queue->sum(fn (Sale $item) => $item->remaining_amount);
-            $remainingToAllocate = min($amount, $maxPayable);
-
-            foreach ($queue as $queuedSale) {
-                if ($remainingToAllocate <= 0) {
-                    break;
-                }
-
-                $payable = min($queuedSale->remaining_amount, $remainingToAllocate);
-
-                if ($payable > 0) {
-                    $allocations[] = [
-                        'sale_id' => $queuedSale->id,
-                        'amount' => $payable,
-                    ];
-                    $remainingToAllocate -= $payable;
-                }
-            }
-        } else {
-            $maxPayable = $sale->remaining_amount;
-            $amount = min($amount, $maxPayable);
-
-            if ($amount > 0) {
-                $allocations[] = [
-                    'sale_id' => $sale->id,
-                    'amount' => $amount,
-                ];
-            }
-        }
-
+        $allocations = $this->calculatePaymentAllocations($sale, $amount);
         $totalAllocated = collect($allocations)->sum('amount');
 
         if ($totalAllocated <= 0) {
@@ -236,15 +215,21 @@ class SaleManagement extends Component
         }
     }
 
-    protected function getCustomerInstallmentQueue(int $customerId)
+    private function calculatePaymentAllocations(Sale $sale, float $amount): array
     {
-        return Sale::with('paymentAllocations')
-            ->where('customer_id', $customerId)
-            ->where('installment_months', '>', 0)
-            ->orderBy('created_at')
-            ->get()
-            ->filter(fn (Sale $item) => $item->remaining_amount > 0)
-            ->values();
+        $allocations = [];
+
+        $maxPayable = $sale->remaining_amount;
+        $amount = min($amount, $maxPayable);
+
+        if ($amount > 0) {
+            $allocations[] = [
+                'sale_id' => $sale->id,
+                'amount' => $amount,
+            ];
+        }
+
+        return $allocations;
     }
 
     public function resetPayForm(): void
@@ -257,6 +242,33 @@ class SaleManagement extends Component
         $this->printAfterPayment = false;
     }
 
+    // ==========================================
+    // DELETE ACTIONS
+    // ==========================================
+
+    public function setDelete(int $id): void
+    {
+        $this->authorizeManageSales();
+        $this->openDeleteModal($id, 'open-modal-delete-sale');
+    }
+
+    public function delete(DeleteSaleAction $action): void
+    {
+        $this->authorizeManageSales();
+
+        $sale = Sale::with('items', 'paymentAllocations')->findOrFail($this->deleteId);
+
+        $action->execute($sale);
+
+        $this->deleteId = null;
+        $this->dispatch('close-modal-delete-sale');
+        $this->resetPage();
+    }
+
+    // ==========================================
+    // AUTHORIZATION
+    // ==========================================
+
     protected function authorizeManageSales(): void
     {
         abort_unless(auth()->user()?->can('manage_sales'), 403);
@@ -265,40 +277,6 @@ class SaleManagement extends Component
     protected function authorizePaySales(): void
     {
         abort_unless(auth()->user()?->canAny(['manage_sales', 'pay_sales']), 403);
-    }
-
-    public function setDelete($id): void
-    {
-        $this->authorizeManageSales();
-        $this->openDeleteModal($id, 'open-modal-delete-sale');
-    }
-
-    public function delete(): void
-    {
-        $this->authorizeManageSales();
-
-        $sale = Sale::with('items', 'paymentAllocations')->findOrFail($this->deleteId);
-        $relatedPaymentIds = $sale->paymentAllocations->pluck('customer_payment_id')->unique()->all();
-
-        foreach ($sale->items as $item) {
-            $item->product?->increment('quantity', $item->quantity);
-        }
-
-        ProductMovement::where('movable_type', Sale::class)
-            ->where('movable_id', $sale->id)
-            ->delete();
-
-        $sale->delete();
-
-        if (! empty($relatedPaymentIds)) {
-            CustomerPayment::whereIn('id', $relatedPaymentIds)
-                ->doesntHave('allocations')
-                ->delete();
-        }
-
-        $this->deleteId = null;
-        $this->dispatch('close-modal-delete-sale');
-        $this->resetPage();
     }
 
     public function render()
