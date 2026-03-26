@@ -15,6 +15,10 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class SaleEdit extends Component
 {
+    private const VAT_RATE = 14;
+
+    private const INSTALLMENT_MONTHLY_SURCHARGE = 100;
+
     public Sale $sale;
 
     public ?int $customer_id = null;
@@ -24,6 +28,12 @@ class SaleEdit extends Component
     public string $down_payment = '0';
 
     public string $installment_months = '';
+
+    public string $interest_rate = '0';
+
+    public string $discount = '0';
+
+    public bool $with_vat = false;
 
     public string $dealer_name = '';
 
@@ -38,6 +48,9 @@ class SaleEdit extends Component
         $this->payment_type = $sale->isInstallment() ? 'installment' : 'cash';
         $this->down_payment = (string) $sale->down_payment;
         $this->installment_months = (string) ($sale->installment_months ?? '');
+        $this->interest_rate = (string) ($sale->interest_rate ?? '0');
+        $this->discount = (string) ($sale->discount_value ?? '0');
+        $this->with_vat = (bool) ($sale->with_vat ?? false);
         $this->dealer_name = $sale->dealer_name ?? '';
 
         $this->items = $sale->items->map(function ($item) {
@@ -60,6 +73,7 @@ class SaleEdit extends Component
         if ($value !== 'installment') {
             $this->down_payment = '0';
             $this->installment_months = '';
+            $this->interest_rate = '0';
         }
     }
 
@@ -100,16 +114,76 @@ class SaleEdit extends Component
         }
     }
 
-    public function getTotalPriceProperty(): float
+    public function getBaseTotalProperty(): float
     {
         return collect($this->items)->sum(function ($item) {
             return ((float) ($item['sell_price'] ?: 0)) * ((float) ($item['quantity'] ?: 0));
         });
     }
 
+    public function getDiscountAmountProperty(): float
+    {
+        $discount = max(0, (float) ($this->discount ?: 0));
+
+        return min($this->base_total, $discount);
+    }
+
+    public function getTotalAfterDiscountProperty(): float
+    {
+        return max(0, $this->base_total - $this->discount_amount);
+    }
+
+    public function getVatAmountProperty(): float
+    {
+        if (! $this->with_vat) {
+            return 0;
+        }
+
+        return round($this->total_after_discount * (self::VAT_RATE / 100), 2);
+    }
+
+    public function getSubtotalAfterVatProperty(): float
+    {
+        return $this->total_after_discount + $this->vat_amount;
+    }
+
     public function getRemainingAfterDownPaymentProperty(): float
     {
-        return max(0, $this->total_price - (float) ($this->down_payment ?: 0));
+        return max(0, $this->subtotal_after_vat - (float) ($this->down_payment ?: 0));
+    }
+
+    public function getInterestAmountProperty(): float
+    {
+        if ($this->payment_type !== 'installment') {
+            return 0;
+        }
+
+        $rate = max(0, (float) ($this->interest_rate ?: 0));
+
+        return round($this->remaining_after_down_payment * ($rate / 100), 2);
+    }
+
+    public function getInstallmentMonthsSurchargeTotalProperty(): float
+    {
+        if ($this->payment_type !== 'installment') {
+            return 0;
+        }
+
+        $months = (int) ($this->installment_months ?: 0);
+        if ($months < 3) {
+            return 0;
+        }
+
+        return $months * self::INSTALLMENT_MONTHLY_SURCHARGE;
+    }
+
+    public function getInstallmentTotalProperty(): float
+    {
+        if ($this->payment_type !== 'installment') {
+            return 0;
+        }
+
+        return $this->remaining_after_down_payment + $this->interest_amount + $this->installment_months_surcharge_total;
     }
 
     public function getInstallmentAmountProperty(): float
@@ -119,7 +193,16 @@ class SaleEdit extends Component
             return 0;
         }
 
-        return round($this->remaining_after_down_payment / $months, 2);
+        return round($this->installment_total / $months, 2);
+    }
+
+    public function getTotalPriceProperty(): float
+    {
+        if ($this->payment_type !== 'installment') {
+            return $this->subtotal_after_vat;
+        }
+
+        return $this->subtotal_after_vat + $this->interest_amount + $this->installment_months_surcharge_total;
     }
 
     protected function rules(): array
@@ -129,6 +212,9 @@ class SaleEdit extends Component
             'payment_type' => 'required|in:cash,installment',
             'down_payment' => 'required_if:payment_type,installment|numeric|min:0',
             'installment_months' => 'required_if:payment_type,installment|nullable|integer|min:1|max:60',
+            'interest_rate' => 'required_if:payment_type,installment|nullable|numeric|min:0|max:100',
+            'discount' => 'nullable|numeric|min:0',
+            'with_vat' => 'boolean',
             'dealer_name' => 'nullable|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
@@ -144,6 +230,9 @@ class SaleEdit extends Component
             'payment_type' => __('keywords.payment_type'),
             'down_payment' => __('keywords.down_payment'),
             'installment_months' => __('keywords.installment_months'),
+            'interest_rate' => __('keywords.interest_rate'),
+            'discount' => __('keywords.discount'),
+            'with_vat' => __('keywords.apply_vat'),
             'dealer_name' => __('keywords.dealer_name'),
         ];
 
@@ -162,12 +251,18 @@ class SaleEdit extends Component
         $this->validate();
 
         $customer = Customer::findOrFail($this->customer_id);
+        $baseTotal = $this->base_total;
+        $discountAmount = min($baseTotal, max(0, (float) ($this->discount ?: 0)));
+        $totalAfterDiscount = max(0, $baseTotal - $discountAmount);
+        $vatAmount = $this->with_vat ? round($totalAfterDiscount * (self::VAT_RATE / 100), 2) : 0;
+        $subtotalAfterVat = $totalAfterDiscount + $vatAmount;
         $totalPrice = $this->total_price;
         $isInstallment = $this->payment_type === 'installment';
         $months = $isInstallment ? (int) $this->installment_months : null;
         $installmentAmount = $isInstallment ? $this->installment_amount : null;
+        $interestRate = $isInstallment ? max(0, (float) ($this->interest_rate ?: 0)) : null;
 
-        DB::transaction(function () use ($customer, $totalPrice, $isInstallment, $months, $installmentAmount) {
+        DB::transaction(function () use ($customer, $totalPrice, $isInstallment, $months, $installmentAmount, $interestRate, $discountAmount) {
             foreach ($this->sale->items as $oldItem) {
                 $product = Product::find($oldItem->product_id);
                 if ($product) {
@@ -185,8 +280,11 @@ class SaleEdit extends Component
                 'dealer_name' => $this->dealer_name,
                 'total_price' => $totalPrice,
                 'payment_type' => $isInstallment ? 'installment' : 'cash',
+                'discount_value' => $discountAmount,
+                'interest_rate' => $interestRate,
                 'installment_amount' => $installmentAmount,
                 'installment_months' => $months,
+                'with_vat' => $this->with_vat,
                 'customer_id' => $customer->id,
             ]);
 

@@ -416,10 +416,23 @@
                     </div>
                 @endif
 
+                <x-input name="discount" label="{{ __('keywords.discount') }}" placeholder="0.00"
+                    wire:model.live="discount" type="number" step="0.01" min="0" />
+
                 <div class="rounded-lg bg-gray-50 p-4 space-y-2 text-sm">
                     <div class="flex justify-between">
                         <span class="text-gray-500">{{ __('keywords.subtotal') }}</span>
                         <span class="font-medium">{{ number_format($this->base_total, 2) }}
+                            {{ __('keywords.currency') }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">{{ __('keywords.discount') }}</span>
+                        <span class="font-medium text-red-600">- {{ number_format($this->discount_amount, 2) }}
+                            {{ __('keywords.currency') }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">{{ __('keywords.total_after_discount') }}</span>
+                        <span class="font-medium">{{ number_format($this->total_after_discount, 2) }}
                             {{ __('keywords.currency') }}</span>
                     </div>
                     @if ($with_vat)

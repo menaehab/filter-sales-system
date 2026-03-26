@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\Place;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Sale;
@@ -60,6 +61,9 @@ class NotificationSeeder extends Seeder
         $this->command->info('[0/4] Creating demo customer, supplier, product, sale, purchase, and filter...');
 
         $user = User::query()->first();
+        $place = Place::create([
+            'name' => 'مكان تجريبي',
+        ]);
 
         $customer = Customer::firstOrCreate(
             ['name' => 'عميل تجريبي'],
@@ -67,6 +71,7 @@ class NotificationSeeder extends Seeder
                 'phone' => '01000000001',
                 'national_number' => '12345678901234',
                 'address' => 'عنوان تجريبي',
+                'place_id' => $place->id,
             ]
         );
 
