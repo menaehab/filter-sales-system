@@ -2,25 +2,28 @@
 
 namespace App\Livewire\Expenses;
 
+use App\Actions\Expenses\CreateExpenseAction;
+use App\Actions\Expenses\DeleteExpenseAction;
+use App\Actions\Expenses\UpdateExpenseAction;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
-use App\Livewire\Traits\HasValidationAttributes;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Expense;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app', ['title' => 'expenses_management'])]
 class ExpenseManagement extends Component
 {
-    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
     public ?string $dateFrom = null;
 
     public ?string $dateTo = null;
 
-    public function mount()
+    public function mount(): void
     {
         $this->resetForm();
     }
@@ -33,12 +36,12 @@ class ExpenseManagement extends Component
         ];
     }
 
-    public function updatingDateFrom()
+    public function updatingDateFrom(): void
     {
         $this->resetPage();
     }
 
-    public function updatingDateTo()
+    public function updatingDateTo(): void
     {
         $this->resetPage();
     }
@@ -54,12 +57,14 @@ class ExpenseManagement extends Component
         }
     }
 
-    public function getExpensesProperty()
+    #[Computed]
+    public function expenses()
     {
         return $this->items;
     }
 
-    public function getTotalExpensesProperty(): float
+    #[Computed]
+    public function totalExpenses(): float
     {
         $query = Expense::query();
 
@@ -83,22 +88,6 @@ class ExpenseManagement extends Component
         return Expense::class;
     }
 
-    protected function rules()
-    {
-        return [
-            'form.amount' => ['required', 'numeric', 'min:0.01'],
-            'form.description' => ['nullable', 'string', 'max:1000'],
-        ];
-    }
-
-    protected function validationAttributes(): array
-    {
-        return [
-            'form.amount' => __('keywords.amount'),
-            'form.description' => __('keywords.description'),
-        ];
-    }
-
     protected function getDefaultForm(): array
     {
         return [
@@ -107,24 +96,23 @@ class ExpenseManagement extends Component
         ];
     }
 
-    public function create()
+    public function create(CreateExpenseAction $action): void
     {
         $this->authorizeManageExpenses();
 
-        $this->validate();
+        $request = new \App\Http\Requests\Expenses\CreateExpenseRequest;
+        $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
 
-        Expense::create([
-            'amount' => $this->form['amount'],
-            'description' => $this->form['description'],
-            'user_id' => auth()->id(),
-        ]);
+        $action->execute($validated['form']);
 
         $this->resetForm();
         $this->dispatch('close-modal-create-expense');
         $this->resetPage();
     }
 
-    public function openEdit($id)
+    public function openEdit($id): void
     {
         $this->authorizeManageExpenses();
 
@@ -140,13 +128,17 @@ class ExpenseManagement extends Component
         $this->dispatch('open-modal-edit-expense');
     }
 
-    public function updateExpense()
+    public function updateExpense(UpdateExpenseAction $action): void
     {
         $this->authorizeManageExpenses();
 
-        $this->validate();
+        $request = new \App\Http\Requests\Expenses\UpdateExpenseRequest;
+        $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
 
-        Expense::findOrFail($this->editId)->update($this->form);
+        $expense = Expense::findOrFail($this->editId);
+        $action->execute($expense, $validated['form']);
 
         $this->resetForm();
         $this->editId = null;
@@ -155,18 +147,21 @@ class ExpenseManagement extends Component
         $this->resetPage();
     }
 
-    public function setDelete($id)
+    public function setDelete($id): void
     {
         $this->authorizeManageExpenses();
 
         $this->openDeleteModal($id, 'open-modal-delete-expense');
     }
 
-    public function delete()
+    public function delete(DeleteExpenseAction $action): void
     {
         $this->authorizeManageExpenses();
 
-        Expense::find($this->deleteId)?->delete();
+        $expense = Expense::find($this->deleteId);
+        if ($expense) {
+            $action->execute($expense);
+        }
 
         $this->deleteId = null;
 
@@ -189,8 +184,8 @@ class ExpenseManagement extends Component
         return view('livewire.expenses.expense-management');
     }
 
-    public function authorizeManageExpenses()
+    public function authorizeManageExpenses(): void
     {
-        return auth()->user()->can('manage_expenses');
+        abort_unless(auth()->user()?->can('manage_expenses'), 403);
     }
 }

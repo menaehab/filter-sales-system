@@ -2,15 +2,19 @@
 
 namespace App\Livewire\Purchases;
 
+use App\Actions\SupplierPayments\CreateSupplierPaymentAction;
+use App\Actions\Purchases\DeletePurchaseAction;
+use App\Enums\PaymentMethodEnum;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Purchase;
-use App\Models\SupplierPayment;
-use App\Models\SupplierPaymentAllocation;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -26,7 +30,7 @@ class PurchaseManagement extends Component
 
     public ?string $dateTo = null;
 
-    // Payment modal
+    #[Locked]
     public ?int $payPurchaseId = null;
 
     public string $payAmount = '';
@@ -39,12 +43,12 @@ class PurchaseManagement extends Component
 
     public bool $printAfterPayment = false;
 
-    public function mount()
+    public function mount(): void
     {
         $this->resetForm();
     }
 
-    protected function rules()
+    protected function rules(): array
     {
         return [];
     }
@@ -117,13 +121,19 @@ class PurchaseManagement extends Component
         $this->resetPage();
     }
 
-    public function getPurchasesProperty()
+    #[Computed]
+    public function purchases()
     {
         return $this->items;
     }
 
-    // Payment handling
-    public function openPayModal(int $id)
+    #[Computed]
+    public function paymentMethods(): array
+    {
+        return PaymentMethodEnum::values();
+    }
+
+    public function openPayModal(int $id): void
     {
         $this->authorizePayPurchases();
 
@@ -132,124 +142,49 @@ class PurchaseManagement extends Component
         $this->payPurchaseId = $purchase->id;
         $this->payFromPurchaseId = null;
 
-        if ($purchase->isInstallment() && $purchase->supplier_id) {
-            $oldestUnpaid = $this->getSupplierInstallmentQueue($purchase->supplier_id)->first();
-
-            if ($oldestUnpaid) {
-                $this->payFromPurchaseId = $oldestUnpaid->id;
-                $defaultInstallment = (float) ($oldestUnpaid->installment_amount ?: $oldestUnpaid->remaining_amount);
-                $this->payAmount = (string) min($defaultInstallment, $oldestUnpaid->remaining_amount);
-            } else {
-                $this->payAmount = (string) $purchase->remaining_amount;
-            }
-        } else {
-            $this->payAmount = (string) $purchase->remaining_amount;
-        }
+        $this->payAmount = (string) $purchase->remaining_amount;
 
         $this->payMethod = 'cash';
         $this->payNote = '';
         $this->dispatch('open-modal-pay-purchase');
     }
 
-    public function submitPayment()
+    public function submitPayment(CreateSupplierPaymentAction $action): void
     {
         $this->authorizePayPurchases();
 
-        $this->validate([
-            'payAmount' => 'required|numeric|min:0.01',
-            'payMethod' => 'required|string',
-        ], [], [
-            'payAmount' => __('keywords.amount'),
-            'payMethod' => __('keywords.payment_method'),
-        ]);
+        $request = new \App\Http\Requests\SupplierPayments\CreateSupplierPaymentRequest();
 
-        $purchase = Purchase::with('paymentAllocations')->findOrFail($this->payPurchaseId);
-
-        $amount = (float) $this->payAmount;
-
-        if ($amount <= 0) {
-            return;
-        }
-
-        $allocations = [];
-
-        if ($purchase->isInstallment() && $purchase->supplier_id) {
-            $queue = $this->getSupplierInstallmentQueue($purchase->supplier_id);
-            $maxPayable = $queue->sum(fn (Purchase $item) => $item->remaining_amount);
-            $remainingToAllocate = min($amount, $maxPayable);
-
-            foreach ($queue as $queuedPurchase) {
-                if ($remainingToAllocate <= 0) {
-                    break;
-                }
-
-                $payable = min($queuedPurchase->remaining_amount, $remainingToAllocate);
-
-                if ($payable > 0) {
-                    $allocations[] = [
-                        'purchase_id' => $queuedPurchase->id,
-                        'amount' => $payable,
-                    ];
-                    $remainingToAllocate -= $payable;
-                }
-            }
-        } else {
-            $maxPayable = $purchase->remaining_amount;
-            $amount = min($amount, $maxPayable);
-
-            if ($amount > 0) {
-                $allocations[] = [
-                    'purchase_id' => $purchase->id,
-                    'amount' => $amount,
-                ];
-            }
-        }
-
-        $totalAllocated = collect($allocations)->sum('amount');
-
-        if ($totalAllocated <= 0) {
-            return;
-        }
-
-        $payment = SupplierPayment::create([
-            'amount' => $totalAllocated,
+        // Create form data array for validation
+        $formData = [
+            'purchase_id' => $this->payPurchaseId,
+            'amount' => $this->payAmount,
             'payment_method' => $this->payMethod,
-            'note' => $this->payNote ?: null,
-            'supplier_id' => $purchase->supplier_id,
-            'user_id' => auth()->id(),
-        ]);
+            'note' => $this->payNote,
+        ];
 
-        foreach ($allocations as $allocation) {
-            SupplierPaymentAllocation::create([
-                'amount' => $allocation['amount'],
-                'supplier_payment_id' => $payment->id,
-                'purchase_id' => $allocation['purchase_id'],
-            ]);
-        }
+        $validator = \Illuminate\Support\Facades\Validator::make($formData, $request->rules(), $request->messages(), $request->attributes());
+
+        $validated = $validator->validate();
+
+        $payment = $action->execute($validated['purchase_id'], [
+            'amount' => $validated['amount'],
+            'payment_method' => $validated['payment_method'],
+            'note' => $validated['note'] ?? null,
+        ]);
 
         $printAfterPayment = $this->printAfterPayment;
-        $paymentId = $payment->id;
+        $paymentId = $payment?->id;
 
         $this->resetPayForm();
         $this->dispatch('close-modal-pay-purchase');
 
-        if ($printAfterPayment) {
+        if ($printAfterPayment && $paymentId) {
             $this->redirect(route('supplier-payments.print', $paymentId), navigate: true);
         }
     }
 
-    protected function getSupplierInstallmentQueue(int $supplierId)
-    {
-        return Purchase::with('paymentAllocations')
-            ->where('supplier_id', $supplierId)
-            ->where('installment_months', '>', 0)
-            ->orderBy('created_at')
-            ->get()
-            ->filter(fn (Purchase $item) => $item->remaining_amount > 0)
-            ->values();
-    }
-
-    public function resetPayForm()
+    public function resetPayForm(): void
     {
         $this->payPurchaseId = null;
         $this->payFromPurchaseId = null;
@@ -269,27 +204,18 @@ class PurchaseManagement extends Component
         abort_unless(auth()->user()?->canAny(['manage_purchases', 'pay_purchases']), 403);
     }
 
-    // Delete
-    public function setDelete($id)
+    public function setDelete($id): void
     {
         $this->authorizeManagePurchases();
         $this->openDeleteModal($id, 'open-modal-delete-purchase');
     }
 
-    public function delete()
+    public function delete(DeletePurchaseAction $action): void
     {
         $this->authorizeManagePurchases();
 
         $purchase = Purchase::with('paymentAllocations')->findOrFail($this->deleteId);
-        $relatedPaymentIds = $purchase->paymentAllocations->pluck('supplier_payment_id')->unique()->all();
-
-        $purchase->delete();
-
-        if (! empty($relatedPaymentIds)) {
-            SupplierPayment::whereIn('id', $relatedPaymentIds)
-                ->doesntHave('allocations')
-                ->delete();
-        }
+        $action->execute($purchase);
 
         $this->deleteId = null;
         $this->dispatch('close-modal-delete-purchase');

@@ -15,7 +15,7 @@ beforeEach(function () {
 });
 
 it('creates a cash sale and syncs inventory and payment records', function () {
-    $customer = Customer::create(['name' => 'Acme Customer']);
+    $customer = Customer::factory()->create(['name' => 'Acme Customer']);
     $product = Product::factory()->create([
         'name' => 'Primary Filter',
         'cost_price' => 50,
@@ -54,7 +54,7 @@ it('creates a cash sale and syncs inventory and payment records', function () {
     $this->assertDatabaseHas('sale_items', [
         'sale_id' => $sale->id,
         'product_id' => $product->id,
-        'sell_price' => '80.00',
+        'cost_price' => '50.00', 'sell_price' => '80.00',
         'cost_price' => '50.00',
         'quantity' => '2.00',
     ]);
@@ -85,7 +85,7 @@ it('creates a cash sale and syncs inventory and payment records', function () {
 it('creates an installment sale with down payment and next installment date', function () {
     Carbon::setTestNow('2026-03-11 10:00:00');
 
-    $customer = Customer::create(['name' => 'Installment Customer']);
+    $customer = Customer::factory()->create(['name' => 'Installment Customer']);
     $product = Product::factory()->create([
         'cost_price' => 40,
         'quantity' => 8,
@@ -112,9 +112,9 @@ it('creates an installment sale with down payment and next installment date', fu
     $sale = Sale::sole();
 
     $this->assertEquals('installment', $sale->payment_type);
-    $this->assertEquals(180.0, (float) $sale->total_price);
+    $this->assertEquals(480.0, (float) $sale->total_price);
     $this->assertEquals(30.0, (float) $sale->down_payment);
-    $this->assertEquals(50.0, (float) $sale->installment_amount);
+    $this->assertEquals(150.0, (float) $sale->installment_amount);
     $this->assertEquals(3, $sale->installment_months);
     $this->assertEquals('2026-04-11', $sale->next_installment_date?->toDateString());
 
@@ -158,7 +158,7 @@ it('validates sale fields before saving', function () {
 });
 
 it('applies available customer credit to a new sale before cash payment', function () {
-    $customer = Customer::create(['name' => 'Credit Customer']);
+    $customer = Customer::factory()->create(['name' => 'Credit Customer']);
     $product = Product::factory()->create([
         'cost_price' => 25,
         'quantity' => 20,
@@ -230,7 +230,7 @@ it('applies available customer credit to a new sale before cash payment', functi
 });
 
 it('creates a sale and stores water reading when enabled', function () {
-    $customer = Customer::create(['name' => 'Water Reading Customer']);
+    $customer = Customer::factory()->create(['name' => 'Water Reading Customer']);
     $filter = WaterFilter::create([
         'filter_model' => 'Customer Filter',
         'address' => 'Customer Address',

@@ -2,79 +2,36 @@
 
 namespace App\Livewire\Sales;
 
+use App\Actions\Sales\CreateSaleAction;
 use App\Enums\WaterQualityTypeEnum;
+use App\Livewire\Traits\HasSaleForm;
 use App\Models\Category;
 use App\Models\Customer;
-use App\Models\CustomerPayment;
-use App\Models\CustomerPaymentAllocation;
 use App\Models\Product;
-use App\Models\ProductMovement;
-use App\Models\Sale;
-use App\Models\SaleItem;
 use App\Models\WaterFilter;
-use App\Models\WaterReading;
-use Illuminate\Support\Facades\DB;
+use App\Support\SalePriceCalculator;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app', ['title' => 'pos'])]
 class SaleCreate extends Component
 {
-    private const VAT_RATE = 14;
-
-    private const INSTALLMENT_MONTHLY_SURCHARGE = 100;
-
-    public ?int $customer_id = null;
-
-    public string $payment_type = 'cash';
-
-    public string $down_payment = '0';
-
-    public string $installment_months = '';
-
-    public string $interest_rate = '0';
-
-    public string $discount = '0';
-
-    public bool $with_vat = false;
+    use HasSaleForm;
 
     public string $customerSearch = '';
-
-    public ?string $dealer_name = null;
 
     public string $search = '';
 
     public string $activeCategory = 'all';
 
-    public bool $includeWaterReading = false;
-
     public bool $printAfterSave = false;
-
-    public array $cart = [];
 
     public array $newCustomer = [
         'name' => '',
         'phone' => '',
         'national_number' => '',
         'address' => '',
-    ];
-
-    public ?int $water_filter_id = null;
-
-    public string $filterSearch = '';
-
-    public bool $createNewFilter = false;
-
-    public array $newFilter = [
-        'filter_model' => '',
-        'address' => '',
-    ];
-
-    public array $waterReading = [
-        'technician_name' => '',
-        'tds' => '',
-        'water_quality' => '',
-        'before_installment' => false,
     ];
 
     public function updatedPaymentType(string $value): void
@@ -129,24 +86,6 @@ class SaleCreate extends Component
         $this->water_filter_id = $filterId;
         $this->filterSearch = $filterLabel;
         $this->createNewFilter = false;
-    }
-
-    public function getCustomerFiltersProperty(): array
-    {
-        if (! $this->customer_id) {
-            return [];
-        }
-
-        return WaterFilter::where('customer_id', $this->customer_id)
-            ->orderBy('filter_model')
-            ->get()
-            ->map(fn ($f) => [
-                'id' => $f->id,
-                'label' => $f->filter_model.' - '.$f->address,
-                'filter_model' => $f->filter_model,
-                'address' => $f->address,
-            ])
-            ->toArray();
     }
 
     public function setActiveCategory(string $categoryId): void
@@ -248,24 +187,15 @@ class SaleCreate extends Component
 
     public function createCustomerInline(): void
     {
-        $this->validate([
-            'newCustomer.name' => ['required', 'string', 'max:255'],
-            'newCustomer.phone' => ['nullable', 'string', 'max:11', 'regex:/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}$/'],
-            'newCustomer.national_number' => ['nullable', 'string', 'max:14', 'min:14'],
-            'newCustomer.address' => ['nullable', 'string', 'max:255'],
-        ], [], [
-            'newCustomer.name' => __('keywords.name'),
-            'newCustomer.phone' => __('keywords.phone'),
-            'newCustomer.national_number' => __('keywords.national_number'),
-            'newCustomer.address' => __('keywords.address'),
-        ]);
+        $request = new \App\Http\Requests\Customers\CreateCustomerRequest;
 
-        $customer = Customer::create([
-            'name' => $this->newCustomer['name'],
-            'phone' => $this->newCustomer['phone'] ?: null,
-            'national_number' => $this->newCustomer['national_number'] ?: null,
-            'address' => $this->newCustomer['address'] ?: null,
-        ]);
+        $validated = $this->validate(
+            collect($request->rules())->mapWithKeys(fn ($rules, $key) => ["newCustomer.{$key}" => $rules])->toArray(),
+            $request->messages(),
+            collect($request->attributes())->mapWithKeys(fn ($label, $key) => ["newCustomer.{$key}" => $label])->toArray()
+        );
+
+        $customer = Customer::create($validated['newCustomer']);
 
         $this->customer_id = $customer->id;
         $this->customerSearch = $customer->name;
@@ -290,50 +220,90 @@ class SaleCreate extends Component
         $this->dispatch('open-modal-sale-payment');
     }
 
-    public function getBaseTotalProperty(): float
+    // ==========================================
+    // COMPUTED PROPERTIES - Using SalePriceCalculator
+    // ==========================================
+
+    #[Computed]
+    public function calculator(): SalePriceCalculator
     {
-        return collect($this->cart)->sum(function ($item) {
-            return ((float) ($item['sell_price'] ?: 0)) * ((float) ($item['quantity'] ?: 0));
-        });
+        return $this->getSaleCalculator($this->available_customer_credit);
     }
 
-    public function getVatAmountProperty(): float
+    #[Computed]
+    public function baseTotal(): float
     {
-        if (! $this->with_vat) {
-            return 0;
-        }
-
-        return round($this->total_after_discount * (self::VAT_RATE / 100), 2);
+        return $this->calculator->baseTotal();
     }
 
-    public function getDiscountAmountProperty(): float
+    #[Computed]
+    public function discountAmount(): float
     {
-        $discount = max(0, (float) ($this->discount ?: 0));
-
-        return min($this->base_total, $discount);
+        return $this->calculator->discountAmount();
     }
 
-    public function getTotalAfterDiscountProperty(): float
+    #[Computed]
+    public function totalAfterDiscount(): float
     {
-        return max(0, $this->base_total - $this->discount_amount);
+        return $this->calculator->totalAfterDiscount();
     }
 
-    public function getSubtotalAfterVatProperty(): float
+    #[Computed]
+    public function vatAmount(): float
     {
-        return $this->total_after_discount + $this->vat_amount;
+        return $this->calculator->vatAmount();
     }
 
-    public function getTotalPriceProperty(): float
+    #[Computed]
+    public function subtotalAfterVat(): float
     {
-        return $this->grand_total;
+        return $this->calculator->subtotalAfterVat();
     }
 
-    public function getCartCountProperty(): float
+    #[Computed]
+    public function interestAmount(): float
     {
-        return (float) collect($this->cart)->sum(fn ($item) => (float) ($item['quantity'] ?: 0));
+        return $this->calculator->interestAmount();
     }
 
-    public function getSelectedCustomerProperty(): ?Customer
+    #[Computed]
+    public function installmentMonthsSurchargeTotal(): float
+    {
+        return $this->calculator->installmentSurchargeTotal();
+    }
+
+    #[Computed]
+    public function installmentTotal(): float
+    {
+        return $this->calculator->installmentTotal();
+    }
+
+    #[Computed]
+    public function installmentAmount(): float
+    {
+        return $this->calculator->installmentAmount();
+    }
+
+    #[Computed]
+    public function grandTotal(): float
+    {
+        return $this->calculator->grandTotal();
+    }
+
+    #[Computed]
+    public function totalPrice(): float
+    {
+        return $this->grandTotal;
+    }
+
+    #[Computed]
+    public function cartCount(): float
+    {
+        return (float) collect($this->cart)->sum(fn ($item) => (float) ($item['quantity'] ?? 0));
+    }
+
+    #[Computed]
+    public function selectedCustomer(): ?Customer
     {
         if (! $this->customer_id) {
             return null;
@@ -342,315 +312,141 @@ class SaleCreate extends Component
         return Customer::find($this->customer_id);
     }
 
-    public function getAvailableCustomerCreditProperty(): float
+    #[Computed]
+    public function availableCustomerCredit(): float
     {
         return $this->selectedCustomer?->available_credit ?? 0;
     }
 
-    public function getAppliedCustomerCreditProperty(): float
+    #[Computed]
+    public function appliedCustomerCredit(): float
     {
-        return min($this->subtotal_after_vat, $this->available_customer_credit);
+        return min($this->subtotalAfterVat, $this->availableCustomerCredit);
     }
 
-    public function getCashAmountDueProperty(): float
+    #[Computed]
+    public function cashAmountDue(): float
     {
-        if ($this->payment_type === 'installment') {
-            return min((float) ($this->down_payment ?: 0), max(0, $this->subtotal_after_vat - $this->applied_customer_credit));
-        }
-
-        return max(0, $this->subtotal_after_vat - $this->applied_customer_credit);
+        return $this->calculator->cashAmountDue();
     }
 
-    public function getRemainingAfterDownPaymentProperty(): float
+    #[Computed]
+    public function remainingAfterDownPayment(): float
     {
-        return max(0, $this->subtotal_after_vat - $this->applied_customer_credit - $this->cash_amount_due);
+        return $this->calculator->remainingAfterDownPayment();
     }
 
-    public function getInterestAmountProperty(): float
+    // ==========================================
+    // SAVE ACTION - Using FormRequest Validation
+    // ==========================================
+
+    public function save(CreateSaleAction $action): void
     {
-        if ($this->payment_type !== 'installment') {
-            return 0;
-        }
+        $request = new \App\Http\Requests\Sales\CreateSaleRequest;
+        $request->merge($this->all());
 
-        $rate = max(0, (float) ($this->interest_rate ?: 0));
+        $validated = $this->validate($request->rules(), $request->messages(), $request->attributes());
 
-        return round($this->remaining_after_down_payment * ($rate / 100), 2);
-    }
-
-    public function getInstallmentMonthsSurchargeTotalProperty(): float
-    {
-        if ($this->payment_type !== 'installment') {
-            return 0;
-        }
-
-        $months = (int) ($this->installment_months ?: 0);
-        if ($months < 3) {
-            return 0;
-        }
-
-        return $months * self::INSTALLMENT_MONTHLY_SURCHARGE;
-    }
-
-    public function getInstallmentTotalProperty(): float
-    {
-        if ($this->payment_type !== 'installment') {
-            return 0;
-        }
-
-        return $this->remaining_after_down_payment + $this->interest_amount + $this->installment_months_surcharge_total;
-    }
-
-    public function getInstallmentAmountProperty(): float
-    {
-        $months = (int) ($this->installment_months ?: 0);
-        if ($months <= 0) {
-            return 0;
-        }
-
-        return round($this->installment_total / $months, 2);
-    }
-
-    public function getGrandTotalProperty(): float
-    {
-        if ($this->payment_type !== 'installment') {
-            return $this->subtotal_after_vat;
-        }
-
-        return $this->subtotal_after_vat + $this->interest_amount + $this->installment_months_surcharge_total;
-    }
-
-    protected function rules(): array
-    {
-        $rules = [
-            'customer_id' => 'required|exists:customers,id',
-            'dealer_name' => 'nullable|string|max:255',
-            'includeWaterReading' => 'boolean',
-            'with_vat' => 'boolean',
-            'payment_type' => 'required|in:cash,installment',
-            'down_payment' => 'required_if:payment_type,installment|numeric|min:0',
-            'installment_months' => 'required_if:payment_type,installment|nullable|integer|min:1|max:60',
-            'interest_rate' => 'required_if:payment_type,installment|nullable|numeric|min:0|max:100',
-            'discount' => 'nullable|numeric|min:0',
-            'cart' => 'required|array|min:1',
-            'cart.*.product_id' => 'required|exists:products,id',
-            'cart.*.sell_price' => 'required|numeric|min:0.01',
-            'cart.*.quantity' => 'required|integer|min:1',
-        ];
-
-        if ($this->includeWaterReading) {
-            if ($this->createNewFilter) {
-                $rules['newFilter.filter_model'] = 'required|string|max:255';
-                $rules['newFilter.address'] = 'required|string|max:255';
-            } else {
-                $rules['water_filter_id'] = 'required|exists:water_filters,id';
-            }
-            $rules['waterReading.technician_name'] = 'required|string|max:255';
-            $rules['waterReading.tds'] = 'required|numeric|min:0';
-            $rules['waterReading.water_quality'] = 'required|in:'.implode(',', WaterQualityTypeEnum::values());
-            $rules['waterReading.before_installment'] = 'boolean';
-        } else {
-            $rules['waterReading.technician_name'] = 'nullable|string|max:255';
-            $rules['waterReading.tds'] = 'nullable|numeric|min:0';
-            $rules['waterReading.water_quality'] = 'nullable|in:'.implode(',', WaterQualityTypeEnum::values());
-        }
-
-        foreach ($this->cart as $i => $item) {
-            $rules["cart.{$i}.quantity"] = 'required|integer|min:1';
-        }
-
-        return $rules;
-    }
-
-    protected function validationAttributes(): array
-    {
-        $attrs = [
-            'customer_id' => __('keywords.customer'),
-            'payment_type' => __('keywords.payment_type'),
-            'with_vat' => __('keywords.apply_vat'),
-            'down_payment' => __('keywords.down_payment'),
-            'installment_months' => __('keywords.installment_months'),
-            'interest_rate' => __('keywords.interest_rate'),
-            'discount' => __('keywords.discount'),
-            'dealer_name' => __('keywords.dealer_name'),
-            'water_filter_id' => __('keywords.filter'),
-            'newFilter.filter_model' => __('keywords.filter_model'),
-            'newFilter.address' => __('keywords.address'),
-            'waterReading.technician_name' => __('keywords.technician_name'),
-            'waterReading.tds' => __('keywords.tds'),
-            'waterReading.water_quality' => __('keywords.water_quality'),
-            'waterReading.before_installment' => __('keywords.before_installment'),
-        ];
-
-        foreach ($this->cart as $i => $item) {
-            $n = $i + 1;
-            $attrs["cart.{$i}.sell_price"] = __('keywords.sell_price')." #{$n}";
-            $attrs["cart.{$i}.quantity"] = __('keywords.quantity')." #{$n}";
-        }
-
-        return $attrs;
-    }
-
-    public function save(): void
-    {
-        $this->validate();
-
-        $customer = Customer::findOrFail($this->customer_id);
-        $baseTotal = $this->base_total;
-        $discountAmount = min($baseTotal, max(0, (float) ($this->discount ?: 0)));
-        $totalAfterDiscount = max(0, $baseTotal - $discountAmount);
-        $vatAmount = $this->with_vat ? round($totalAfterDiscount * (self::VAT_RATE / 100), 2) : 0;
-        $subtotalAfterVat = $totalAfterDiscount + $vatAmount;
-        $isInstallment = $this->payment_type === 'installment';
-        $months = $isInstallment ? (int) $this->installment_months : null;
-        $interestRate = $isInstallment ? max(0, (float) ($this->interest_rate ?: 0)) : null;
-        $appliedCredit = min($customer->available_credit, $subtotalAfterVat);
-        $downPayment = $isInstallment
-            ? min((float) $this->down_payment, max(0, $subtotalAfterVat - $appliedCredit))
-            : max(0, $subtotalAfterVat - $appliedCredit);
-        $installmentBase = max(0, $subtotalAfterVat - $appliedCredit - $downPayment);
-        $interestAmount = $isInstallment
-            ? round($installmentBase * (($interestRate ?? 0) / 100), 2)
-            : 0;
-        $installmentMonthsSurchargeTotal = $isInstallment && $months >= 3
-            ? $months * self::INSTALLMENT_MONTHLY_SURCHARGE
-            : 0;
-        $installmentAmount = $isInstallment && $months > 0
-            ? round(($installmentBase + $interestAmount + $installmentMonthsSurchargeTotal) / $months, 2)
-            : null;
-        $totalPrice = $subtotalAfterVat + $interestAmount + $installmentMonthsSurchargeTotal;
-
-        $saleNumber = null;
-
-        DB::transaction(function () use ($customer, $totalPrice, $isInstallment, $downPayment, $months, $installmentAmount, $appliedCredit, $interestRate, $discountAmount, &$saleNumber) {
-            $sale = Sale::create([
-                'dealer_name' => $this->dealer_name ?? null,
-                'user_name' => auth()->user()->name,
-                'total_price' => $totalPrice,
-                'payment_type' => $isInstallment ? 'installment' : 'cash',
-                'discount_value' => $discountAmount,
-                'interest_rate' => $interestRate,
-                'installment_amount' => $installmentAmount,
-                'installment_months' => $months,
-                'with_vat' => $this->with_vat,
-                'user_id' => auth()->id(),
-                'customer_id' => $customer->id,
-            ]);
-
-            $saleNumber = $sale->number;
-
-            foreach ($this->cart as $item) {
-                $product = Product::lockForUpdate()->findOrFail($item['product_id']);
-                $quantity = (int) $item['quantity'];
-
-                // Allow sales even if stock is zero or negative
-                SaleItem::create([
-                    'sell_price' => (float) $item['sell_price'],
-                    'cost_price' => (float) $item['cost_price'],
-                    'quantity' => $quantity,
-                    'sale_id' => $sale->id,
-                    'product_id' => $product->id,
-                ]);
-
-                $product->decrement('quantity', $quantity);
-
-                ProductMovement::create([
-                    'quantity' => -$quantity,
-                    'movable_type' => Sale::class,
-                    'movable_id' => $sale->id,
-                    'product_id' => $product->id,
-                ]);
-            }
-
-            if ($downPayment > 0) {
-                $payment = CustomerPayment::create([
-                    'amount' => $downPayment,
-                    'payment_method' => 'cash',
-                    'note' => $isInstallment ? __('keywords.down_payment') : __('keywords.cash_payment'),
-                    'customer_id' => $customer->id,
-                    'user_id' => auth()->id(),
-                ]);
-
-                CustomerPaymentAllocation::create([
-                    'amount' => $downPayment,
-                    'customer_payment_id' => $payment->id,
-                    'sale_id' => $sale->id,
-                ]);
-            }
-
-            if ($appliedCredit > 0) {
-                $creditPayment = CustomerPayment::create([
-                    'amount' => $appliedCredit,
-                    'payment_method' => 'customer_credit',
-                    'note' => __('keywords.applied_customer_credit'),
-                    'customer_id' => $customer->id,
-                    'user_id' => auth()->id(),
-                ]);
-
-                CustomerPaymentAllocation::create([
-                    'amount' => $appliedCredit,
-                    'customer_payment_id' => $creditPayment->id,
-                    'sale_id' => $sale->id,
-                ]);
-            }
-
-            if ($this->includeWaterReading) {
-                $filterId = $this->water_filter_id;
-
-                if ($this->createNewFilter) {
-                    $newFilter = WaterFilter::create([
-                        'filter_model' => $this->newFilter['filter_model'],
-                        'address' => $this->newFilter['address'],
-                        'customer_id' => $customer->id,
-                    ]);
-                    $filterId = $newFilter->id;
-                }
-
-                WaterReading::create([
-                    'technician_name' => $this->waterReading['technician_name'],
-                    'tds' => $this->waterReading['tds'],
-                    'water_quality' => $this->waterReading['water_quality'],
-                    'before_installment' => $this->waterReading['before_installment'] ?? false,
-                    'water_filter_id' => $filterId,
-                ]);
-            }
-        });
+        $sale = $action->execute($validated);
 
         session()->flash('success', __('keywords.sale_created'));
 
-        if ($this->printAfterSave && $saleNumber) {
-            $this->redirect(route('sales.print', $saleNumber), navigate: true);
+        if ($this->printAfterSave && $sale->number) {
+            $this->redirect(route('sales.print', $sale->number), navigate: true);
         } else {
             $this->redirect(route('sales.create'), navigate: true);
         }
     }
 
-    public function render()
+    private function getSaleData(): array
     {
-        $productsQuery = Product::query()->with('category')->orderBy('name');
-        $customersQuery = Customer::query()->orderBy('name');
+        return [
+            'customer_id' => $this->customer_id,
+            'payment_type' => $this->payment_type,
+            'down_payment' => $this->down_payment,
+            'installment_months' => $this->installment_months,
+            'interest_rate' => $this->interest_rate,
+            'discount' => $this->discount,
+            'with_vat' => $this->with_vat,
+            'dealer_name' => $this->dealer_name,
+            'cart' => $this->cart,
+            'includeWaterReading' => $this->includeWaterReading,
+            'water_filter_id' => $this->water_filter_id,
+            'createNewFilter' => $this->createNewFilter,
+            'newFilter' => $this->newFilter,
+            'waterReading' => $this->waterReading,
+        ];
+    }
+
+    // ==========================================
+    // RENDER WITH COMPUTED PROPERTIES FOR DATA
+    // ==========================================
+
+    #[Computed]
+    public function products()
+    {
+        $query = Product::query()->with('category')->orderBy('name');
 
         if (filled($this->search)) {
-            $productsQuery->where('name', 'like', '%'.$this->search.'%');
+            $query->where('name', 'like', '%'.$this->search.'%');
         }
 
         if ($this->activeCategory !== 'all') {
-            $productsQuery->where('category_id', $this->activeCategory);
+            $query->where('category_id', $this->activeCategory);
         }
 
+        return $query->get();
+    }
+
+    #[Computed]
+    public function categories()
+    {
+        return Category::orderBy('name')->get();
+    }
+
+    #[Computed]
+    public function customers()
+    {
+        $query = Customer::query()->orderBy('name');
+
         if (filled($this->customerSearch)) {
-            $customersQuery->where(function ($query) {
-                $query->where('name', 'like', '%'.$this->customerSearch.'%')
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%'.$this->customerSearch.'%')
                     ->orWhere('phone', 'like', '%'.$this->customerSearch.'%')
                     ->orWhere('national_number', 'like', '%'.$this->customerSearch.'%');
             });
         }
 
+        return $query->limit(100)->pluck('name', 'id')->all();
+    }
+
+    #[Computed]
+    public function customerFilters(): array
+    {
+        if (! $this->customer_id) {
+            return [];
+        }
+
+        return WaterFilter::where('customer_id', $this->customer_id)
+            ->orderBy('filter_model')
+            ->get()
+            ->map(fn ($f) => [
+                'id' => $f->id,
+                'label' => $f->filter_model.' - '.$f->address,
+                'filter_model' => $f->filter_model,
+                'address' => $f->address,
+            ])
+            ->toArray();
+    }
+
+    public function render()
+    {
         return view('livewire.sales.sale-create', [
-            'products' => $productsQuery->get(),
-            'categories' => Category::orderBy('name')->get(),
-            'customers' => $customersQuery->limit(100)->pluck('name', 'id')->all(),
+            'products' => $this->products,
+            'categories' => $this->categories,
+            'customers' => $this->customers,
             'waterQualityOptions' => WaterQualityTypeEnum::cases(),
-            'customerFilters' => $this->customer_filters,
+            'customerFilters' => $this->customerFilters,
         ]);
     }
 }

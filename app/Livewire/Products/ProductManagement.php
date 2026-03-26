@@ -2,27 +2,31 @@
 
 namespace App\Livewire\Products;
 
+use App\Actions\Products\CreateProductAction;
+use App\Actions\Products\DeleteProductAction;
+use App\Actions\Products\UpdateProductAction;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
-use App\Livewire\Traits\HasValidationAttributes;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class ProductManagement extends Component
 {
-    use HasCrudModals, HasCrudQuery, HasForm, HasValidationAttributes, WithSearchAndPagination;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
     public $categorySlug = '';
 
     public $stockStatus = '';
 
-    public function mount()
+    public function mount(): void
     {
         $this->resetForm();
     }
@@ -30,30 +34,6 @@ class ProductManagement extends Component
     protected function getModelClass(): string
     {
         return Product::class;
-    }
-
-    protected function rules()
-    {
-        return [
-            'form.name' => ['required', 'string', 'max:255'],
-            'form.cost_price' => ['required', 'numeric', 'min:0'],
-            'form.quantity' => ['required', 'integer', 'min:0'],
-            'form.min_quantity' => ['required', 'integer', 'min:0'],
-            'form.description' => ['nullable', 'string'],
-            'form.category_id' => ['required', 'exists:categories,id'],
-        ];
-    }
-
-    protected function validationAttributes(): array
-    {
-        return [
-            'form.name' => __('keywords.name'),
-            'form.cost_price' => __('keywords.cost_price'),
-            'form.quantity' => __('keywords.quantity'),
-            'form.min_quantity' => __('keywords.min_quantity'),
-            'form.description' => __('keywords.description'),
-            'form.category_id' => __('keywords.category'),
-        ];
     }
 
     protected function getDefaultForm(): array
@@ -76,30 +56,33 @@ class ProductManagement extends Component
         ];
     }
 
-    public function updatingCategorySlug()
+    public function updatingCategorySlug(): void
     {
         $this->resetPage();
     }
 
-    public function updatingStockStatus()
+    public function updatingStockStatus(): void
     {
         $this->resetPage();
     }
 
-    public function create()
+    public function create(CreateProductAction $action): void
     {
         $this->authorizeManageProducts();
 
-        $this->validate();
+        $request = new \App\Http\Requests\Products\CreateProductRequest();
+        $rules = collect($request->rules())->mapWithKeys(fn($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
 
-        Product::create($this->form);
+        $action->execute($validated['form']);
 
         $this->resetForm();
         $this->dispatch('close-modal-create-product');
         $this->resetPage();
     }
 
-    public function openEdit($id)
+    public function openEdit($id): void
     {
         $this->authorizeManageProducts();
 
@@ -119,13 +102,17 @@ class ProductManagement extends Component
         $this->dispatch('open-modal-edit-product');
     }
 
-    public function updateProduct()
+    public function updateProduct(UpdateProductAction $action): void
     {
         $this->authorizeManageProducts();
 
-        $this->validate();
+        $request = new \App\Http\Requests\Products\UpdateProductRequest();
+        $rules = collect($request->rules())->mapWithKeys(fn($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
 
-        Product::findOrFail($this->editId)->update($this->form);
+        $product = Product::findOrFail($this->editId);
+        $action->execute($product, $validated['form']);
 
         $this->resetForm();
         $this->editId = null;
@@ -134,18 +121,21 @@ class ProductManagement extends Component
         $this->resetPage();
     }
 
-    public function setDelete($id)
+    public function setDelete($id): void
     {
         $this->authorizeManageProducts();
 
         $this->openDeleteModal($id, 'open-modal-delete-product');
     }
 
-    public function delete()
+    public function delete(DeleteProductAction $action): void
     {
         $this->authorizeManageProducts();
 
-        Product::find($this->deleteId)?->delete();
+        $product = Product::find($this->deleteId);
+        if ($product) {
+            $action->execute($product);
+        }
 
         $this->deleteId = null;
 
@@ -171,12 +161,14 @@ class ProductManagement extends Component
         $query->when($this->stockStatus === 'below', fn (Builder $builder) => $builder->whereColumn('quantity', '<', 'min_quantity'));
     }
 
-    public function getProductsProperty()
+    #[Computed]
+    public function products()
     {
         return $this->items;
     }
 
-    public function getCategoriesProperty()
+    #[Computed]
+    public function categories(): Collection
     {
         return Category::orderBy('name')->get();
     }

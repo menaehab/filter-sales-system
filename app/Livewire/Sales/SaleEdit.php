@@ -2,24 +2,22 @@
 
 namespace App\Livewire\Sales;
 
+use App\Actions\Sales\UpdateSaleAction;
 use App\Models\Customer;
 use App\Models\Product;
-use App\Models\ProductMovement;
 use App\Models\Sale;
-use App\Models\SaleItem;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
+use App\Support\SalePriceCalculator;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
 class SaleEdit extends Component
 {
-    private const VAT_RATE = 14;
-
-    private const INSTALLMENT_MONTHLY_SURCHARGE = 100;
-
-    public Sale $sale;
+    // IMPORTANT: Store only the ID, not the model (Livewire v4 best practice)
+    #[Locked]
+    public int $saleId;
 
     public ?int $customer_id = null;
 
@@ -42,7 +40,11 @@ class SaleEdit extends Component
 
     public function mount(Sale $sale): void
     {
-        $this->sale = $sale->load(['items.product', 'paymentAllocations.customerPayment']);
+        // Store only the ID
+        $this->saleId = $sale->id;
+
+        // Load and map data to primitives
+        $sale->load(['items.product', 'paymentAllocations.customerPayment']);
 
         $this->customer_id = $sale->customer_id;
         $this->payment_type = $sale->isInstallment() ? 'installment' : 'cash';
@@ -53,20 +55,33 @@ class SaleEdit extends Component
         $this->with_vat = (bool) ($sale->with_vat ?? false);
         $this->dealer_name = $sale->dealer_name ?? '';
 
-        $this->items = $sale->items->map(function ($item) {
-            return [
-                'product_id' => (string) $item->product_id,
-                'product_name' => $item->product?->name ?? __('keywords.not_specified'),
-                'sell_price' => (string) $item->sell_price,
-                'cost_price' => (string) $item->cost_price,
-                'quantity' => (string) $item->quantity,
-            ];
-        })->toArray();
+        $this->items = $sale->items->map(fn ($item) => [
+            'product_id' => (string) $item->product_id,
+            'product_name' => $item->product?->name ?? __('keywords.not_specified'),
+            'sell_price' => (string) $item->sell_price,
+            'cost_price' => (string) $item->cost_price,
+            'quantity' => (string) $item->quantity,
+        ])->toArray();
 
         if (empty($this->items)) {
             $this->addItem();
         }
     }
+
+    // ==========================================
+    // COMPUTED PROPERTY - Rebuild model when needed
+    // ==========================================
+
+    #[Computed]
+    public function sale(): Sale
+    {
+        return Sale::with(['items.product', 'paymentAllocations.customerPayment'])
+            ->findOrFail($this->saleId);
+    }
+
+    // ==========================================
+    // FORM HANDLERS
+    // ==========================================
 
     public function updatedPaymentType(string $value): void
     {
@@ -114,96 +129,98 @@ class SaleEdit extends Component
         }
     }
 
-    public function getBaseTotalProperty(): float
-    {
-        return collect($this->items)->sum(function ($item) {
-            return ((float) ($item['sell_price'] ?: 0)) * ((float) ($item['quantity'] ?: 0));
-        });
-    }
+    // ==========================================
+    // COMPUTED PRICE CALCULATIONS
+    // ==========================================
 
-    public function getDiscountAmountProperty(): float
+    #[Computed]
+    public function calculator(): SalePriceCalculator
     {
-        $discount = max(0, (float) ($this->discount ?: 0));
+        $calculator = SalePriceCalculator::make()
+            ->withItems($this->items)
+            ->withDiscount((float) ($this->discount ?? 0))
+            ->withVat($this->with_vat);
 
-        return min($this->base_total, $discount);
-    }
-
-    public function getTotalAfterDiscountProperty(): float
-    {
-        return max(0, $this->base_total - $this->discount_amount);
-    }
-
-    public function getVatAmountProperty(): float
-    {
-        if (! $this->with_vat) {
-            return 0;
+        if ($this->payment_type === 'installment') {
+            $calculator->withInstallment(
+                (float) ($this->down_payment ?? 0),
+                (int) ($this->installment_months ?? 0),
+                (float) ($this->interest_rate ?? 0)
+            );
         }
 
-        return round($this->total_after_discount * (self::VAT_RATE / 100), 2);
+        return $calculator;
     }
 
-    public function getSubtotalAfterVatProperty(): float
+    #[Computed]
+    public function baseTotal(): float
     {
-        return $this->total_after_discount + $this->vat_amount;
+        return $this->calculator->baseTotal();
     }
 
-    public function getRemainingAfterDownPaymentProperty(): float
+    #[Computed]
+    public function discountAmount(): float
     {
-        return max(0, $this->subtotal_after_vat - (float) ($this->down_payment ?: 0));
+        return $this->calculator->discountAmount();
     }
 
-    public function getInterestAmountProperty(): float
+    #[Computed]
+    public function totalAfterDiscount(): float
     {
-        if ($this->payment_type !== 'installment') {
-            return 0;
-        }
-
-        $rate = max(0, (float) ($this->interest_rate ?: 0));
-
-        return round($this->remaining_after_down_payment * ($rate / 100), 2);
+        return $this->calculator->totalAfterDiscount();
     }
 
-    public function getInstallmentMonthsSurchargeTotalProperty(): float
+    #[Computed]
+    public function vatAmount(): float
     {
-        if ($this->payment_type !== 'installment') {
-            return 0;
-        }
-
-        $months = (int) ($this->installment_months ?: 0);
-        if ($months < 3) {
-            return 0;
-        }
-
-        return $months * self::INSTALLMENT_MONTHLY_SURCHARGE;
+        return $this->calculator->vatAmount();
     }
 
-    public function getInstallmentTotalProperty(): float
+    #[Computed]
+    public function subtotalAfterVat(): float
     {
-        if ($this->payment_type !== 'installment') {
-            return 0;
-        }
-
-        return $this->remaining_after_down_payment + $this->interest_amount + $this->installment_months_surcharge_total;
+        return $this->calculator->subtotalAfterVat();
     }
 
-    public function getInstallmentAmountProperty(): float
+    #[Computed]
+    public function remainingAfterDownPayment(): float
     {
-        $months = (int) ($this->installment_months ?: 0);
-        if ($months <= 0) {
-            return 0;
-        }
-
-        return round($this->installment_total / $months, 2);
+        return $this->calculator->remainingAfterDownPayment();
     }
 
-    public function getTotalPriceProperty(): float
+    #[Computed]
+    public function interestAmount(): float
     {
-        if ($this->payment_type !== 'installment') {
-            return $this->subtotal_after_vat;
-        }
-
-        return $this->subtotal_after_vat + $this->interest_amount + $this->installment_months_surcharge_total;
+        return $this->calculator->interestAmount();
     }
+
+    #[Computed]
+    public function installmentMonthsSurchargeTotal(): float
+    {
+        return $this->calculator->installmentSurchargeTotal();
+    }
+
+    #[Computed]
+    public function installmentTotal(): float
+    {
+        return $this->calculator->installmentTotal();
+    }
+
+    #[Computed]
+    public function installmentAmount(): float
+    {
+        return $this->calculator->installmentAmount();
+    }
+
+    #[Computed]
+    public function totalPrice(): float
+    {
+        return $this->calculator->grandTotal();
+    }
+
+    // ==========================================
+    // VALIDATION
+    // ==========================================
 
     protected function rules(): array
     {
@@ -246,86 +263,56 @@ class SaleEdit extends Component
         return $attrs;
     }
 
-    public function update(): void
+    // ==========================================
+    // UPDATE ACTION
+    // ==========================================
+
+    public function update(UpdateSaleAction $action): void
     {
         $this->validate();
 
-        $customer = Customer::findOrFail($this->customer_id);
-        $baseTotal = $this->base_total;
-        $discountAmount = min($baseTotal, max(0, (float) ($this->discount ?: 0)));
-        $totalAfterDiscount = max(0, $baseTotal - $discountAmount);
-        $vatAmount = $this->with_vat ? round($totalAfterDiscount * (self::VAT_RATE / 100), 2) : 0;
-        $subtotalAfterVat = $totalAfterDiscount + $vatAmount;
-        $totalPrice = $this->total_price;
-        $isInstallment = $this->payment_type === 'installment';
-        $months = $isInstallment ? (int) $this->installment_months : null;
-        $installmentAmount = $isInstallment ? $this->installment_amount : null;
-        $interestRate = $isInstallment ? max(0, (float) ($this->interest_rate ?: 0)) : null;
-
-        DB::transaction(function () use ($customer, $totalPrice, $isInstallment, $months, $installmentAmount, $interestRate, $discountAmount) {
-            foreach ($this->sale->items as $oldItem) {
-                $product = Product::find($oldItem->product_id);
-                if ($product) {
-                    $product->increment('quantity', $oldItem->quantity);
-                }
-            }
-
-            ProductMovement::where('movable_type', Sale::class)
-                ->where('movable_id', $this->sale->id)
-                ->delete();
-
-            $this->sale->items()->delete();
-
-            $this->sale->update([
-                'dealer_name' => $this->dealer_name,
-                'total_price' => $totalPrice,
-                'payment_type' => $isInstallment ? 'installment' : 'cash',
-                'discount_value' => $discountAmount,
-                'interest_rate' => $interestRate,
-                'installment_amount' => $installmentAmount,
-                'installment_months' => $months,
-                'with_vat' => $this->with_vat,
-                'customer_id' => $customer->id,
-            ]);
-
-            foreach ($this->items as $item) {
-                $product = Product::findOrFail($item['product_id']);
-                $quantity = (int) $item['quantity'];
-
-                if ((int) $product->quantity < $quantity) {
-                    throw ValidationException::withMessages([
-                        'items' => __('keywords.not_available').': '.$product->name,
-                    ]);
-                }
-
-                SaleItem::create([
-                    'sell_price' => (float) $item['sell_price'],
-                    'cost_price' => (float) ($item['cost_price'] ?: $item['sell_price']),
-                    'quantity' => $quantity,
-                    'sale_id' => $this->sale->id,
-                    'product_id' => $product->id,
-                ]);
-
-                $product->decrement('quantity', $quantity);
-
-                ProductMovement::create([
-                    'quantity' => -$quantity,
-                    'movable_type' => Sale::class,
-                    'movable_id' => $this->sale->id,
-                    'product_id' => $product->id,
-                ]);
-            }
-        });
+        $action->execute($this->sale, $this->getUpdateData());
 
         session()->flash('success', __('keywords.sale_updated'));
         $this->redirect(route('sales'), navigate: true);
     }
 
+    private function getUpdateData(): array
+    {
+        return [
+            'customer_id' => $this->customer_id,
+            'payment_type' => $this->payment_type,
+            'down_payment' => $this->down_payment,
+            'installment_months' => $this->installment_months,
+            'interest_rate' => $this->interest_rate,
+            'discount' => $this->discount,
+            'with_vat' => $this->with_vat,
+            'dealer_name' => $this->dealer_name,
+            'items' => $this->items,
+        ];
+    }
+
+    // ==========================================
+    // COMPUTED DATA FOR VIEW
+    // ==========================================
+
+    #[Computed]
+    public function customers(): array
+    {
+        return Customer::orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    #[Computed]
+    public function products(): array
+    {
+        return Product::orderBy('name')->pluck('name', 'id')->all();
+    }
+
     public function render()
     {
         return view('livewire.sales.sale-edit', [
-            'customers' => Customer::orderBy('name')->pluck('name', 'id')->all(),
-            'products' => Product::orderBy('name')->pluck('name', 'id')->all(),
+            'customers' => $this->customers,
+            'products' => $this->products,
         ]);
     }
 }

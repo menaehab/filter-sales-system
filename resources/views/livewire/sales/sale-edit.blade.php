@@ -18,7 +18,7 @@
             </div>
             <div class="p-6">
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                    <x-select name="customer_id" label="{{ __('keywords.customer') }}" :options="$customers"
+                    <x-select name="customer_id" label="{{ __('keywords.customer') }}" :options="$this->customers"
                         wire:model.live="customer_id" :placeholder="__('keywords.select_customer')" required />
 
                     <div>
@@ -92,7 +92,7 @@
                         wire:key="item-{{ $index }}">
                         <div class="flex-1 min-w-0">
                             <x-select name="items.{{ $index }}.product_id" label="{{ __('keywords.product') }}"
-                                :options="$products" wire:model.live="items.{{ $index }}.product_id"
+                                :options="$this->products" wire:model.live="items.{{ $index }}.product_id"
                                 :placeholder="__('keywords.select_product')" required />
                         </div>
                         <div class="w-full sm:w-36">
@@ -232,7 +232,7 @@
             </div>
         </div>
 
-        @if ($sale->paymentAllocations->count() > 0)
+        @if ($this->sale->paymentAllocations->count() > 0)
             <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div class="border-b border-gray-200 px-6 py-4">
                     <h3 class="text-base font-semibold text-gray-900">
@@ -259,7 +259,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            @foreach ($sale->paymentAllocations as $i => $allocation)
+                            @foreach ($this->sale->paymentAllocations as $i => $allocation)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $i + 1 }}</td>
                                     <td class="px-4 py-3 text-sm font-medium text-emerald-600">

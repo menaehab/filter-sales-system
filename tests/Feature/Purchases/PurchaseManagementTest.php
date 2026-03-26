@@ -99,7 +99,7 @@ it('filters purchases by search, payment type, and status', function () {
     $this->assertSame([$unpaidPurchase->id], collect($component->get('purchases')->items())->pluck('id')->all());
 });
 
-it('allocates supplier payments to the oldest unpaid installment purchases first', function () {
+it('allocates supplier payments directly to the specified purchase', function () {
     Carbon::setTestNow('2026-03-11 09:00:00');
 
     $supplier = Supplier::factory()->create();
@@ -134,10 +134,10 @@ it('allocates supplier payments to the oldest unpaid installment purchases first
         ->call('openPayModal', $newerPurchase->id);
 
     $this->assertEquals($newerPurchase->id, $component->get('payPurchaseId'));
-    $this->assertEquals($oldestPurchase->id, $component->get('payFromPurchaseId'));
-    $this->assertEquals(100.0, (float) $component->get('payAmount'));
+    $this->assertNull($component->get('payFromPurchaseId'));
+    $this->assertEquals(200.0, (float) $component->get('payAmount'));
 
-    $component->set('payAmount', '330')
+    $component->set('payAmount', '200')
         ->set('payMethod', 'bank_transfer')
         ->set('payNote', 'Wire transfer')
         ->call('submitPayment')
@@ -149,30 +149,29 @@ it('allocates supplier payments to the oldest unpaid installment purchases first
     $this->assertDatabaseHas('supplier_payments', [
         'id' => $payment->id,
         'supplier_id' => $supplier->id,
-        'amount' => '330.00',
+        'amount' => '200.00',
         'payment_method' => 'bank_transfer',
         'note' => 'Wire transfer',
     ]);
 
-    $this->assertDatabaseHas('supplier_payment_allocations', [
+    $this->assertDatabaseMissing('supplier_payment_allocations', [
         'supplier_payment_id' => $payment->id,
         'purchase_id' => $oldestPurchase->id,
-        'amount' => '300.00',
     ]);
 
     $this->assertDatabaseHas('supplier_payment_allocations', [
         'supplier_payment_id' => $payment->id,
         'purchase_id' => $newerPurchase->id,
-        'amount' => '30.00',
+        'amount' => '200.00',
     ]);
 
     $oldestPurchase->refresh();
     $newerPurchase->refresh();
 
-    $this->assertTrue($oldestPurchase->isFullyPaid());
-    $this->assertNull($oldestPurchase->next_installment_date);
-    $this->assertFalse($newerPurchase->isFullyPaid());
-    $this->assertEquals('2026-04-11', $newerPurchase->next_installment_date?->toDateString());
+    $this->assertFalse($oldestPurchase->isFullyPaid());
+    $this->assertEquals('2026-04-11', $oldestPurchase->next_installment_date?->toDateString());
+    $this->assertTrue($newerPurchase->isFullyPaid());
+    $this->assertNull($newerPurchase->next_installment_date);
 
     Carbon::setTestNow();
 });

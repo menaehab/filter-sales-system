@@ -12,7 +12,7 @@ beforeEach(function () {
 });
 
 it('shows sale details including items and payment history', function () {
-    $customer = Customer::create(['name' => 'Detail Customer']);
+    $customer = Customer::factory()->create(['name' => 'Detail Customer']);
     $product = Product::factory()->create(['name' => 'Carbon Filter']);
 
     $sale = Sale::create([

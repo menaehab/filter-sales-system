@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Http\Requests\Purchases;
+
+use App\Enums\PaymentTypeEnum;
+use Illuminate\Foundation\Http\FormRequest;
+
+class CreatePurchaseRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'supplier_id' => ['required', 'exists:suppliers,id'],
+            'payment_type' => ['required', 'in:'.implode(',', array_column(PaymentTypeEnum::cases(), 'value'))],
+            'down_payment' => ['required_if:payment_type,installment', 'nullable', 'numeric', 'min:0'],
+            'installment_months' => ['required_if:payment_type,installment', 'nullable', 'integer', 'min:1', 'max:60'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.cost_price' => ['required', 'numeric', 'min:0.01'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'supplier_id' => __('keywords.supplier'),
+            'payment_type' => __('keywords.payment_type'),
+            'down_payment' => __('keywords.down_payment'),
+            'installment_months' => __('keywords.installment_months'),
+            'items' => __('keywords.purchase_items'),
+            'items.*.product_id' => __('keywords.product'),
+            'items.*.cost_price' => __('keywords.cost_price'),
+            'items.*.quantity' => __('keywords.quantity'),
+        ];
+    }
+}

@@ -25,7 +25,7 @@
                             wire:model.live.debounce.500ms="purchase_number" required />
                     </div>
 
-                    @if ($purchase)
+                    @if ($this->purchase)
                         <div class="sm:col-span-2">
                             <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-4 space-y-2">
                                 <div class="flex items-center gap-2 text-sm font-medium text-emerald-800">
@@ -35,22 +35,22 @@
                                 <div class="grid grid-cols-2 gap-2 text-sm">
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.supplier') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ $purchase->supplier_name }}</span>
+                                        <span class="font-medium text-gray-900">{{ $this->purchase->supplier_name }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.total_price') }}:</span>
                                         <span
-                                            class="font-medium text-gray-900">{{ number_format($purchase->total_price, 2) }}
+                                            class="font-medium text-gray-900">{{ number_format($this->purchase->total_price, 2) }}
                                             {{ __('keywords.currency') }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.date') }}:</span>
                                         <span
-                                            class="font-medium text-gray-900">{{ $purchase->created_at->format('Y-m-d') }}</span>
+                                            class="font-medium text-gray-900">{{ $this->purchase->created_at->format('Y-m-d') }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.purchase_items') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ $purchase->items->count() }}
+                                        <span class="font-medium text-gray-900">{{ $this->purchase->items->count() }}
                                             {{ __('keywords.items') }}</span>
                                     </div>
                                 </div>
@@ -62,7 +62,7 @@
         </div>
 
         {{-- Purchase Items for Return --}}
-        @if ($purchase && count($items) > 0)
+        @if ($this->purchase && count($items) > 0)
             <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div class="border-b border-gray-200 px-6 py-4">
                     <h3 class="text-base font-semibold text-gray-900">

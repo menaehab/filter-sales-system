@@ -21,7 +21,7 @@
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
                         <x-select name="supplier_id" label="{{ __('keywords.supplier') }}"
-                            :options="$suppliers" wire:model.live="supplier_id"
+                            :options="$this->suppliers" wire:model.live="supplier_id"
                             :placeholder="__('keywords.select_supplier')" required />
                         <button type="button" wire:click="openCreateSupplierModal"
                             class="mt-1.5 text-xs text-emerald-600 hover:text-emerald-700 font-medium">
@@ -102,7 +102,7 @@
                         <div class="flex-1 min-w-0">
                             <x-select name="items.{{ $index }}.product_id"
                                 label="{{ __('keywords.product') }}"
-                                :options="$products"
+                                :options="$this->products"
                                 wire:model.live="items.{{ $index }}.product_id"
                                 :placeholder="__('keywords.select_product')" required />
                             <button type="button" wire:click="openCreateProductModal({{ $index }})"
@@ -228,7 +228,7 @@
 
                     <div>
                         <x-select name="newProduct.category_id" label="{{ __('keywords.category') }}"
-                            :options="$categories" wire:model="newProduct.category_id"
+                            :options="$this->categories" wire:model="newProduct.category_id"
                             :placeholder="__('keywords.select_category')" required />
                         <button type="button" @click="$dispatch('open-modal-create-category-inline')"
                             class="mt-1.5 text-xs text-emerald-600 hover:text-emerald-700 font-medium">

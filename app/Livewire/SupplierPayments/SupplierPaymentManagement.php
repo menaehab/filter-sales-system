@@ -2,10 +2,13 @@
 
 namespace App\Livewire\SupplierPayments;
 
+use App\Actions\SupplierPayments\DeleteSupplierPaymentAction;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\SupplierPayment;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -43,22 +46,28 @@ class SupplierPaymentManagement extends Component
         return ['supplier', 'user', 'allocations.purchase'];
     }
 
-    public function getSupplierPaymentsProperty()
+    #[Computed]
+    public function supplierPayments(): LengthAwarePaginator
     {
         return $this->items;
     }
 
-    public function setDelete($id)
+    public function setDelete(int $id): void
     {
         $this->authorizeManageSupplierPayments();
-        $this->openDeleteModal($id, 'open-modal-delete-supplier-payment');
+        $this->deleteId = $id;
+        $this->dispatch('open-modal-delete-supplier-payment');
     }
 
-    public function delete()
+    public function delete(DeleteSupplierPaymentAction $action): void
     {
         $this->authorizeManageSupplierPayments();
 
-        SupplierPayment::find($this->deleteId)?->delete();
+        $payment = SupplierPayment::find($this->deleteId);
+
+        if ($payment) {
+            $action->execute($payment);
+        }
 
         $this->deleteId = null;
         $this->dispatch('close-modal-delete-supplier-payment');

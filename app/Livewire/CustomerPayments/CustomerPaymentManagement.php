@@ -6,6 +6,7 @@ use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\CustomerPayment;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -43,18 +44,30 @@ class CustomerPaymentManagement extends Component
         return ['customer', 'user', 'allocations.sale'];
     }
 
-    public function getCustomerPaymentsProperty()
+    protected function applyAdditionalFilters($query): void
+    {
+        if (filled($this->dateFrom)) {
+            $query->whereDate('created_at', '>=', $this->dateFrom);
+        }
+
+        if (filled($this->dateTo)) {
+            $query->whereDate('created_at', '<=', $this->dateTo);
+        }
+    }
+
+    #[Computed]
+    public function customerPayments()
     {
         return $this->items;
     }
 
-    public function setDelete($id)
+    public function setDelete($id): void
     {
         $this->authorizeManageCustomerPayments();
         $this->openDeleteModal($id, 'open-modal-delete-customer-payment');
     }
 
-    public function delete()
+    public function delete(): void
     {
         $this->authorizeManageCustomerPayments();
 
@@ -72,6 +85,6 @@ class CustomerPaymentManagement extends Component
 
     private function authorizeManageCustomerPayments(): void
     {
-        abort_unless(auth()->user()->can('manage_customer_payment_allocations'), 403);
+        abort_unless(auth()->user()?->can('manage_customer_payment_allocations'), 403);
     }
 }
