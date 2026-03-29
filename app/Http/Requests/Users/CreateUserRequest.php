@@ -15,6 +15,7 @@ class CreateUserRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'role' => ['nullable', 'string'],
             'email' => [
                 'nullable',
                 'email',
@@ -31,6 +32,8 @@ class CreateUserRequest extends FormRequest
                 'required_without:email',
             ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'place_ids' => ['nullable', 'array'],
+            'place_ids.*' => ['integer', 'exists:places,id'],
             'permissions' => ['array'],
             'permissions.*' => ['string', 'exists:permissions,name'],
         ];
@@ -40,9 +43,11 @@ class CreateUserRequest extends FormRequest
     {
         return [
             'name' => __('keywords.name'),
+            'role' => __('keywords.role'),
             'email' => __('keywords.email'),
             'phone' => __('keywords.phone'),
             'password' => __('keywords.password'),
+            'place_ids' => __('keywords.places'),
             'permissions' => __('keywords.permissions'),
         ];
     }

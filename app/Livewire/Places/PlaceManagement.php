@@ -1,23 +1,24 @@
 <?php
 
-namespace App\Livewire\Categories;
+namespace App\Livewire\Places;
 
-use App\Actions\Categories\CreateCategoryAction;
-use App\Actions\Categories\DeleteCategoryAction;
-use App\Actions\Categories\UpdateCategoryAction;
-use App\Http\Requests\Categories\CreateCategoryRequest;
-use App\Http\Requests\Categories\UpdateCategoryRequest;
+use App\Actions\Places\CreatePlaceAction;
+use App\Actions\Places\DeletePlaceAction;
+use App\Actions\Places\UpdatePlaceAction;
+use App\Http\Requests\Place\CreatePlaceRequest;
+use App\Http\Requests\Place\UpdatePlaceRequest;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
 use App\Livewire\Traits\WithSearchAndPagination;
-use App\Models\Category;
+use App\Models\Place;
+use App\Models\User;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('layouts.app', ['title' => 'categories_management'])]
-class CategoryManagement extends Component
+#[Layout('layouts.app', ['title' => 'places_management'])]
+class PlaceManagement extends Component
 {
     use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
@@ -30,24 +31,36 @@ class CategoryManagement extends Component
     {
         return [
             'name' => '',
+            'user_ids' => [],
         ];
     }
 
     protected function getModelClass(): string
     {
-        return Category::class;
+        return Place::class;
     }
 
     protected function getSearchableFields(): array
     {
-        return ['name'];
+        return ['name', 'users.name'];
     }
 
-    public function create(CreateCategoryAction $action): void
+    protected function getWithRelations(): array
+    {
+        return ['users'];
+    }
+
+    #[Computed]
+    public function userOptions(): array
+    {
+        return User::query()->orderBy('name')->pluck('name', 'id')->toArray();
+    }
+
+    public function create(CreatePlaceAction $action): void
     {
         $this->editId = null;
 
-        $request = new CreateCategoryRequest;
+        $request = new CreatePlaceRequest;
         // Map form.* rules to match $this->form array structure
         $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
         $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
@@ -58,19 +71,26 @@ class CategoryManagement extends Component
 
         $this->resetForm();
 
-        $this->dispatch('close-modal-create-category');
+        $this->dispatch('close-modal-create-place');
 
         $this->resetPage();
     }
 
-    public function openEdit($id): void
+    public function openEdit(int $id): void
     {
-        $this->openEditModal($id, 'open-modal-edit-category');
+        $place = Place::with('users:id')->findOrFail($id);
+
+        $this->form = [
+            'name' => $place->name,
+            'user_ids' => $place->users->pluck('id')->map(fn ($id) => (string) $id)->all(),
+        ];
+
+        $this->openEditModal($id, 'open-modal-edit-place');
     }
 
-    public function updateCategory(UpdateCategoryAction $action): void
+    public function updatePlace(UpdatePlaceAction $action): void
     {
-        $request = new UpdateCategoryRequest;
+        $request = new UpdatePlaceRequest;
         $request->merge(['id' => $this->editId]);
         // Map form.* rules to match $this->form array structure
         $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
@@ -78,44 +98,44 @@ class CategoryManagement extends Component
 
         $validated = $this->validate($rules, $request->messages(), $attributes);
 
-        $category = Category::findOrFail($this->editId);
-        $action->execute($category, $validated['form']);
+        $place = Place::findOrFail($this->editId);
+        $action->execute($place, $validated['form']);
 
         $this->resetForm();
         $this->editId = null;
 
-        $this->dispatch('close-modal-edit-category');
+        $this->dispatch('close-modal-edit-place');
 
         $this->resetPage();
     }
 
     public function setDelete($id): void
     {
-        $this->openDeleteModal($id, 'open-modal-delete-category');
+        $this->openDeleteModal($id, 'open-modal-delete-place');
     }
 
-    public function delete(DeleteCategoryAction $action): void
+    public function delete(DeletePlaceAction $action): void
     {
-        $category = Category::find($this->deleteId);
-        if ($category) {
-            $action->execute($category);
+        $place = Place::find($this->deleteId);
+        if ($place) {
+            $action->execute($place);
         }
 
         $this->deleteId = null;
 
-        $this->dispatch('close-modal-delete-category');
+        $this->dispatch('close-modal-delete-place');
 
         $this->resetPage();
     }
 
     #[Computed]
-    public function categories()
+    public function places()
     {
         return $this->items;
     }
 
     public function render()
     {
-        return view('livewire.categories.category-management');
+        return view('livewire.places.place-management');
     }
 }

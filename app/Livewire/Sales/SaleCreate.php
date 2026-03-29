@@ -7,6 +7,7 @@ use App\Enums\WaterQualityTypeEnum;
 use App\Livewire\Traits\HasSaleForm;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\Place;
 use App\Models\Product;
 use App\Models\WaterFilter;
 use App\Support\SalePriceCalculator;
@@ -29,6 +30,7 @@ class SaleCreate extends Component
 
     public array $newCustomer = [
         'name' => '',
+        'place_id' => '',
         'phone' => '',
         'national_number' => '',
         'address' => '',
@@ -177,6 +179,7 @@ class SaleCreate extends Component
     {
         $this->newCustomer = [
             'name' => '',
+            'place_id' => '',
             'phone' => '',
             'national_number' => '',
             'address' => '',
@@ -418,6 +421,12 @@ class SaleCreate extends Component
         }
 
         return $query->limit(100)->pluck('name', 'id')->all();
+    }
+
+    #[Computed]
+    public function placeOptions(): array
+    {
+        return Place::query()->orderBy('name')->pluck('name', 'id')->toArray();
     }
 
     #[Computed]

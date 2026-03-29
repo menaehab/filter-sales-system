@@ -10,6 +10,7 @@ use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Customer;
+use App\Models\Place;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -31,6 +32,7 @@ class CustomerManagement extends Component
             'phone' => '',
             'national_number' => '',
             'address' => '',
+            'place_id' => '',
         ];
     }
 
@@ -41,7 +43,18 @@ class CustomerManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['name', 'phone', 'national_number', 'address'];
+        return ['name', 'phone', 'national_number', 'address', 'place.name'];
+    }
+
+    protected function getWithRelations(): array
+    {
+        return ['place'];
+    }
+
+    #[Computed]
+    public function placeOptions(): array
+    {
+        return Place::query()->orderBy('name')->pluck('name', 'id')->toArray();
     }
 
     public function create(CreateCustomerAction $action): void
@@ -93,6 +106,7 @@ class CustomerManagement extends Component
             'phone' => $customer->phone,
             'national_number' => $customer->national_number,
             'address' => $customer->address,
+            'place_id' => (string) $customer->place_id,
         ];
     }
 

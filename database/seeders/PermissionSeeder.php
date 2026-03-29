@@ -50,6 +50,8 @@ class PermissionSeeder extends Seeder
             'manage_expenses',
             'view_activities',
             'view_dashboard',
+            'view_places',
+            'manage_places',
         ];
 
         foreach ($permissions as $permission) {

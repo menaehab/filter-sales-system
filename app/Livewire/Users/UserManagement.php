@@ -9,6 +9,7 @@ use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
 use App\Livewire\Traits\WithSearchAndPagination;
+use App\Models\Place;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
@@ -30,10 +31,12 @@ class UserManagement extends Component
     {
         return [
             'name' => '',
+            'role' => '',
             'email' => '',
             'phone' => '',
             'password' => '',
             'password_confirmation' => '',
+            'place_ids' => [],
             'permissions' => [],
         ];
     }
@@ -45,7 +48,12 @@ class UserManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['name', 'email', 'phone'];
+        return ['name', 'email', 'phone', 'role', 'places.name'];
+    }
+
+    protected function getWithRelations(): array
+    {
+        return ['places'];
     }
 
     #[Computed]
@@ -54,6 +62,22 @@ class UserManagement extends Component
         return Permission::pluck('name', 'name')
             ->mapWithKeys(fn ($name) => [$name => __('keywords.'.$name)])
             ->toArray();
+    }
+
+    #[Computed]
+    public function roleOptions(): array
+    {
+        return [
+            'admin' => __('keywords.admin'),
+            'manager' => __('keywords.manager'),
+            'cashier' => __('keywords.cashier'),
+        ];
+    }
+
+    #[Computed]
+    public function placeOptions(): array
+    {
+        return Place::query()->orderBy('name')->pluck('name', 'id')->toArray();
     }
 
     #[Computed]
@@ -99,10 +123,12 @@ class UserManagement extends Component
         $this->editId = $id;
         $this->form = [
             'name' => $user->name,
+            'role' => $user->role ?? '',
             'email' => $user->email,
             'phone' => $user->phone,
             'password' => '',
             'password_confirmation' => '',
+            'place_ids' => $user->places->pluck('id')->map(fn ($id) => (string) $id)->all(),
             'permissions' => $user->getPermissionNames()->toArray(),
         ];
 

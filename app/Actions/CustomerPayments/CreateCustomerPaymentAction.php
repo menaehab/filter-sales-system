@@ -7,7 +7,6 @@ namespace App\Actions\CustomerPayments;
 use App\Models\CustomerPayment;
 use App\Models\CustomerPaymentAllocation;
 use App\Models\Sale;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 final class CreateCustomerPaymentAction
@@ -66,4 +65,3 @@ final class CreateCustomerPaymentAction
         return $allocations;
     }
 }
-

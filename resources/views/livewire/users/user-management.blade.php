@@ -13,8 +13,10 @@
     {{-- Users table --}}
     <x-data-table :searchable="false" :paginated="false" :headers="[
         ['key' => 'name', 'label' => __('keywords.name')],
+        ['key' => 'role', 'label' => __('keywords.role')],
         ['key' => 'email', 'label' => __('keywords.email')],
         ['key' => 'phone', 'label' => __('keywords.phone')],
+        ['key' => 'places', 'label' => __('keywords.places')],
         ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
     ]">
         @forelse ($this->users as $user)
@@ -29,10 +31,36 @@
                     </div>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
+                    <span
+                        class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                        {{ $user->role ? $this->roleOptions[$user->role] ?? $user->role : '—' }}
+                    </span>
+                </td>
+                <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-500">{{ $user->email ?? '—' }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-500">{{ $user->phone ?? '—' }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    @if ($user->places->isEmpty())
+                        <span class="text-sm text-gray-500">—</span>
+                    @else
+                        <div class="flex flex-wrap gap-1.5">
+                            @foreach ($user->places->take(2) as $place)
+                                <span
+                                    class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                                    {{ $place->name }}
+                                </span>
+                            @endforeach
+                            @if ($user->places->count() > 2)
+                                <span
+                                    class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                                    +{{ $user->places->count() - 2 }}
+                                </span>
+                            @endif
+                        </div>
+                    @endif
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                     <x-table-actions editAction="openEdit({{ $user->id }})"
@@ -40,7 +68,7 @@
                 </td>
             </tr>
         @empty
-            <x-empty-state :title="__('keywords.no_users_found')" :colspan="4" />
+            <x-empty-state :title="__('keywords.no_users_found')" :colspan="6" />
         @endforelse
     </x-data-table>
 
@@ -52,6 +80,8 @@
             <div class="space-y-5">
                 <x-input name="form.name" label="{{ __('keywords.name') }}"
                     placeholder="{{ __('keywords.enter_name') }}" wire:model.blur="form.name" required />
+                <x-input name="form.role" label="{{ __('keywords.role') }}" wire:model.blur="form.role"
+                    placeholder="{{ __('keywords.select_role') }}" />
                 <x-input name="form.email" label="{{ __('keywords.email') }}" type="email"
                     placeholder="{{ __('keywords.enter_your_email') }}" wire:model.blur="form.email" />
                 <x-input name="form.phone" label="{{ __('keywords.phone') }}"
@@ -61,6 +91,9 @@
                 <x-input name="form.password_confirmation" label="{{ __('keywords.confirm_password') }}"
                     type="password" placeholder="{{ __('keywords.confirm_password') }}"
                     wire:model.blur="form.password_confirmation" required />
+
+                <x-select name="form.place_ids" label="{{ __('keywords.places') }}" wire:model="form.place_ids"
+                    :options="$this->placeOptions" :selected="$form['place_ids']" multiple />
 
                 <x-checkbox-group label="{{ __('keywords.permissions') }}" name="form.permissions" :options="$this->permissionOptions"
                     :selected="$form['permissions']" />
@@ -79,6 +112,8 @@
             <div class="space-y-5">
                 <x-input name="form.name" label="{{ __('keywords.name') }}"
                     placeholder="{{ __('keywords.enter_name') }}" wire:model.blur="form.name" required />
+                <x-input name="form.role" label="{{ __('keywords.role') }}" wire:model.blur="form.role"
+                    placeholder="{{ __('keywords.select_role') }}" />
                 <x-input name="form.email" label="{{ __('keywords.email') }}" type="email"
                     placeholder="{{ __('keywords.enter_your_email') }}" wire:model.blur="form.email" />
                 <x-input name="form.phone" label="{{ __('keywords.phone') }}"
@@ -88,6 +123,9 @@
                 <x-input name="form.password_confirmation" label="{{ __('keywords.confirm_password') }}"
                     type="password" placeholder="{{ __('keywords.confirm_password') }}"
                     wire:model.blur="form.password_confirmation" />
+
+                <x-select name="form.place_ids" label="{{ __('keywords.places') }}" wire:model="form.place_ids"
+                    :options="$this->placeOptions" :selected="$form['place_ids']" multiple />
 
                 <x-checkbox-group label="{{ __('keywords.permissions') }}" name="form.permissions" :options="$this->permissionOptions"
                     :selected="$form['permissions']" />

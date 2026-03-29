@@ -15,6 +15,7 @@ final class CreateUserAction
         return DB::transaction(function () use ($data) {
             $user = User::create([
                 'name' => $data['name'],
+                'role' => $data['role'] ?: null,
                 'email' => $data['email'] ?: null,
                 'phone' => $data['phone'] ?: null,
                 'password' => Hash::make($data['password']),
@@ -23,6 +24,8 @@ final class CreateUserAction
             if (!empty($data['permissions'])) {
                 $user->syncPermissions($data['permissions']);
             }
+
+            $user->places()->sync($data['place_ids'] ?? []);
 
             return $user;
         });

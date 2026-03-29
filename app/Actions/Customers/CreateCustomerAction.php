@@ -15,6 +15,7 @@ final class CreateCustomerAction
             'phone' => $data['phone'] ?? null,
             'national_number' => $data['national_number'] ?? null,
             'address' => $data['address'] ?? null,
+            'place_id' => $data['place_id'],
         ]);
     }
 }
