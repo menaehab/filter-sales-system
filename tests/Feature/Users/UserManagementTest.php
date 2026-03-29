@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Place;
 use App\Models\User;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
@@ -60,6 +61,32 @@ it('can assign permissions when creating a user', function () {
     $this->assertTrue($user->hasPermissionTo('manage_products'));
 });
 
+it('can assign role and places when creating a user', function () {
+    $firstPlace = Place::factory()->create();
+    $secondPlace = Place::factory()->create();
+
+    Livewire::test('users.user-management')
+        ->set('form.name', 'Role User')
+        ->set('form.role', 'manager')
+        ->set('form.email', 'role.user@example.com')
+        ->set('form.phone', '')
+        ->set('form.password', 'secret123')
+        ->set('form.password_confirmation', 'secret123')
+        ->set('form.place_ids', [(string) $firstPlace->id, (string) $secondPlace->id])
+        ->call('create')
+        ->assertHasNoErrors();
+
+    $user = User::where('email', 'role.user@example.com')->first();
+
+    expect($user->role)->toBe('manager');
+    $actualPlaceIds = $user->places()->pluck('places.id')->all();
+    $expectedPlaceIds = [$firstPlace->id, $secondPlace->id];
+    sort($actualPlaceIds);
+    sort($expectedPlaceIds);
+
+    expect($actualPlaceIds)->toBe($expectedPlaceIds);
+});
+
 it('validates required fields when empty', function () {
     Livewire::test('users.user-management')
         ->call('create')
@@ -86,4 +113,24 @@ it('syncs permissions when updating a user', function () {
     $existing->refresh();
     $this->assertFalse($existing->hasPermissionTo('manage_users'));
     $this->assertTrue($existing->hasPermissionTo('manage_products'));
+});
+
+it('updates role and syncs places when editing a user', function () {
+    $firstPlace = Place::factory()->create();
+    $secondPlace = Place::factory()->create();
+
+    $existing = User::factory()->create(['role' => 'cashier']);
+    $existing->places()->sync([$firstPlace->id]);
+
+    Livewire::test('users.user-management')
+        ->call('openEdit', $existing->id)
+        ->set('form.role', 'admin')
+        ->set('form.place_ids', [(string) $secondPlace->id])
+        ->call('updateUser')
+        ->assertHasNoErrors();
+
+    $existing->refresh();
+
+    expect($existing->role)->toBe('admin');
+    expect($existing->places()->pluck('places.id')->all())->toBe([$secondPlace->id]);
 });

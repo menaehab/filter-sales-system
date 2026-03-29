@@ -25,6 +25,7 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'role',
         'password',
     ];
 
@@ -88,5 +89,15 @@ class User extends Authenticatable
     public function saleReturns()
     {
         return $this->hasMany(SaleReturn::class);
+    }
+
+    public function places()
+    {
+        return $this->belongsToMany(Place::class);
+    }
+
+    public function place()
+    {
+        return $this->places();
     }
 }

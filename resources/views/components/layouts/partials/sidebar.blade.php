@@ -56,7 +56,7 @@
                 purchases: {{ request()->routeIs('purchases.*') || request()->routeIs('purchase-returns.*') || request()->routeIs('supplier-payments*') ? 'true' : 'false' }},
                 people: {{ request()->routeIs('customers.*') || request()->routeIs('suppliers.*') || request()->routeIs('filters*') ? 'true' : 'false' }},
                 inventory: {{ request()->routeIs('categories.*') || request()->routeIs('products.*') || request()->routeIs('damaged-products*') || request()->routeIs('expenses*') ? 'true' : 'false' }},
-                system: {{ request()->routeIs('dashboard') || request()->routeIs('activities*') || request()->routeIs('users.*') ? 'true' : 'false' }},
+                system: {{ request()->routeIs('dashboard') || request()->routeIs('activities*') || request()->routeIs('users') || request()->routeIs('users.*') || request()->routeIs('places*') ? 'true' : 'false' }},
             },
             toggleGroup(key) {
                 this.openGroups[key] = !this.openGroups[key];
@@ -212,7 +212,7 @@
             </div>
         @endcanany
 
-        @canany(['view_dashboard', 'view_activities', 'manage_users'])
+        @canany(['view_dashboard', 'view_activities', 'manage_users', 'manage_places', 'view_places'])
             <div class="space-y-1">
                 <button type="button" @click="toggleGroup('system')"
                     class="w-full flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 transition-colors">
@@ -234,10 +234,16 @@
                     @endcan
 
                     @can('manage_users')
-                        <x-sidebar-link href="{{ route('users') }}" icon="fas fa-cog" :active="request()->routeIs('users.*')">
+                        <x-sidebar-link href="{{ route('users') }}" icon="fas fa-cog" :active="request()->routeIs('users*')">
                             {{ __('keywords.users') }}
                         </x-sidebar-link>
                     @endcan
+
+                    @canany(['manage_places', 'view_places'])
+                        <x-sidebar-link href="{{ route('places') }}" icon="fas fa-location-dot" :active="request()->routeIs('places*')">
+                            {{ __('keywords.places') }}
+                        </x-sidebar-link>
+                    @endcanany
                 </div>
             </div>
         @endcanany

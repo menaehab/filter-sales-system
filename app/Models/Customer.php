@@ -17,6 +17,7 @@ class Customer extends Model
         'slug',
         'phone',
         'national_number',
+        'place_id',
         'address',
     ];
 
@@ -77,5 +78,10 @@ class Customer extends Model
         // Balance = Total Sales - Total Payments - Returns (without cash refund).
         // Positive = Customer still owes us, Negative = Customer has credit.
         return $this->total_sales - $this->total_payments - $this->total_returns_without_cash;
+    }
+
+    public function place()
+    {
+        return $this->belongsTo(Place::class);
     }
 }

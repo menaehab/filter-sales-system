@@ -58,6 +58,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('products.show')
         ->middleware('permission:view_products|manage_products');
 
+    Route::livewire('/places', 'places.place-management')
+        ->name('places')
+        ->middleware('permission:view_places|manage_places');
+
     /*
     |--------------------------------------------------------------------------
     | Users

@@ -531,6 +531,10 @@
                 <x-input name="newCustomer.name" label="{{ __('keywords.name') }}"
                     placeholder="{{ __('keywords.enter_name') }}" wire:model.blur="newCustomer.name" required />
 
+                <x-select name="newCustomer.place_id" label="{{ __('keywords.places') }}"
+                    wire:model.blur="newCustomer.place_id" :options="$this->placeOptions"
+                    placeholder="{{ __('keywords.select_place') }}" required />
+
                 <x-input name="newCustomer.phone" label="{{ __('keywords.phone') }}"
                     placeholder="{{ __('keywords.enter_your_phone') }}" wire:model.blur="newCustomer.phone" />
 

@@ -15,6 +15,7 @@ final class UpdateUserAction
         return DB::transaction(function () use ($user, $data) {
             $updateData = [
                 'name' => $data['name'],
+                'role' => $data['role'] ?: null,
                 'email' => $data['email'] ?: null,
                 'phone' => $data['phone'] ?: null,
             ];
@@ -26,6 +27,7 @@ final class UpdateUserAction
             $user->update($updateData);
 
             $user->syncPermissions($data['permissions'] ?? []);
+            $user->places()->sync($data['place_ids'] ?? []);
 
             return $user->fresh();
         });
