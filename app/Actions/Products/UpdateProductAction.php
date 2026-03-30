@@ -17,6 +17,7 @@ final class UpdateProductAction
             'quantity' => (int) ($data['quantity'] ?? $product->quantity),
             'min_quantity' => (int) ($data['min_quantity'] ?? $product->min_quantity),
             'category_id' => (int) $data['category_id'],
+            'for_maintenance' => (bool) ($data['for_maintenance'] ?? $product->for_maintenance),
         ]);
 
         return $product->fresh();

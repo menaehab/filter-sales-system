@@ -15,6 +15,7 @@ use App\Models\WaterFilter;
 use App\Models\WaterReading;
 use App\Support\SalePriceCalculator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 final class CreateSaleAction
 {
@@ -73,7 +74,7 @@ final class CreateSaleAction
             $this->createSaleItems($sale, $data['cart']);
             $this->createPayments($sale, $customer, $downPayment, $appliedCredit, $isInstallment);
 
-            if (!empty($data['includeWaterReading']) && $data['includeWaterReading']) {
+            if (! empty($data['includeWaterReading']) && $data['includeWaterReading']) {
                 $this->createWaterReading($data, $customer);
             }
 
@@ -102,6 +103,12 @@ final class CreateSaleAction
         foreach ($cart as $item) {
             $product = Product::lockForUpdate()->findOrFail($item['product_id']);
             $quantity = (int) $item['quantity'];
+
+            if ((int) $product->quantity < $quantity) {
+                throw ValidationException::withMessages([
+                    'cart' => __('keywords.low_stock_warning').': '.$product->name.' ('.__('keywords.available').': '.$product->quantity.')',
+                ]);
+            }
 
             SaleItem::create([
                 'sell_price' => (float) $item['sell_price'],
@@ -166,7 +173,7 @@ final class CreateSaleAction
     {
         $filterId = $data['water_filter_id'] ?? null;
 
-        if (!empty($data['createNewFilter']) && !empty($data['newFilter'])) {
+        if (! empty($data['createNewFilter']) && ! empty($data['newFilter'])) {
             $newFilter = WaterFilter::create([
                 'filter_model' => $data['newFilter']['filter_model'],
                 'address' => $data['newFilter']['address'],
@@ -175,7 +182,7 @@ final class CreateSaleAction
             $filterId = $newFilter->id;
         }
 
-        if ($filterId && !empty($data['waterReading'])) {
+        if ($filterId && ! empty($data['waterReading'])) {
             WaterReading::create([
                 'technician_name' => $data['waterReading']['technician_name'],
                 'tds' => $data['waterReading']['tds'],

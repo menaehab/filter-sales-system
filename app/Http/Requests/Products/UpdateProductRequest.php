@@ -20,6 +20,7 @@ class UpdateProductRequest extends FormRequest
             'min_quantity' => ['required', 'integer', 'min:0'],
             'description' => ['nullable', 'string'],
             'category_id' => ['required', 'exists:categories,id'],
+            'for_maintenance' => ['boolean'],
         ];
     }
 
@@ -31,6 +32,8 @@ class UpdateProductRequest extends FormRequest
             'min_quantity' => __('keywords.min_quantity'),
             'category_id' => __('keywords.category'),
             'description' => __('keywords.description'),
+            'quantity' => __('keywords.quantity'),
+            'for_maintenance' => __('keywords.for_maintenance'),
         ];
     }
 }

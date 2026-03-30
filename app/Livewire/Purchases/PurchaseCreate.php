@@ -40,6 +40,7 @@ class PurchaseCreate extends Component
         'cost_price' => '',
         'min_quantity' => '0',
         'category_id' => '',
+        'for_maintenance' => false,
     ];
 
     public ?int $targetItemIndexForNewProduct = null;
@@ -125,6 +126,7 @@ class PurchaseCreate extends Component
             'cost_price' => '',
             'min_quantity' => '0',
             'category_id' => '',
+            'for_maintenance' => false,
         ];
         $this->dispatch('open-modal-create-product-inline');
     }
@@ -167,12 +169,14 @@ class PurchaseCreate extends Component
             'min_quantity' => (int) $this->newProduct['min_quantity'],
             'quantity' => 0,
             'category_id' => (int) $this->newProduct['category_id'],
+            'for_maintenance' => (bool) $this->newProduct['for_maintenance'],
         ]);
 
         if ($this->targetItemIndexForNewProduct !== null && isset($this->items[$this->targetItemIndexForNewProduct])) {
             $this->items[$this->targetItemIndexForNewProduct]['product_id'] = (string) $product->id;
             $this->items[$this->targetItemIndexForNewProduct]['product_name'] = $product->name;
             $this->items[$this->targetItemIndexForNewProduct]['cost_price'] = (string) $product->cost_price;
+            $this->items[$this->targetItemIndexForNewProduct]['for_maintenance'] = $product->for_maintenance;
         }
 
         $this->dispatch('close-modal-create-product-inline');

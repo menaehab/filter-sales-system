@@ -116,7 +116,7 @@ class WaterFilter extends Model
     {
         $latestReading = $this->latestReading();
 
-        return $latestReading && $latestReading->tds >= 80;
+        return $latestReading && $latestReading->tds >= 100;
     }
 
     public function getCandle5NextDateAttribute(): ?Carbon
@@ -220,5 +220,10 @@ class WaterFilter extends Model
                 'replaced_at' => $replacedAt->toDateTimeString(),
             ])
             ->log(__('keywords.activity_mark_filter_candle_replaced'));
+    }
+
+    public function maintenances()
+    {
+        return $this->hasMany(Maintenance::class);
     }
 }

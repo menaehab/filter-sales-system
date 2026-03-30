@@ -54,8 +54,8 @@ it('creates a cash sale and syncs inventory and payment records', function () {
     $this->assertDatabaseHas('sale_items', [
         'sale_id' => $sale->id,
         'product_id' => $product->id,
-        'cost_price' => '50.00', 'sell_price' => '80.00',
         'cost_price' => '50.00',
+        'sell_price' => '80.00',
         'quantity' => '2.00',
     ]);
 
@@ -155,6 +155,49 @@ it('validates sale fields before saving', function () {
             'cart.0.sell_price' => 'required',
             'cart.0.quantity' => 'required',
         ]);
+});
+
+it('caps add to cart quantity at available stock', function () {
+    $product = Product::factory()->create([
+        'name' => 'Limited Product',
+        'cost_price' => 40,
+        'quantity' => 2,
+    ]);
+
+    Livewire::test('sales.sale-create')
+        ->call('addToCart', $product->id)
+        ->call('addToCart', $product->id)
+        ->call('addToCart', $product->id)
+        ->assertSet('cart.0.quantity', '2');
+});
+
+it('blocks sale creation when cart quantity exceeds product stock', function () {
+    $customer = Customer::factory()->create(['name' => 'Stock Check Customer']);
+    $product = Product::factory()->create([
+        'name' => 'Low Stock Product',
+        'cost_price' => 20,
+        'quantity' => 1,
+    ]);
+
+    Livewire::test('sales.sale-create')
+        ->set('customer_id', $customer->id)
+        ->set('payment_type', 'cash')
+        ->set('cart', [[
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'category_name' => 'Filters',
+            'cost_price' => '20',
+            'sell_price' => '30',
+            'available_quantity' => 999,
+            'quantity' => '2',
+        ]])
+        ->call('save')
+        ->assertHasErrors(['cart']);
+
+    $this->assertDatabaseCount('sales', 0);
+
+    $product->refresh();
+    $this->assertEquals(1.0, (float) $product->quantity);
 });
 
 it('applies available customer credit to a new sale before cash payment', function () {

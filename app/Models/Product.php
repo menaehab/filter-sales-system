@@ -20,6 +20,11 @@ class Product extends Model
         'min_quantity',
         'quantity',
         'category_id',
+        'for_maintenance',
+    ];
+
+    protected $casts = [
+        'for_maintenance' => 'boolean',
     ];
 
     public function category()

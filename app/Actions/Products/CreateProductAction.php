@@ -17,6 +17,7 @@ final class CreateProductAction
             'quantity' => (int) ($data['quantity'] ?? 0),
             'min_quantity' => (int) ($data['min_quantity'] ?? 0),
             'category_id' => (int) $data['category_id'],
+            'for_maintenance' => (bool) ($data['for_maintenance'] ?? false),
         ]);
     }
 }

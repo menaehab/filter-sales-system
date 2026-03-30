@@ -26,4 +26,9 @@ class SaleItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function maintenanceItems()
+    {
+        return $this->hasMany(MaintenanceItem::class);
+    }
 }

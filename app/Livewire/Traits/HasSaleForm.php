@@ -146,9 +146,20 @@ trait HasSaleForm
 
         if ($existingIndex !== false) {
             $currentQuantity = (int) ($this->cart[$existingIndex]['quantity'] ?? 0);
+
+            if ($currentQuantity >= $availableQuantity) {
+                $this->cart[$existingIndex]['quantity'] = (string) max($availableQuantity, 0);
+
+                return false;
+            }
+
             $this->cart[$existingIndex]['quantity'] = (string) ($currentQuantity + 1);
 
             return ($currentQuantity + 1) <= $availableQuantity;
+        }
+
+        if ($availableQuantity <= 0) {
+            return false;
         }
 
         $this->cart[] = [
@@ -161,7 +172,7 @@ trait HasSaleForm
             'quantity' => '1',
         ];
 
-        return $availableQuantity > 0;
+        return true;
     }
 
     public function removeProductFromCart(int $index): void

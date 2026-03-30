@@ -96,8 +96,8 @@ class User extends Authenticatable
         return $this->belongsToMany(Place::class);
     }
 
-    public function place()
+    public function maintenances()
     {
-        return $this->places();
+        return $this->hasMany(Maintenance::class);
     }
 }

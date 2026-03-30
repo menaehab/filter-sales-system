@@ -98,16 +98,28 @@ class SaleCreate extends Component
     public function addToCart(int $productId): void
     {
         $product = Product::with('category')->findOrFail($productId);
+        $available = (int) $product->quantity;
+
+        if ($available <= 0) {
+            session()->flash('warning', __('keywords.out_of_stock_warning').': '.$product->name);
+
+            return;
+        }
 
         $existingIndex = collect($this->cart)->search(fn ($item) => (int) $item['product_id'] === $product->id);
 
         if ($existingIndex !== false) {
             $currentQuantity = (int) ($this->cart[$existingIndex]['quantity'] ?: 0);
-            $this->cart[$existingIndex]['quantity'] = (string) ($currentQuantity + 1);
 
-            if (($currentQuantity + 1) > (int) $product->quantity) {
+            if ($currentQuantity >= $available) {
+                $this->cart[$existingIndex]['quantity'] = (string) $available;
+
                 session()->flash('warning', __('keywords.low_stock_warning').': '.$product->name.' ('.__('keywords.available').': '.$product->quantity.')');
+
+                return;
             }
+
+            $this->cart[$existingIndex]['quantity'] = (string) ($currentQuantity + 1);
 
             return;
         }
@@ -118,13 +130,9 @@ class SaleCreate extends Component
             'category_name' => $product->category?->name ?? __('keywords.not_specified'),
             'cost_price' => (string) $product->cost_price,
             'sell_price' => (string) $product->cost_price,
-            'available_quantity' => (int) $product->quantity,
+            'available_quantity' => $available,
             'quantity' => '1',
         ];
-
-        if ((int) $product->quantity <= 0) {
-            session()->flash('warning', __('keywords.out_of_stock_warning').': '.$product->name);
-        }
     }
 
     public function removeFromCart(int $index): void
@@ -155,6 +163,14 @@ class SaleCreate extends Component
         }
 
         if ($next > $available) {
+            if ($available <= 0) {
+                $productName = $this->cart[$index]['product_name'];
+                $this->removeFromCart($index);
+                session()->flash('warning', __('keywords.out_of_stock_warning').': '.$productName);
+
+                return;
+            }
+
             $this->cart[$index]['quantity'] = (string) $available;
 
             session()->flash(
