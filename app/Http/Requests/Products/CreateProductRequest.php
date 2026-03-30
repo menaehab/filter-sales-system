@@ -20,6 +20,7 @@ class CreateProductRequest extends FormRequest
             'min_quantity' => ['required', 'integer', 'min:0'],
             'description' => ['nullable', 'string'],
             'category_id' => ['required', 'exists:categories,id'],
+            'for_maintenance' => ['boolean'],
         ];
     }
 
@@ -32,6 +33,7 @@ class CreateProductRequest extends FormRequest
             'cost_price' => __('keywords.cost_price'),
             'min_quantity' => __('keywords.min_quantity'),
             'category_id' => __('keywords.category'),
+            'for_maintenance' => __('keywords.for_maintenance'),
         ];
     }
 }

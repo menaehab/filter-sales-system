@@ -26,6 +26,8 @@ class ProductManagement extends Component
 
     public $stockStatus = '';
 
+    public $forMaintenance = '';
+
     public function mount(): void
     {
         $this->resetForm();
@@ -45,6 +47,7 @@ class ProductManagement extends Component
             'min_quantity' => null,
             'description' => '',
             'category_id' => null,
+            'for_maintenance' => false,
         ];
     }
 
@@ -53,6 +56,7 @@ class ProductManagement extends Component
         return [
             'categorySlug' => ['as' => 'category', 'except' => ''],
             'stockStatus' => ['as' => 'stock', 'except' => ''],
+            'forMaintenance' => ['as' => 'maintenance', 'except' => ''],
         ];
     }
 
@@ -70,9 +74,9 @@ class ProductManagement extends Component
     {
         $this->authorizeManageProducts();
 
-        $request = new \App\Http\Requests\Products\CreateProductRequest();
-        $rules = collect($request->rules())->mapWithKeys(fn($rule, $key) => ["form.{$key}" => $rule])->toArray();
-        $attributes = collect($request->attributes())->mapWithKeys(fn($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $request = new \App\Http\Requests\Products\CreateProductRequest;
+        $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
         $validated = $this->validate($rules, $request->messages(), $attributes);
 
         $action->execute($validated['form']);
@@ -106,9 +110,9 @@ class ProductManagement extends Component
     {
         $this->authorizeManageProducts();
 
-        $request = new \App\Http\Requests\Products\UpdateProductRequest();
-        $rules = collect($request->rules())->mapWithKeys(fn($rule, $key) => ["form.{$key}" => $rule])->toArray();
-        $attributes = collect($request->attributes())->mapWithKeys(fn($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $request = new \App\Http\Requests\Products\UpdateProductRequest;
+        $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
         $validated = $this->validate($rules, $request->messages(), $attributes);
 
         $product = Product::findOrFail($this->editId);
@@ -159,6 +163,8 @@ class ProductManagement extends Component
 
         $query->when($this->stockStatus === 'above', fn (Builder $builder) => $builder->whereColumn('quantity', '>', 'min_quantity'));
         $query->when($this->stockStatus === 'below', fn (Builder $builder) => $builder->whereColumn('quantity', '<', 'min_quantity'));
+        $query->when($this->forMaintenance === 'yes', fn (Builder $builder) => $builder->where('for_maintenance', true));
+        $query->when($this->forMaintenance === 'no', fn (Builder $builder) => $builder->where('for_maintenance', false));
     }
 
     #[Computed]

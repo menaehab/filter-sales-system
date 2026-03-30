@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sales;
 
+use App\Actions\Places\CreatePlaceAction;
 use App\Actions\Sales\CreateSaleAction;
 use App\Enums\WaterQualityTypeEnum;
 use App\Livewire\Traits\HasSaleForm;
@@ -36,6 +37,10 @@ class SaleCreate extends Component
         'address' => '',
     ];
 
+    public array $newPlace = [
+        'name' => '',
+    ];
+
     public function updatedPaymentType(string $value): void
     {
         if ($value !== 'installment') {
@@ -61,6 +66,12 @@ class SaleCreate extends Component
                 'water_quality' => '',
                 'before_installment' => false,
             ];
+            $this->includeAfterInstallationReading = false;
+            $this->afterWaterReading = [
+                'technician_name' => '',
+                'tds' => '',
+                'water_quality' => '',
+            ];
         }
     }
 
@@ -83,11 +94,84 @@ class SaleCreate extends Component
         }
     }
 
+    public function updatedWaterReadingBeforeInstallment(bool $value): void
+    {
+        if (! $value) {
+            $this->includeAfterInstallationReading = false;
+            $this->afterWaterReading = [
+                'technician_name' => '',
+                'tds' => '',
+                'water_quality' => '',
+            ];
+        }
+    }
+
+    public function updatedIncludeAfterInstallationReading(bool $value): void
+    {
+        if (! $value) {
+            $this->afterWaterReading = [
+                'technician_name' => '',
+                'tds' => '',
+                'water_quality' => '',
+            ];
+        }
+    }
+
     public function selectFilter(int $filterId, string $filterLabel): void
     {
         $this->water_filter_id = $filterId;
         $this->filterSearch = $filterLabel;
         $this->createNewFilter = false;
+    }
+
+    public function openCreateFilterModal(): void
+    {
+        if (! $this->customer_id) {
+            $this->addError('water_filter_id', __('keywords.select_customer_first'));
+
+            return;
+        }
+
+        $this->newFilter = [
+            'filter_model' => '',
+            'address' => '',
+        ];
+
+        $this->dispatch('open-modal-create-filter-inline');
+    }
+
+    public function createFilterInline(): void
+    {
+        if (! $this->customer_id) {
+            $this->addError('water_filter_id', __('keywords.select_customer_first'));
+
+            return;
+        }
+
+        $validated = $this->validate([
+            'customer_id' => ['required', 'exists:customers,id'],
+            'newFilter.filter_model' => ['required', 'string', 'max:255'],
+            'newFilter.address' => ['required', 'string', 'max:255'],
+        ], [], [
+            'customer_id' => __('keywords.customer'),
+            'newFilter.filter_model' => __('keywords.filter_model'),
+            'newFilter.address' => __('keywords.filter_address'),
+        ]);
+
+        $filter = WaterFilter::create([
+            'filter_model' => $validated['newFilter']['filter_model'],
+            'address' => $validated['newFilter']['address'],
+            'customer_id' => (int) $this->customer_id,
+        ]);
+
+        $this->newFilter = [
+            'filter_model' => '',
+            'address' => '',
+        ];
+
+        $this->selectFilter($filter->id, $filter->filter_model.' - '.$filter->address);
+        $this->dispatch('close-modal-create-filter-inline');
+        $this->dispatch('open-modal-sale-payment');
     }
 
     public function setActiveCategory(string $categoryId): void
@@ -98,16 +182,28 @@ class SaleCreate extends Component
     public function addToCart(int $productId): void
     {
         $product = Product::with('category')->findOrFail($productId);
+        $available = (int) $product->quantity;
+
+        if ($available <= 0) {
+            session()->flash('warning', __('keywords.out_of_stock_warning').': '.$product->name);
+
+            return;
+        }
 
         $existingIndex = collect($this->cart)->search(fn ($item) => (int) $item['product_id'] === $product->id);
 
         if ($existingIndex !== false) {
             $currentQuantity = (int) ($this->cart[$existingIndex]['quantity'] ?: 0);
-            $this->cart[$existingIndex]['quantity'] = (string) ($currentQuantity + 1);
 
-            if (($currentQuantity + 1) > (int) $product->quantity) {
+            if ($currentQuantity >= $available) {
+                $this->cart[$existingIndex]['quantity'] = (string) $available;
+
                 session()->flash('warning', __('keywords.low_stock_warning').': '.$product->name.' ('.__('keywords.available').': '.$product->quantity.')');
+
+                return;
             }
+
+            $this->cart[$existingIndex]['quantity'] = (string) ($currentQuantity + 1);
 
             return;
         }
@@ -118,13 +214,9 @@ class SaleCreate extends Component
             'category_name' => $product->category?->name ?? __('keywords.not_specified'),
             'cost_price' => (string) $product->cost_price,
             'sell_price' => (string) $product->cost_price,
-            'available_quantity' => (int) $product->quantity,
+            'available_quantity' => $available,
             'quantity' => '1',
         ];
-
-        if ((int) $product->quantity <= 0) {
-            session()->flash('warning', __('keywords.out_of_stock_warning').': '.$product->name);
-        }
     }
 
     public function removeFromCart(int $index): void
@@ -155,6 +247,14 @@ class SaleCreate extends Component
         }
 
         if ($next > $available) {
+            if ($available <= 0) {
+                $productName = $this->cart[$index]['product_name'];
+                $this->removeFromCart($index);
+                session()->flash('warning', __('keywords.out_of_stock_warning').': '.$productName);
+
+                return;
+            }
+
             $this->cart[$index]['quantity'] = (string) $available;
 
             session()->flash(
@@ -185,6 +285,32 @@ class SaleCreate extends Component
             'address' => '',
         ];
 
+        $this->dispatch('open-modal-create-customer-inline');
+    }
+
+    public function openCreatePlaceModal(): void
+    {
+        $this->newPlace = [
+            'name' => '',
+        ];
+
+        $this->dispatch('open-modal-create-place-inline');
+    }
+
+    public function createPlaceInline(CreatePlaceAction $action): void
+    {
+        $request = new \App\Http\Requests\Place\CreatePlaceRequest;
+
+        $validated = $this->validate(
+            collect($request->rules())->mapWithKeys(fn ($rules, $key) => ["newPlace.{$key}" => $rules])->toArray(),
+            $request->messages(),
+            collect($request->attributes())->mapWithKeys(fn ($label, $key) => ["newPlace.{$key}" => $label])->toArray()
+        );
+
+        $place = $action->execute($validated['newPlace']);
+
+        $this->newCustomer['place_id'] = (string) $place->id;
+        $this->dispatch('close-modal-create-place-inline');
         $this->dispatch('open-modal-create-customer-inline');
     }
 
@@ -348,7 +474,36 @@ class SaleCreate extends Component
         $request = new \App\Http\Requests\Sales\CreateSaleRequest;
         $request->merge($this->all());
 
-        $validated = $this->validate($request->rules(), $request->messages(), $request->attributes());
+        $rules = $request->rules();
+
+        if ($this->includeWaterReading) {
+            if ($this->createNewFilter) {
+                unset($rules['water_filter_id']);
+                $rules['newFilter.filter_model'] = ['required', 'string', 'max:255'];
+                $rules['newFilter.address'] = ['required', 'string', 'max:255'];
+            } else {
+                unset($rules['newFilter.filter_model'], $rules['newFilter.address']);
+                $rules['water_filter_id'] = ['required', 'exists:water_filters,id'];
+            }
+
+            if (($this->waterReading['before_installment'] ?? false) && $this->includeAfterInstallationReading) {
+                $waterQualityValues = implode(',', array_column(WaterQualityTypeEnum::cases(), 'value'));
+                $rules['afterWaterReading.technician_name'] = ['required', 'string', 'max:255'];
+                $rules['afterWaterReading.tds'] = ['required', 'numeric', 'min:0'];
+                $rules['afterWaterReading.water_quality'] = ['required', 'in:'.$waterQualityValues];
+            }
+        }
+
+        $attributes = array_merge($request->attributes(), [
+            'newFilter.filter_model' => __('keywords.filter_model'),
+            'newFilter.address' => __('keywords.filter_address'),
+            'includeAfterInstallationReading' => __('keywords.add_after_installment_reading'),
+            'afterWaterReading.technician_name' => __('keywords.technician_name'),
+            'afterWaterReading.tds' => __('keywords.tds'),
+            'afterWaterReading.water_quality' => __('keywords.water_quality'),
+        ]);
+
+        $validated = $this->validate($rules, $request->messages(), $attributes);
 
         $sale = $action->execute($validated);
 
@@ -378,6 +533,8 @@ class SaleCreate extends Component
             'createNewFilter' => $this->createNewFilter,
             'newFilter' => $this->newFilter,
             'waterReading' => $this->waterReading,
+            'includeAfterInstallationReading' => $this->includeAfterInstallationReading,
+            'afterWaterReading' => $this->afterWaterReading,
         ];
     }
 

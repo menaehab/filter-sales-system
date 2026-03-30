@@ -86,7 +86,7 @@ class SendFilterCandleReminders extends Command
             $candles[] = ['name' => __('keywords.candle_2_3'), 'due_date' => $candle23Due->toDateString()];
         }
 
-        // Candle 4: When TDS >= 80
+        // Candle 4: When TDS >= 100
         if ($this->isCandle4Due($filter)) {
             $candles[] = ['name' => __('keywords.candle_4_high_tds'), 'due_date' => null];
         }
@@ -153,7 +153,7 @@ class SendFilterCandleReminders extends Command
             ->latest()
             ->first();
 
-        return $latestReading && $latestReading->tds >= 80;
+        return $latestReading && $latestReading->tds >= 100;
     }
 
     protected function isDueWithinWarningPeriod(Carbon $dueDate, CarbonInterface $now, int $warningDays): bool

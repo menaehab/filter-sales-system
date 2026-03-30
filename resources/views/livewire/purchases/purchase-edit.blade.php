@@ -252,6 +252,9 @@
                         </div>
                     </div>
 
+                    <x-checkbox name="newProduct.for_maintenance" label="{{ __('keywords.for_maintenance') }}"
+                        wire:model.blur="newProduct.for_maintenance" />
+
                     <x-textarea name="newProduct.description" label="{{ __('keywords.description') }}"
                         placeholder="{{ __('keywords.enter_description') }}"
                         wire:model.blur="newProduct.description" />

@@ -101,7 +101,7 @@ it('calculates candle 1 next date correctly', function () {
     expect($filter->candle_1_next_date->format('Y-m-d'))->toBe($expectedDate->format('Y-m-d'));
 });
 
-it('checks candle 4 needs replacement when TDS >= 80', function () {
+it('checks candle 4 needs replacement when TDS >= 100', function () {
     $customer = Customer::factory()->create();
     $filter = WaterFilter::create([
         'filter_model' => 'Test Model',
@@ -123,7 +123,7 @@ it('checks candle 4 needs replacement when TDS >= 80', function () {
     expect($filter->candle_4_needs_replacement)->toBeTrue();
 });
 
-it('checks candle 4 does not need replacement when TDS < 80', function () {
+it('checks candle 4 does not need replacement when TDS < 100', function () {
     $customer = Customer::factory()->create();
     $filter = WaterFilter::create([
         'filter_model' => 'Test Model',
