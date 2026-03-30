@@ -452,6 +452,7 @@ return [
     'not_installed' => 'لم يتم التركيب',
     'before_installment' => 'قبل التركيب',
     'after_installment' => 'بعد التركيب',
+    'add_after_installment_reading' => 'إضافة قراءة بعد التركيب',
     'before_installment_hint' => 'ستُستخدم هذه القراءة لتحديد تاريخ التركيب ومواعيد تغيير الشموع',
     'before_installment_already_exists' => 'يوجد بالفعل قراءة قبل التركيب لهذا الفلتر',
     'create_new_filter' => 'إنشاء فلتر جديد',

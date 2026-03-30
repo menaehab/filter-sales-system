@@ -190,6 +190,20 @@ final class CreateSaleAction
                 'before_installment' => $data['waterReading']['before_installment'] ?? false,
                 'water_filter_id' => $filterId,
             ]);
+
+            if (
+                ! empty($data['waterReading']['before_installment'])
+                && ! empty($data['includeAfterInstallationReading'])
+                && ! empty($data['afterWaterReading'])
+            ) {
+                WaterReading::create([
+                    'technician_name' => $data['afterWaterReading']['technician_name'],
+                    'tds' => $data['afterWaterReading']['tds'],
+                    'water_quality' => $data['afterWaterReading']['water_quality'],
+                    'before_installment' => false,
+                    'water_filter_id' => $filterId,
+                ]);
+            }
         }
     }
 }

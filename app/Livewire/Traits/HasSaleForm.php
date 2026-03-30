@@ -45,6 +45,14 @@ trait HasSaleForm
         'before_installment' => false,
     ];
 
+    public bool $includeAfterInstallationReading = false;
+
+    public array $afterWaterReading = [
+        'technician_name' => '',
+        'tds' => '',
+        'water_quality' => '',
+    ];
+
     /** @var array<int, array{product_id: string, product_name: string, sell_price: string, cost_price: string, quantity: string, available_quantity?: int, category_name?: string}> */
     public array $cart = [];
 
@@ -77,6 +85,13 @@ trait HasSaleForm
             $rules['waterReading.tds'] = 'required|numeric|min:0';
             $rules['waterReading.water_quality'] = 'required|in:'.implode(',', WaterQualityTypeEnum::values());
             $rules['waterReading.before_installment'] = 'boolean';
+            $rules['includeAfterInstallationReading'] = 'boolean';
+
+            if (($this->waterReading['before_installment'] ?? false) && $this->includeAfterInstallationReading) {
+                $rules['afterWaterReading.technician_name'] = 'required|string|max:255';
+                $rules['afterWaterReading.tds'] = 'required|numeric|min:0';
+                $rules['afterWaterReading.water_quality'] = 'required|in:'.implode(',', WaterQualityTypeEnum::values());
+            }
         }
 
         return $rules;
@@ -100,6 +115,10 @@ trait HasSaleForm
             'waterReading.tds' => __('keywords.tds'),
             'waterReading.water_quality' => __('keywords.water_quality'),
             'waterReading.before_installment' => __('keywords.before_installment'),
+            'includeAfterInstallationReading' => __('keywords.add_after_installment_reading'),
+            'afterWaterReading.technician_name' => __('keywords.technician_name'),
+            'afterWaterReading.tds' => __('keywords.tds'),
+            'afterWaterReading.water_quality' => __('keywords.water_quality'),
         ];
 
         foreach ($this->cart as $i => $item) {
@@ -137,6 +156,12 @@ trait HasSaleForm
             'tds' => '',
             'water_quality' => '',
             'before_installment' => false,
+        ];
+        $this->includeAfterInstallationReading = false;
+        $this->afterWaterReading = [
+            'technician_name' => '',
+            'tds' => '',
+            'water_quality' => '',
         ];
     }
 

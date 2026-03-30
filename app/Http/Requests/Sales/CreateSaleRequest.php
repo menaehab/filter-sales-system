@@ -46,6 +46,13 @@ class CreateSaleRequest extends FormRequest
             $rules['waterReading.tds'] = ['required', 'numeric', 'min:0'];
             $rules['waterReading.water_quality'] = ['required', 'in:'.$waterQualityValues];
             $rules['waterReading.before_installment'] = ['boolean'];
+            $rules['includeAfterInstallationReading'] = ['boolean'];
+
+            if (data_get($this->all(), 'waterReading.before_installment') && $this->boolean('includeAfterInstallationReading')) {
+                $rules['afterWaterReading.technician_name'] = ['required', 'string', 'max:255'];
+                $rules['afterWaterReading.tds'] = ['required', 'numeric', 'min:0'];
+                $rules['afterWaterReading.water_quality'] = ['required', 'in:'.$waterQualityValues];
+            }
         }
 
         return $rules;
@@ -72,6 +79,10 @@ class CreateSaleRequest extends FormRequest
             'waterReading.tds' => __('keywords.tds_reading'),
             'waterReading.water_quality' => __('keywords.water_quality'),
             'waterReading.before_installment' => __('keywords.before_installment'),
+            'includeAfterInstallationReading' => __('keywords.add_after_installment_reading'),
+            'afterWaterReading.technician_name' => __('keywords.technician_name'),
+            'afterWaterReading.tds' => __('keywords.tds_reading'),
+            'afterWaterReading.water_quality' => __('keywords.water_quality'),
         ];
     }
 }

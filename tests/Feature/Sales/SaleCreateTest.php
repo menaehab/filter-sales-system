@@ -3,6 +3,7 @@
 use App\Models\Customer;
 use App\Models\CustomerPayment;
 use App\Models\CustomerPaymentAllocation;
+use App\Models\Place;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\WaterFilter;
@@ -155,6 +156,49 @@ it('validates sale fields before saving', function () {
             'cart.0.sell_price' => 'required',
             'cart.0.quantity' => 'required',
         ]);
+});
+
+it('creates a place inline while creating a customer', function () {
+    Livewire::test('sales.sale-create')
+        ->set('newPlace.name', 'Inline Place Cairo')
+        ->call('createPlaceInline')
+        ->assertHasNoErrors();
+
+    $place = Place::query()->where('name', 'Inline Place Cairo')->first();
+
+    expect($place)->not->toBeNull();
+
+    Livewire::test('sales.sale-create')
+        ->set('newPlace.name', 'Inline Place Giza')
+        ->call('createPlaceInline')
+        ->assertSet('newCustomer.place_id', (string) Place::query()->where('name', 'Inline Place Giza')->value('id'));
+});
+
+    it('requires selecting a customer before opening filter modal', function () {
+        Livewire::test('sales.sale-create')
+        ->call('openCreateFilterModal')
+        ->assertHasErrors(['water_filter_id']);
+    });
+
+it('creates a filter inline during sale creation', function () {
+    $customer = Customer::factory()->create(['name' => 'Inline Filter Customer']);
+
+    Livewire::test('sales.sale-create')
+        ->set('customer_id', $customer->id)
+        ->set('createNewFilter', true)
+        ->set('newFilter.filter_model', 'Inline Filter Model')
+        ->set('newFilter.address', 'Inline Filter Address')
+        ->call('createFilterInline')
+        ->assertHasNoErrors()
+        ->assertSet('createNewFilter', false);
+
+    $filter = WaterFilter::query()
+        ->where('customer_id', $customer->id)
+        ->where('filter_model', 'Inline Filter Model')
+        ->where('address', 'Inline Filter Address')
+        ->first();
+
+    expect($filter)->not->toBeNull();
 });
 
 it('caps add to cart quantity at available stock', function () {
@@ -318,4 +362,62 @@ it('creates a sale and stores water reading when enabled', function () {
     ]);
 
     $this->assertEquals(1, WaterReading::query()->count());
+});
+
+it('creates before and after installation readings when requested', function () {
+    $customer = Customer::factory()->create(['name' => 'Dual Reading Customer']);
+    $filter = WaterFilter::create([
+        'filter_model' => 'Dual Reading Filter',
+        'address' => 'Dual Reading Address',
+        'customer_id' => $customer->id,
+    ]);
+
+    $product = Product::factory()->create([
+        'name' => 'Dual Reading Product',
+        'cost_price' => 60,
+        'quantity' => 4,
+    ]);
+
+    Livewire::test('sales.sale-create')
+        ->set('customer_id', $customer->id)
+        ->set('payment_type', 'cash')
+        ->set('includeWaterReading', true)
+        ->set('water_filter_id', $filter->id)
+        ->set('waterReading.technician_name', 'Technician Before')
+        ->set('waterReading.tds', '130')
+        ->set('waterReading.water_quality', 'fair')
+        ->set('waterReading.before_installment', true)
+        ->set('includeAfterInstallationReading', true)
+        ->set('afterWaterReading.technician_name', 'Technician After')
+        ->set('afterWaterReading.tds', '95')
+        ->set('afterWaterReading.water_quality', 'good')
+        ->set('cart', [[
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'category_name' => 'Filters',
+            'cost_price' => '60',
+            'sell_price' => '90',
+            'available_quantity' => 4,
+            'quantity' => '1',
+        ]])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('water_readings', [
+        'water_filter_id' => $filter->id,
+        'technician_name' => 'Technician Before',
+        'tds' => '130.00',
+        'water_quality' => 'fair',
+        'before_installment' => 1,
+    ]);
+
+    $this->assertDatabaseHas('water_readings', [
+        'water_filter_id' => $filter->id,
+        'technician_name' => 'Technician After',
+        'tds' => '95.00',
+        'water_quality' => 'good',
+        'before_installment' => 0,
+    ]);
+
+    $this->assertEquals(2, WaterReading::query()->where('water_filter_id', $filter->id)->count());
 });
