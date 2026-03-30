@@ -11,7 +11,8 @@
         'text-gray-300 hover:bg-gray-800 hover:text-white' => !$active,
     ]) }}>
 
-    <i class="{{ $icon }} w-5 text-center
+    <i
+        class="{{ $icon }} w-5 text-center
         {{ $active ? 'text-white' : 'text-gray-400 group-hover:text-white' }}">
     </i>
 
