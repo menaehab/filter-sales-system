@@ -113,7 +113,7 @@ it('checks candle 4 needs replacement when TDS >= 100', function () {
     WaterReading::create([
         'water_filter_id' => $filter->id,
         'technician_name' => 'Test Technician',
-        'tds' => 85,
+        'tds' => 120,
         'water_quality' => WaterQualityTypeEnum::GOOD->value,
         'before_installment' => false,
     ]);

@@ -4,16 +4,19 @@
     'latestNotifications' => null,
 ])
 
-<header class="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-4 sm:px-6">
+<header
+    class="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-gray-200/90 bg-white/95 px-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/90 sm:px-6 lg:px-8">
     {{-- Mobile menu button --}}
-    <button @click="sidebarOpen = true" class="text-gray-500 hover:text-gray-700 lg:hidden">
+    <button @click="sidebarOpen = true"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 lg:hidden">
         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
         </svg>
     </button>
 
     {{-- Page title --}}
-    <h1 class="text-lg font-semibold text-gray-900">{{ __('keywords.' . $title) }}</h1>
+    <h1 class="truncate text-base font-semibold tracking-tight text-gray-900 sm:text-lg">{{ __('keywords.' . $title) }}
+    </h1>
 
     {{-- Spacer --}}
     <div class="flex-1"></div>
@@ -21,7 +24,7 @@
     {{-- Notifications --}}
     <div class="relative" x-data="notificationPanel()" x-on:confirmed-confirm-action.window="executeConfirmAction()">
         <button @click="open = !open"
-            class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+            class="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-gray-500 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
             title="{{ __('keywords.notifications') }}">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -30,7 +33,7 @@
 
             @if ($unreadNotificationsCount > 0)
                 <span
-                    class="absolute -top-1 -end-1 min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-bold text-white">
+                    class="absolute -top-1 -inset-e-1 min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-bold text-white ring-2 ring-white">
                     {{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}
                 </span>
             @endif
@@ -41,15 +44,15 @@
             x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="transform opacity-100 scale-100"
             x-transition:leave-end="transform opacity-0 scale-95"
-            class="absolute end-0 mt-2 w-96 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5">
+            class="absolute inset-e-0 mt-3 w-88 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl ring-1 ring-black/5 sm:w-96">
 
             {{-- Header with actions --}}
-            <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+            <div class="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
                 <p class="text-sm font-semibold text-gray-800">{{ __('keywords.notifications') }}</p>
 
                 @if ($unreadNotificationsCount > 0)
                     <button @click="markAllAsRead()"
-                        class="text-xs text-emerald-600 hover:text-emerald-700 font-medium">
+                        class="text-xs font-semibold text-emerald-600 transition-colors hover:text-emerald-700">
                         {{ __('keywords.mark_all_as_read') }}
                     </button>
                 @endif
@@ -71,12 +74,12 @@
                         $typeColor = $typeColors[$notificationType] ?? 'text-gray-600';
                     @endphp
                     <div x-data="{ hover: false }" @mouseenter="hover = true" @mouseleave="hover = false"
-                        class="relative border-b border-gray-50 px-4 py-3 {{ is_null($notification->read_at) ? 'bg-emerald-50/40' : '' }} hover:bg-gray-50 transition-colors">
+                        class="relative border-b border-gray-100 px-5 py-3.5 transition-colors {{ is_null($notification->read_at) ? 'bg-emerald-50/40' : '' }} hover:bg-gray-50">
 
                         {{-- Notification content --}}
                         <div class="flex items-start gap-3">
                             {{-- Icon --}}
-                            <div class="flex-shrink-0 mt-0.5">
+                            <div class="mt-0.5 shrink-0">
                                 @if ($notificationType === 'customer_installment' || $notificationType === 'supplier_installment')
                                     <i class="fas fa-money-bill-wave {{ $typeColor }}"></i>
                                 @elseif($notificationType === 'low_stock')
@@ -90,21 +93,21 @@
 
                             {{-- Message --}}
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm text-gray-700 leading-relaxed">{{ $notificationMessage }}</p>
-                                <p class="mt-1 text-xs text-gray-400">{{ $notificationDate }}</p>
+                                <p class="text-sm leading-5 text-gray-700">{{ $notificationMessage }}</p>
+                                <p class="mt-1.5 text-xs text-gray-400">{{ $notificationDate }}</p>
                             </div>
 
                             {{-- Actions (shown on hover) --}}
-                            <div x-show="hover" x-transition class="flex gap-1 flex-shrink-0">
+                            <div x-show="hover" x-transition class="flex shrink-0 gap-1">
                                 @if (is_null($notification->read_at))
                                     <button @click="markAsRead('{{ $notification->id }}')"
-                                        class="p-1.5 text-gray-400 hover:text-emerald-600 rounded transition-colors"
+                                        class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-emerald-50 hover:text-emerald-600"
                                         title="{{ __('keywords.mark_as_read') }}">
                                         <i class="fas fa-check text-xs"></i>
                                     </button>
                                 @endif
                                 <button @click="deleteNotification('{{ $notification->id }}')"
-                                    class="p-1.5 text-gray-400 hover:text-red-600 rounded transition-colors"
+                                    class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
                                     title="{{ __('keywords.delete') }}">
                                     <i class="fas fa-trash text-xs"></i>
                                 </button>
@@ -112,8 +115,8 @@
                         </div>
                     </div>
                 @empty
-                    <div class="px-4 py-8 text-center text-sm text-gray-500">
-                        <i class="fas fa-bell-slash text-2xl text-gray-300 mb-2"></i>
+                    <div class="px-4 py-10 text-center text-sm text-gray-500">
+                        <i class="fas fa-bell-slash mb-2 text-2xl text-gray-300"></i>
                         <p>{{ __('keywords.no_notifications') }}</p>
                     </div>
                 @endforelse
@@ -121,14 +124,14 @@
 
             {{-- Footer with clear actions --}}
             @if ($latestNotifications->isNotEmpty())
-                <div class="border-t border-gray-100 px-4 py-2 bg-gray-50 flex gap-2">
+                <div class="flex gap-2 border-t border-gray-100 bg-gray-50 px-4 py-2.5">
                     <button @click="deleteAllRead()"
-                        class="flex-1 text-xs py-2 px-3 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors">
+                        class="flex-1 rounded-lg px-3 py-2 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800">
                         <i class="fas fa-trash-alt me-1"></i>
                         {{ __('keywords.delete_read_notifications') }}
                     </button>
                     <button @click="deleteAll()"
-                        class="flex-1 text-xs py-2 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors">
+                        class="flex-1 rounded-lg px-3 py-2 text-xs text-red-600 transition-colors hover:bg-red-50 hover:text-red-700">
                         <i class="fas fa-trash me-1"></i> {{ __('keywords.delete_all_notifications') }}
                     </button>
                 </div>
@@ -279,9 +282,10 @@
 
     {{-- User avatar dropdown --}}
     <div class="relative" x-data="{ open: false }">
-        <button @click="open = !open" class="flex items-center gap-2 rounded-lg p-1.5 hover:bg-gray-100">
+        <button @click="open = !open"
+            class="flex items-center gap-2 rounded-xl border border-transparent p-1.5 transition-all duration-200 hover:border-gray-200 hover:bg-gray-100">
             <div
-                class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-medium text-white">
+                class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-medium text-white ring-2 ring-emerald-100">
                 {{ auth()->user()->name[0] ?? 'A' }}
             </div>
             <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -294,11 +298,11 @@
             x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="transform opacity-100 scale-100"
             x-transition:leave-end="transform opacity-0 scale-95"
-            class="absolute end-0 mt-2 w-48 ltr:origin-top-right rtl:origin-top-left rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5">
+            class="absolute inset-e-0 mt-3 w-52 rounded-xl border border-gray-200 bg-white py-1.5 shadow-lg ring-1 ring-black/5 ltr:origin-top-right rtl:origin-top-left">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit"
-                    class="block w-full px-4 py-2 text-start text-sm text-gray-700 hover:bg-gray-100">{{ __('keywords.log_out') }}</button>
+                    class="block w-full rounded-lg px-4 py-2 text-start text-sm text-gray-700 transition-colors hover:bg-gray-100">{{ __('keywords.log_out') }}</button>
             </form>
         </div>
     </div>

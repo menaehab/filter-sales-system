@@ -9,7 +9,7 @@ class UpdateSaleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->canAny(['manage_sales', 'edit_sales']) ?? false;
     }
 
     public function rules(): array
@@ -23,11 +23,11 @@ class UpdateSaleRequest extends FormRequest
             'discount' => ['nullable', 'numeric', 'min:0'],
             'with_vat' => ['boolean'],
             'dealer_name' => ['nullable', 'string', 'max:255'],
-            'cart' => ['required', 'array', 'min:1'],
-            'cart.*.product_id' => ['required', 'exists:products,id'],
-            'cart.*.sell_price' => ['required', 'numeric', 'min:0.01'],
-            'cart.*.cost_price' => ['nullable', 'numeric'],
-            'cart.*.quantity' => ['required', 'integer', 'min:1'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.sell_price' => ['required', 'numeric', 'min:0.01'],
+            'items.*.cost_price' => ['nullable', 'numeric'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
         ];
     }
 
@@ -41,10 +41,10 @@ class UpdateSaleRequest extends FormRequest
             'interest_rate' => __('keywords.interest_rate'),
             'with_vat' => __('keywords.with_vat'),
             'dealer_name' => __('keywords.dealer_name'),
-            'cart' => __('keywords.cart'),
-            'cart.*.product_id' => __('keywords.product'),
-            'cart.*.sell_price' => __('keywords.sell_price'),
-            'cart.*.quantity' => __('keywords.quantity'),
+            'items' => __('keywords.cart'),
+            'items.*.product_id' => __('keywords.product'),
+            'items.*.sell_price' => __('keywords.sell_price'),
+            'items.*.quantity' => __('keywords.quantity'),
         ];
     }
 }

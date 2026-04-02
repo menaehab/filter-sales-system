@@ -8,7 +8,7 @@ class UpdateWaterFilterRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('manage_water_filters') ?? false;
     }
 
     public function rules(): array

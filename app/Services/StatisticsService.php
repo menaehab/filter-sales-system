@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\CustomerPayment;
 use App\Models\DamagedProduct;
 use App\Models\Expense;
+use App\Models\Maintenance;
 use App\Models\Purchase;
 use App\Models\PurchaseReturn;
 use App\Models\Sale;
@@ -51,7 +52,7 @@ class StatisticsService
     }
 
     /**
-     * Get total expenses amount
+     * Get total expenses amount (direct expenses only)
      */
     public function getTotalExpenses(?string $dateFrom = null, ?string $dateTo = null): float
     {
@@ -64,7 +65,24 @@ class StatisticsService
             $query->whereDate('created_at', '<=', $dateTo);
         }
 
-        return (float) $query->sum('amount');
+          return (float) $query->sum('amount');
+    }
+
+    /**
+      * Get total maintenance revenue
+     */
+    public function getTotalMaintenanceCosts(?string $dateFrom = null, ?string $dateTo = null): float
+    {
+        $query = Maintenance::query();
+
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
+
+        return (float) $query->sum('cost');
     }
 
     /**
@@ -121,18 +139,19 @@ class StatisticsService
 
     /**
      * Calculate net profit using the exact business logic:
-     * Net Profit = Sales + PurchaseReturns - Purchases - SaleReturns - DamagedProducts - Expenses
+     * Net Profit = Sales + MaintenanceRevenue + PurchaseReturns - Purchases - SaleReturns - DamagedProducts - Expenses
      */
     public function getNetProfit(?string $dateFrom = null, ?string $dateTo = null): float
     {
         $sales = $this->getTotalSales($dateFrom, $dateTo);
+        $maintenanceRevenue = $this->getTotalMaintenanceCosts($dateFrom, $dateTo);
         $purchases = $this->getTotalPurchases($dateFrom, $dateTo);
         $expenses = $this->getTotalExpenses($dateFrom, $dateTo);
         $saleReturns = $this->getTotalSaleReturns($dateFrom, $dateTo);
         $purchaseReturns = $this->getTotalPurchaseReturns($dateFrom, $dateTo);
         $damagedProducts = $this->getTotalDamagedProductsCost($dateFrom, $dateTo);
 
-        return $sales + $purchaseReturns - $purchases - $saleReturns - $damagedProducts - $expenses;
+        return $sales + $maintenanceRevenue + $purchaseReturns - $purchases - $saleReturns - $damagedProducts - $expenses;
     }
 
     /**
@@ -194,7 +213,8 @@ class StatisticsService
      */
     public function getCashFlow(?string $dateFrom = null, ?string $dateTo = null): array
     {
-        $incoming = $this->getTotalCustomerPayments($dateFrom, $dateTo);
+        $incoming = $this->getTotalCustomerPayments($dateFrom, $dateTo)
+                  + $this->getTotalMaintenanceCosts($dateFrom, $dateTo);
         $outgoing = $this->getTotalSupplierPayments($dateFrom, $dateTo)
                   + $this->getTotalExpenses($dateFrom, $dateTo);
 
@@ -283,19 +303,33 @@ class StatisticsService
             ->groupBy('date')
             ->pluck('total', 'date');
 
+        // Get maintenance costs by date
+        $maintenanceQuery = Maintenance::query();
+        if ($dateFrom) {
+            $maintenanceQuery->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $maintenanceQuery->whereDate('created_at', '<=', $dateTo);
+        }
+        $maintenanceCosts = $maintenanceQuery->selectRaw("DATE_FORMAT(created_at, '{$dateFormat}') as date, SUM(cost) as total")
+            ->groupBy('date')
+            ->pluck('total', 'date');
+
         // Combine all dates
         $allDates = collect($sales->keys())
             ->merge($purchases->keys())
             ->merge($expenses->keys())
+            ->merge($maintenanceCosts->keys())
             ->unique()
             ->sort()
             ->values();
 
-        return $allDates->map(function ($date) use ($sales, $purchases, $expenses) {
+        return $allDates->map(function ($date) use ($sales, $purchases, $expenses, $maintenanceCosts) {
             $saleAmount = $sales->get($date, 0);
             $purchaseAmount = $purchases->get($date, 0);
             $expenseAmount = $expenses->get($date, 0);
-            $profit = $saleAmount - $purchaseAmount - $expenseAmount;
+            $maintenanceAmount = $maintenanceCosts->get($date, 0);
+            $profit = $saleAmount - $purchaseAmount - $expenseAmount + $maintenanceAmount;
 
             return [
                 'date' => $date,
@@ -465,7 +499,7 @@ class StatisticsService
     public function getRevenueVsExpenses(?string $dateFrom = null, ?string $dateTo = null): array
     {
         return [
-            'revenue' => $this->getTotalSales($dateFrom, $dateTo),
+            'revenue' => $this->getTotalSales($dateFrom, $dateTo) + $this->getTotalMaintenanceCosts($dateFrom, $dateTo),
             'expenses' => $this->getTotalExpenses($dateFrom, $dateTo) + $this->getTotalPurchases($dateFrom, $dateTo),
         ];
     }

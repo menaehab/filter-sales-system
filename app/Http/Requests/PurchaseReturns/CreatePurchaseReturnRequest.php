@@ -8,7 +8,7 @@ class CreatePurchaseReturnRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->canAny(['manage_purchase_returns', 'add_purchase_returns']) ?? false;
     }
 
     public function rules(): array

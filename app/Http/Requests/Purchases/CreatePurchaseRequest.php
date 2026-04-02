@@ -9,7 +9,7 @@ class CreatePurchaseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->canAny(['manage_purchases', 'add_purchases']) ?? false;
     }
 
     public function rules(): array

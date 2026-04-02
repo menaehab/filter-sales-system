@@ -2,14 +2,13 @@
 
 namespace App\Livewire\Sales;
 
+use App\Actions\CustomerPayments\CreateCustomerPaymentAction;
 use App\Actions\Sales\DeleteSaleAction;
 use App\Enums\SaleStatusEnum;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
 use App\Livewire\Traits\WithSearchAndPagination;
-use App\Models\CustomerPayment;
-use App\Models\CustomerPaymentAllocation;
 use App\Models\Sale;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Computed;
@@ -162,7 +161,7 @@ class SaleManagement extends Component
         $this->dispatch('open-modal-pay-sale');
     }
 
-    public function submitPayment(): void
+    public function submitPayment(CreateCustomerPaymentAction $action): void
     {
         $this->authorizePaySales();
 
@@ -175,33 +174,19 @@ class SaleManagement extends Component
         ]);
 
         $sale = Sale::with('paymentAllocations')->findOrFail($this->paySaleId);
-        $amount = (float) $this->payAmount;
 
-        if ($amount <= 0) {
+        if ($sale->isFullyPaid()) {
             return;
         }
 
-        $allocations = $this->calculatePaymentAllocations($sale, $amount);
-        $totalAllocated = collect($allocations)->sum('amount');
-
-        if ($totalAllocated <= 0) {
-            return;
-        }
-
-        $payment = CustomerPayment::create([
-            'amount' => $totalAllocated,
+        $payment = $action->execute($sale->id, [
+            'amount' => $this->payAmount,
             'payment_method' => $this->payMethod,
             'note' => $this->payNote ?: null,
-            'customer_id' => $sale->customer_id,
-            'user_id' => auth()->id(),
         ]);
 
-        foreach ($allocations as $allocation) {
-            CustomerPaymentAllocation::create([
-                'amount' => $allocation['amount'],
-                'customer_payment_id' => $payment->id,
-                'sale_id' => $allocation['sale_id'],
-            ]);
+        if (! $payment) {
+            return;
         }
 
         $printAfterPayment = $this->printAfterPayment;
@@ -213,23 +198,6 @@ class SaleManagement extends Component
         if ($printAfterPayment) {
             $this->redirect(route('customer-payments.print', $paymentId), navigate: true);
         }
-    }
-
-    private function calculatePaymentAllocations(Sale $sale, float $amount): array
-    {
-        $allocations = [];
-
-        $maxPayable = $sale->remaining_amount;
-        $amount = min($amount, $maxPayable);
-
-        if ($amount > 0) {
-            $allocations[] = [
-                'sale_id' => $sale->id,
-                'amount' => $amount,
-            ];
-        }
-
-        return $allocations;
     }
 
     public function resetPayForm(): void

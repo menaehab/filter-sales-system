@@ -4,8 +4,16 @@ namespace App\Livewire\Filters;
 
 use App\Enums\WaterQualityTypeEnum;
 use App\Livewire\Traits\WithSearchAndPagination;
+use App\Models\Maintenance;
+use App\Models\MaintenanceItem;
+use App\Models\SaleItem;
 use App\Models\WaterFilter;
 use App\Models\WaterReading;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -23,11 +31,19 @@ class FilterView extends Component
         'before_installment' => false,
     ];
 
-    public ?string $selectedCandle = null;
+    public array $maintenanceForm = [
+        'selected_candles' => [],
+        'technician_name' => '',
+        'replaced_at' => '',
+        'cost' => '',
+        'description' => '',
+        'items' => [],
+    ];
 
     public function mount(WaterFilter $filter): void
     {
         $this->filter = $filter->load('customer');
+        $this->resetMaintenanceForm();
     }
 
     public function getReadingsProperty()
@@ -64,7 +80,7 @@ class FilterView extends Component
                 'status' => $status['candle_4'],
                 'next_date' => null,
                 'replaced_at' => $this->filter->candle_4_replaced_at,
-                'interval' => 'TDS >= 80',
+                'interval' => 'TDS >= 100',
             ],
             [
                 'key' => 'candle_5',
@@ -93,13 +109,36 @@ class FilterView extends Component
         ];
     }
 
-    public function getCandleChangesProperty()
+    public function getMaintenancesProperty()
     {
-        return $this->filter->candleChanges()
-            ->with('user')
-            ->latest('replaced_at')
+        return $this->filter->maintenances()
+            ->with([
+                'user',
+                'items.saleItem.product',
+                'candleChanges',
+            ])
+            ->latest('created_at')
             ->limit(20)
             ->get();
+    }
+
+    public function getMaintenanceProductsProperty(): array
+    {
+        return collect($this->getMaintenanceProductsStock())
+            ->map(fn (array $productStock) => [
+                'product_id' => $productStock['product_id'],
+                'product_name' => $productStock['product_name'],
+                'total_purchased' => $productStock['total_purchased'],
+                'total_used' => $productStock['total_used'],
+                'available_quantity' => $productStock['available_quantity'],
+            ])
+            ->values()
+            ->toArray();
+    }
+
+    public function getCanManageCreatedAtProperty(): bool
+    {
+        return (bool) auth()->user()?->can('manage_created_at');
     }
 
     public function openAddReading(): void
@@ -150,21 +189,205 @@ class FilterView extends Component
 
     public function openMarkCandle(string $candleKey): void
     {
-        $this->selectedCandle = $candleKey;
+        $validCandleKeys = collect($this->candles)->pluck('key')->all();
+        $selectedCandles = in_array($candleKey, $validCandleKeys, true) ? [$candleKey] : [];
+
+        $this->resetMaintenanceForm($selectedCandles);
         $this->dispatch('open-modal-mark-candle');
     }
 
     public function markCandleReplaced(): void
     {
+        $this->saveMaintenance();
+    }
+
+    public function saveMaintenance(): void
+    {
         $this->authorize('manage_water_filters');
 
-        if ($this->selectedCandle) {
-            $this->filter->markCandleReplaced($this->selectedCandle, auth()->user());
-            $this->filter->refresh();
+        $availableCandleKeys = collect($this->candles)->pluck('key')->all();
+        $productStock = collect($this->getMaintenanceProductsStock())
+            ->keyBy(fn (array $item) => (string) $item['product_id']);
+
+        $validator = Validator::make(
+            ['maintenanceForm' => $this->maintenanceForm],
+            [
+                'maintenanceForm.selected_candles' => ['required', 'array', 'min:1'],
+                'maintenanceForm.selected_candles.*' => ['required', 'string', Rule::in($availableCandleKeys)],
+                'maintenanceForm.technician_name' => ['required', 'string', 'max:255'],
+                'maintenanceForm.replaced_at' => ['required', 'date'],
+                'maintenanceForm.cost' => ['required', 'numeric', 'min:0'],
+                'maintenanceForm.description' => ['nullable', 'string', 'max:1000'],
+                'maintenanceForm.items' => ['array'],
+                'maintenanceForm.items.*' => ['nullable', 'integer', 'min:0'],
+            ],
+            [],
+            [
+                'maintenanceForm.selected_candles' => __('keywords.changed_candles'),
+                'maintenanceForm.selected_candles.*' => __('keywords.candle'),
+                'maintenanceForm.technician_name' => __('keywords.technician_name'),
+                'maintenanceForm.replaced_at' => __('keywords.replaced_at'),
+                'maintenanceForm.cost' => __('keywords.maintenance_cost'),
+                'maintenanceForm.description' => __('keywords.description'),
+                'maintenanceForm.items.*' => __('keywords.quantity'),
+            ]
+        );
+
+        $validator->after(function ($validator) use ($productStock) {
+            $requestedItems = collect($this->maintenanceForm['items'] ?? [])
+                ->mapWithKeys(fn ($quantity, $productId) => [(string) $productId => (int) $quantity])
+                ->filter(fn (int $quantity) => $quantity > 0);
+
+            foreach ($requestedItems as $productId => $quantity) {
+                $stock = $productStock->get((string) $productId);
+
+                if (! $stock) {
+                    $validator->errors()->add('maintenanceForm.items.'.$productId, __('keywords.maintenance_product_unavailable'));
+
+                    continue;
+                }
+
+                if ($quantity > (int) $stock['available_quantity']) {
+                    $validator->errors()->add('maintenanceForm.items.'.$productId, __('keywords.maintenance_quantity_exceeded'));
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            $this->setErrorBag($validator->getMessageBag());
+
+            return;
         }
 
-        $this->selectedCandle = null;
+        $validated = $validator->validated()['maintenanceForm'];
+        $requestedItems = collect($validated['items'] ?? [])
+            ->mapWithKeys(fn ($quantity, $productId) => [(string) $productId => (int) $quantity])
+            ->filter(fn (int $quantity) => $quantity > 0);
+
+        $user = auth()->user();
+
+        if (! $user) {
+            abort(403);
+        }
+
+        $replacedAt = $this->canManageCreatedAt
+            ? Carbon::parse($validated['replaced_at'])
+            : now();
+
+        DB::transaction(function () use ($validated, $requestedItems, $productStock, $user, $replacedAt) {
+            $maintenance = Maintenance::create([
+                'cost' => $validated['cost'],
+                'technician_name' => $validated['technician_name'],
+                'description' => blank($validated['description'] ?? null) ? null : $validated['description'],
+                'user_id' => $user->id,
+                'water_filter_id' => $this->filter->id,
+            ]);
+
+            foreach ($requestedItems as $productId => $requestedQuantity) {
+                $stock = $productStock->get((string) $productId);
+                $remainingQuantity = $requestedQuantity;
+
+                foreach ($stock['sale_items'] as $saleItemStock) {
+                    if ($remainingQuantity <= 0) {
+                        break;
+                    }
+
+                    $allocatableQuantity = min($remainingQuantity, (int) $saleItemStock['available_quantity']);
+
+                    if ($allocatableQuantity <= 0) {
+                        continue;
+                    }
+
+                    MaintenanceItem::create([
+                        'maintenance_id' => $maintenance->id,
+                        'sale_item_id' => (int) $saleItemStock['sale_item_id'],
+                        'quantity' => $allocatableQuantity,
+                    ]);
+
+                    $remainingQuantity -= $allocatableQuantity;
+                }
+
+                if ($remainingQuantity > 0) {
+                    throw ValidationException::withMessages([
+                        'maintenanceForm.items.'.$productId => __('keywords.maintenance_quantity_exceeded'),
+                    ]);
+                }
+            }
+
+            $this->filter->markCandlesReplaced($validated['selected_candles'], $user, $maintenance, $replacedAt);
+        });
+
+        $this->filter->refresh();
+        $this->resetMaintenanceForm();
         $this->dispatch('close-modal-mark-candle');
+    }
+
+    protected function getMaintenanceProductsStock(): array
+    {
+        if (! $this->filter->customer_id) {
+            return [];
+        }
+
+        $saleItems = SaleItem::query()
+            ->with('product:id,name')
+            ->whereNotNull('product_id')
+            ->whereHas('sale', fn ($query) => $query->where('customer_id', $this->filter->customer_id))
+            ->whereHas('product', fn ($query) => $query->where('for_maintenance', true))
+            ->orderBy('created_at')
+            ->get(['id', 'product_id', 'quantity']);
+
+        if ($saleItems->isEmpty()) {
+            return [];
+        }
+
+        $usedBySaleItem = MaintenanceItem::query()
+            ->selectRaw('maintenance_items.sale_item_id, SUM(maintenance_items.quantity) as used_quantity')
+            ->join('maintenances', 'maintenance_items.maintenance_id', '=', 'maintenances.id')
+            ->join('water_filters', 'maintenances.water_filter_id', '=', 'water_filters.id')
+            ->where('water_filters.customer_id', $this->filter->customer_id)
+            ->groupBy('maintenance_items.sale_item_id')
+            ->pluck('used_quantity', 'maintenance_items.sale_item_id');
+
+        $products = [];
+
+        foreach ($saleItems as $saleItem) {
+            if (! $saleItem->product) {
+                continue;
+            }
+
+            $purchasedQuantity = (int) floor((float) $saleItem->quantity);
+            $usedQuantity = (int) floor((float) ($usedBySaleItem->get($saleItem->id, 0) ?? 0));
+            $availableQuantity = max(0, $purchasedQuantity - $usedQuantity);
+
+            if ($availableQuantity <= 0) {
+                continue;
+            }
+
+            $productId = (int) $saleItem->product_id;
+
+            if (! isset($products[$productId])) {
+                $products[$productId] = [
+                    'product_id' => $productId,
+                    'product_name' => $saleItem->product->name,
+                    'total_purchased' => 0,
+                    'total_used' => 0,
+                    'available_quantity' => 0,
+                    'sale_items' => [],
+                ];
+            }
+
+            $products[$productId]['total_purchased'] += $purchasedQuantity;
+            $products[$productId]['total_used'] += min($usedQuantity, $purchasedQuantity);
+            $products[$productId]['available_quantity'] += $availableQuantity;
+            $products[$productId]['sale_items'][] = [
+                'sale_item_id' => (int) $saleItem->id,
+                'available_quantity' => $availableQuantity,
+            ];
+        }
+
+        uasort($products, fn (array $first, array $second) => strcasecmp($first['product_name'], $second['product_name']));
+
+        return array_values($products);
     }
 
     protected function resetReadingForm(): void
@@ -177,12 +400,26 @@ class FilterView extends Component
         ];
     }
 
+    protected function resetMaintenanceForm(array $selectedCandles = []): void
+    {
+        $this->maintenanceForm = [
+            'selected_candles' => $selectedCandles,
+            'technician_name' => '',
+            'replaced_at' => now()->format('Y-m-d\TH:i'),
+            'cost' => '',
+            'description' => '',
+            'items' => [],
+        ];
+    }
+
     public function render()
     {
         return view('livewire.filters.filter-view', [
             'readings' => $this->readings,
             'candles' => $this->candles,
-            'candleChanges' => $this->candleChanges,
+            'maintenances' => $this->maintenances,
+            'maintenanceProducts' => $this->maintenanceProducts,
+            'canManageCreatedAt' => $this->canManageCreatedAt,
             'waterQualityOptions' => WaterQualityTypeEnum::cases(),
         ]);
     }

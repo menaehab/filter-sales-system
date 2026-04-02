@@ -13,8 +13,7 @@ final class UpdateWaterFilterAction
         $filter->update([
             'filter_model' => $data['filter_model'],
             'address' => $data['address'] ?? null,
-            'install_date' => $data['install_date'] ?? null,
-            'next_maintenance_date' => $data['next_maintenance_date'] ?? null,
+            'installed_at' => $data['installed_at'] ?? null,
             'customer_id' => (int) $data['customer_id'],
         ]);
 

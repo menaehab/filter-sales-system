@@ -10,7 +10,7 @@ class CreateSaleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->canAny(['manage_sales', 'add_sales']) ?? false;
     }
 
     public function rules(): array
