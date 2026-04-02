@@ -14,6 +14,7 @@ use App\Models\SaleItem;
 use App\Models\WaterFilter;
 use App\Models\WaterReading;
 use App\Support\SalePriceCalculator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -57,6 +58,8 @@ final class CreateSaleAction
             $installmentAmount,
             $prices
         ) {
+            $createdAt = $this->resolveCreatedAt(data_get($data, 'created_at'));
+
             $sale = Sale::create([
                 'dealer_name' => $data['dealer_name'] ?? null,
                 'user_name' => auth()->user()->name,
@@ -69,10 +72,11 @@ final class CreateSaleAction
                 'with_vat' => (bool) ($data['with_vat'] ?? false),
                 'user_id' => auth()->id(),
                 'customer_id' => $customer->id,
+                'created_at' => $createdAt,
             ]);
 
             $this->createSaleItems($sale, $data['cart']);
-            $this->createPayments($sale, $customer, $downPayment, $appliedCredit, $isInstallment);
+            $this->createPayments($sale, $customer, $downPayment, $appliedCredit, $isInstallment, $createdAt);
 
             if (! empty($data['includeWaterReading']) && $data['includeWaterReading']) {
                 $this->createWaterReading($data, $customer);
@@ -134,7 +138,8 @@ final class CreateSaleAction
         Customer $customer,
         float $downPayment,
         float $appliedCredit,
-        bool $isInstallment
+        bool $isInstallment,
+        Carbon $createdAt
     ): void {
         if ($downPayment > 0) {
             $payment = CustomerPayment::create([
@@ -143,6 +148,7 @@ final class CreateSaleAction
                 'note' => $isInstallment ? __('keywords.down_payment') : __('keywords.cash_payment'),
                 'customer_id' => $customer->id,
                 'user_id' => auth()->id(),
+                'created_at' => $createdAt,
             ]);
 
             CustomerPaymentAllocation::create([
@@ -159,6 +165,7 @@ final class CreateSaleAction
                 'note' => __('keywords.applied_customer_credit'),
                 'customer_id' => $customer->id,
                 'user_id' => auth()->id(),
+                'created_at' => $createdAt,
             ]);
 
             CustomerPaymentAllocation::create([
@@ -167,6 +174,15 @@ final class CreateSaleAction
                 'sale_id' => $sale->id,
             ]);
         }
+    }
+
+    private function resolveCreatedAt(mixed $createdAt): Carbon
+    {
+        if (auth()->user()?->can('manage_created_at') && filled($createdAt)) {
+            return Carbon::parse((string) $createdAt);
+        }
+
+        return Carbon::now();
     }
 
     private function createWaterReading(array $data, Customer $customer): void

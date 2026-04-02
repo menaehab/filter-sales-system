@@ -7,6 +7,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SaleReturn;
 use App\Models\SaleReturnItem;
+use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -309,4 +310,120 @@ it('replaces old return items and movements when product selection changes', fun
         'product_id' => $product2->id,
         'quantity' => '4.00',
     ]);
+});
+
+it('allows setting created_at on sale return edit when user has manage_created_at permission', function () {
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create(['quantity' => 10]);
+
+    $sale = Sale::factory()->create([
+        'user_name' => auth()->user()->name,
+        'total_price' => 100,
+        'payment_type' => 'cash',
+        'user_id' => auth()->id(),
+        'customer_id' => $customer->id,
+    ]);
+
+    SaleItem::factory()->create([
+        'sell_price' => 100,
+        'quantity' => 2,
+        'sale_id' => $sale->id,
+        'product_id' => $product->id,
+    ]);
+
+    $return = SaleReturn::factory()->create([
+        'total_price' => 100,
+        'sale_id' => $sale->id,
+        'user_id' => auth()->id(),
+        'created_at' => '2025-05-01 08:00:00',
+        'updated_at' => '2025-05-01 08:00:00',
+    ]);
+
+    SaleReturnItem::factory()->create([
+        'sell_price' => 100,
+        'quantity' => 1,
+        'sale_return_id' => $return->id,
+        'product_id' => $product->id,
+    ]);
+
+    ProductMovement::create([
+        'quantity' => 1,
+        'movable_type' => SaleReturn::class,
+        'movable_id' => $return->id,
+        'product_id' => $product->id,
+    ]);
+
+    $product->increment('quantity', 1);
+
+    Livewire::test('sale-returns.sale-return-edit', ['saleReturn' => $return])
+        ->assertSeeHtml('name="created_at"')
+        ->set('items.0.selected', true)
+        ->set('items.0.return_quantity', '1')
+        ->set('created_at', '2026-06-20T15:30')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $return->refresh();
+
+    expect($return->created_at->toDateTimeString())->toBe('2026-06-20 15:30:00');
+});
+
+it('ignores created_at on sale return edit when user lacks manage_created_at permission', function () {
+    $limitedUser = User::factory()->create();
+    $limitedUser->givePermissionTo('manage_sale_returns');
+    $this->actingAs($limitedUser);
+
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create(['quantity' => 10]);
+
+    $sale = Sale::factory()->create([
+        'user_name' => $limitedUser->name,
+        'total_price' => 100,
+        'payment_type' => 'cash',
+        'user_id' => $limitedUser->id,
+        'customer_id' => $customer->id,
+    ]);
+
+    SaleItem::factory()->create([
+        'sell_price' => 100,
+        'quantity' => 2,
+        'sale_id' => $sale->id,
+        'product_id' => $product->id,
+    ]);
+
+    $return = SaleReturn::factory()->create([
+        'total_price' => 100,
+        'sale_id' => $sale->id,
+        'user_id' => $limitedUser->id,
+        'created_at' => '2025-07-01 09:00:00',
+        'updated_at' => '2025-07-01 09:00:00',
+    ]);
+
+    SaleReturnItem::factory()->create([
+        'sell_price' => 100,
+        'quantity' => 1,
+        'sale_return_id' => $return->id,
+        'product_id' => $product->id,
+    ]);
+
+    ProductMovement::create([
+        'quantity' => 1,
+        'movable_type' => SaleReturn::class,
+        'movable_id' => $return->id,
+        'product_id' => $product->id,
+    ]);
+
+    $product->increment('quantity', 1);
+
+    Livewire::test('sale-returns.sale-return-edit', ['saleReturn' => $return])
+        ->assertDontSeeHtml('name="created_at"')
+        ->set('items.0.selected', true)
+        ->set('items.0.return_quantity', '1')
+        ->set('created_at', '2026-08-01T11:11')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $return->refresh();
+
+    expect($return->created_at->toDateTimeString())->toBe('2025-07-01 09:00:00');
 });

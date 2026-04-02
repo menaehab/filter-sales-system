@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SaleReturn;
+use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -226,4 +227,75 @@ it('creates customer credit when return is saved without cash refund', function 
     $customer->refresh();
     $this->assertEquals(120.0, (float) $customer->available_credit);
     $this->assertEquals(-120.0, (float) $customer->balance);
+});
+
+it('allows setting created_at on sale return create when user has manage_created_at permission', function () {
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create(['quantity' => 10]);
+
+    $sale = Sale::factory()->create([
+        'user_name' => auth()->user()->name,
+        'total_price' => 100,
+        'payment_type' => 'cash',
+        'user_id' => auth()->id(),
+        'customer_id' => $customer->id,
+    ]);
+
+    SaleItem::factory()->create([
+        'sell_price' => 100,
+        'quantity' => 2,
+        'sale_id' => $sale->id,
+        'product_id' => $product->id,
+    ]);
+
+    Livewire::test('sale-returns.sale-return-create')
+        ->set('sale_number', $sale->number)
+        ->assertSeeHtml('name="created_at"')
+        ->set('items.0.selected', true)
+        ->set('items.0.return_quantity', '1')
+        ->set('created_at', '2026-02-15T14:05')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $return = SaleReturn::sole();
+
+    expect($return->created_at->toDateTimeString())->toBe('2026-02-15 14:05:00');
+});
+
+it('ignores created_at on sale return create when user lacks manage_created_at permission', function () {
+    $limitedUser = User::factory()->create();
+    $limitedUser->givePermissionTo('manage_sale_returns');
+    $this->actingAs($limitedUser);
+
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create(['quantity' => 10]);
+
+    $sale = Sale::factory()->create([
+        'user_name' => $limitedUser->name,
+        'total_price' => 100,
+        'payment_type' => 'cash',
+        'user_id' => $limitedUser->id,
+        'customer_id' => $customer->id,
+    ]);
+
+    SaleItem::factory()->create([
+        'sell_price' => 100,
+        'quantity' => 2,
+        'sale_id' => $sale->id,
+        'product_id' => $product->id,
+    ]);
+
+    Livewire::test('sale-returns.sale-return-create')
+        ->set('sale_number', $sale->number)
+        ->assertDontSeeHtml('name="created_at"')
+        ->set('items.0.selected', true)
+        ->set('items.0.return_quantity', '1')
+        ->set('created_at', '2020-01-01T00:00')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $return = SaleReturn::sole();
+
+    expect($return->created_at->greaterThanOrEqualTo(now()->subMinute()))->toBeTrue();
+    expect($return->created_at->toDateTimeString())->not->toBe('2020-01-01 00:00:00');
 });

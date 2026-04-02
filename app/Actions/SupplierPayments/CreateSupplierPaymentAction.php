@@ -7,7 +7,7 @@ namespace App\Actions\SupplierPayments;
 use App\Models\Purchase;
 use App\Models\SupplierPayment;
 use App\Models\SupplierPaymentAllocation;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 final class CreateSupplierPaymentAction
@@ -35,6 +35,7 @@ final class CreateSupplierPaymentAction
                 'note' => $data['note'] ?? null,
                 'supplier_id' => $purchase->supplier_id,
                 'user_id' => auth()->id(),
+                'created_at' => $this->resolveCreatedAt(data_get($data, 'created_at')),
             ]);
 
             foreach ($allocations as $allocation) {
@@ -64,6 +65,15 @@ final class CreateSupplierPaymentAction
         }
 
         return $allocations;
+    }
+
+    private function resolveCreatedAt(mixed $createdAt): Carbon
+    {
+        if (auth()->user()?->can('manage_created_at') && filled($createdAt)) {
+            return Carbon::parse((string) $createdAt);
+        }
+
+        return Carbon::now();
     }
 }
 

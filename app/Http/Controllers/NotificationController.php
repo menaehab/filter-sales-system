@@ -13,9 +13,11 @@ class NotificationController extends Controller
 
         $notification->markAsRead();
 
-        // Log activity
+        // Log activity in trait-style format
         activity()
+            ->performedOn(auth()->user())
             ->causedBy(auth()->user())
+            ->event('activity_read_notification')
             ->withProperties([
                 'notification_id' => $notification->id,
                 'notification_type' => data_get($notification->data, 'type'),
@@ -39,9 +41,11 @@ class NotificationController extends Controller
 
         auth()->user()->unreadNotifications->markAsRead();
 
-        // Log activity
+        // Log activity in trait-style format
         activity()
+            ->performedOn(auth()->user())
             ->causedBy(auth()->user())
+            ->event('activity_read_all_notifications')
             ->withProperties([
                 'marked_count' => $unreadCount,
             ])
@@ -60,9 +64,11 @@ class NotificationController extends Controller
     {
         $notification = auth()->user()->notifications()->findOrFail($id);
 
-        // Log activity before deletion
+        // Log activity in trait-style format
         activity()
+            ->performedOn(auth()->user())
             ->causedBy(auth()->user())
+            ->event('activity_delete_notification')
             ->withProperties([
                 'notification_id' => $notification->id,
                 'notification_type' => data_get($notification->data, 'type'),
@@ -87,9 +93,11 @@ class NotificationController extends Controller
         $notifications = auth()->user()->readNotifications;
         $deletedCount = $notifications->count();
 
-        // Log activity
+        // Log activity in trait-style format
         activity()
+            ->performedOn(auth()->user())
             ->causedBy(auth()->user())
+            ->event('activity_delete_all_read_notifications')
             ->withProperties([
                 'deleted_count' => $deletedCount,
             ])
@@ -111,9 +119,11 @@ class NotificationController extends Controller
         $notifications = auth()->user()->notifications;
         $deletedCount = $notifications->count();
 
-        // Log activity
+        // Log activity in trait-style format
         activity()
+            ->performedOn(auth()->user())
             ->causedBy(auth()->user())
+            ->event('activity_delete_all_notifications')
             ->withProperties([
                 'deleted_count' => $deletedCount,
             ])

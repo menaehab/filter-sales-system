@@ -29,6 +29,8 @@ class SaleCreate extends Component
 
     public bool $printAfterSave = false;
 
+    public string $created_at = '';
+
     public array $newCustomer = [
         'name' => '',
         'place_id' => '',
@@ -40,6 +42,16 @@ class SaleCreate extends Component
     public array $newPlace = [
         'name' => '',
     ];
+
+    public function mount(): void
+    {
+        $this->created_at = now()->format('Y-m-d\TH:i');
+    }
+
+    public function getCanManageCreatedAtProperty(): bool
+    {
+        return (bool) auth()->user()?->can('manage_created_at');
+    }
 
     public function updatedPaymentType(string $value): void
     {
@@ -613,6 +625,7 @@ class SaleCreate extends Component
             'customers' => $this->customers,
             'waterQualityOptions' => WaterQualityTypeEnum::cases(),
             'customerFilters' => $this->customerFilters,
+            'canManageCreatedAt' => $this->canManageCreatedAt,
         ]);
     }
 }

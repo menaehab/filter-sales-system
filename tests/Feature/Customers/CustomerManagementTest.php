@@ -2,6 +2,7 @@
 
 use App\Models\Customer;
 use App\Models\Place;
+use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -57,4 +58,24 @@ it('updates customer place', function () {
         'id' => $customer->id,
         'place_id' => $newPlace->id,
     ]);
+});
+
+it('does not show customers in other places when user has view_only_customers_in_his_places permission', function () {
+    (new \Database\Seeders\PermissionSeeder)->run();
+
+    $placeA = Place::factory()->create(['name' => 'Place A']);
+    $placeB = Place::factory()->create(['name' => 'Place B']);
+
+    $user = User::factory()->create();
+    $user->givePermissionTo('view_only_customers_in_his_places');
+    $user->places()->attach($placeA->id);
+
+    $this->actingAs($user);
+
+    Customer::factory()->create(['name' => 'Alice', 'place_id' => $placeA->id]);
+    Customer::factory()->create(['name' => 'Bob', 'place_id' => $placeB->id]);
+
+    Livewire::test('customers.customer-management')
+        ->assertSee('Alice')
+        ->assertDontSee('Bob');
 });

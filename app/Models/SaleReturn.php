@@ -20,6 +20,7 @@ class SaleReturn extends Model
         'cash_refund',
         'sale_id',
         'user_id',
+        'created_at',
     ];
 
     public function sale()

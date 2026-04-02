@@ -30,6 +30,7 @@ class Sale extends Model
         'with_vat',
         'customer_id',
         'user_id',
+        'created_at',
     ];
 
     public function customer()

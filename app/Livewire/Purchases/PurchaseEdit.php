@@ -29,6 +29,10 @@ class PurchaseEdit extends Component
 
     public string $installment_months = '';
 
+    public string $created_at = '';
+
+    public array $form = [];
+
     public array $items = [];
 
     public array $newSupplier = [
@@ -58,6 +62,7 @@ class PurchaseEdit extends Component
         $this->payment_type = $purchase->isInstallment() ? 'installment' : 'cash';
         $this->down_payment = (string) $purchase->down_payment;
         $this->installment_months = (string) ($purchase->installment_months ?? '');
+        $this->created_at = $purchase->created_at?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i');
 
         $this->items = $purchase->items->map(fn ($item) => [
             'product_id' => (string) $item->product_id,
@@ -251,6 +256,11 @@ class PurchaseEdit extends Component
         return Category::orderBy('name')->pluck('name', 'id')->all();
     }
 
+    public function getCanManageCreatedAtProperty(): bool
+    {
+        return (bool) auth()->user()?->can('manage_created_at');
+    }
+
     public function update(UpdatePurchaseAction $action): void
     {
         $request = new \App\Http\Requests\Purchases\UpdatePurchaseRequest;
@@ -261,6 +271,7 @@ class PurchaseEdit extends Component
             'payment_type' => $this->payment_type,
             'down_payment' => $this->down_payment,
             'installment_months' => $this->installment_months,
+            'created_at' => $this->created_at,
             'items' => $this->items,
         ];
 
@@ -273,6 +284,8 @@ class PurchaseEdit extends Component
 
     public function render()
     {
-        return view('livewire.purchases.purchase-edit');
+        return view('livewire.purchases.purchase-edit', [
+            'canManageCreatedAt' => $this->canManageCreatedAt,
+        ]);
     }
 }

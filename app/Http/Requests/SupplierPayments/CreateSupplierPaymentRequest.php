@@ -23,6 +23,7 @@ class CreateSupplierPaymentRequest extends FormRequest
             'amount' => ['required', 'numeric', 'min:0.01'],
             'payment_method' => ['required', 'in:'.implode(',', array_column(PaymentMethodEnum::cases(), 'value'))],
             'note' => ['nullable', 'string', 'max:255'],
+            'created_at' => ['nullable', 'date'],
         ];
     }
 
@@ -32,6 +33,7 @@ class CreateSupplierPaymentRequest extends FormRequest
             'purchase_id' => __('keywords.purchase'),
             'payment_method' => __('keywords.payment_method'),
             'amount' => __('keywords.amount'),
+            'created_at' => __('keywords.created_at'),
         ];
     }
 }

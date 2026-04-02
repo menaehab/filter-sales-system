@@ -18,6 +18,7 @@ class SendFilterCandleReminders extends Command
 
     public function handle()
     {
+        /** @var \Illuminate\Support\Collection<int, WaterFilter> $filters */
         $filters = WaterFilter::with(['customer', 'readings'])
             ->whereNotNull('installed_at')
             ->get();
@@ -28,10 +29,13 @@ class SendFilterCandleReminders extends Command
             return;
         }
 
-        $admins = User::all();
+        /** @var \Illuminate\Support\Collection<int, User> $users */
+        $users = User::all()
+            ->filter(fn (User $user): bool => $user->can('receive_filter_candle_notifications'))
+            ->values();
 
-        if ($admins->isEmpty()) {
-            $this->warn('No users found to notify.');
+        if ($users->isEmpty()) {
+            $this->warn('No users with filter candle notification permission found.');
 
             return;
         }
@@ -44,8 +48,8 @@ class SendFilterCandleReminders extends Command
             $candlesToNotify = $this->getCandlesNeedingNotification($filter, $now, $warningDays);
 
             foreach ($candlesToNotify as $candle) {
-                foreach ($admins as $admin) {
-                    $admin->notify(new FilterCandleNotification(
+                foreach ($users as $user) {
+                    $user->notify(new FilterCandleNotification(
                         $filter,
                         $candle['name'],
                         $candle['due_date']
@@ -55,13 +59,14 @@ class SendFilterCandleReminders extends Command
 
                 // Log activity for each candle notification
                 activity()
+                    ->event('activity_send_filter_candle_reminder')
                     ->withProperties([
                         'filter_id' => $filter->id,
                         'filter_model' => $filter->filter_model,
                         'customer_name' => $filter->customer?->name,
                         'candle_name' => $candle['name'],
                         'due_date' => $candle['due_date'],
-                        'notified_users_count' => $admins->count(),
+                        'notified_users_count' => $users->count(),
                     ])
                     ->log(__('keywords.activity_send_filter_candle_reminder'));
             }

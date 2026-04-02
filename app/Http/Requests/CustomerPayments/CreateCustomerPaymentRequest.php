@@ -22,6 +22,7 @@ class CreateCustomerPaymentRequest extends FormRequest
             'sale_id' => ['required', 'exists:sales,id'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'payment_method' => ['required', 'in:'.implode(',', array_column(PaymentMethodEnum::cases(), 'value'))],
+            'created_at' => ['nullable', 'date'],
         ];
     }
 
@@ -31,6 +32,7 @@ class CreateCustomerPaymentRequest extends FormRequest
             'sale_id' => __('keywords.sale'),
             'payment_method' => __('keywords.payment_method'),
             'amount' => __('keywords.amount'),
+            'created_at' => __('keywords.created_at'),
         ];
     }
 }

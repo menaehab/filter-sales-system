@@ -17,6 +17,7 @@ class CreatePurchaseReturnRequest extends FormRequest
             'purchase_id' => ['required', 'exists:purchases,id'],
             'reason' => ['nullable', 'string', 'max:1000'],
             'cash_refund' => ['boolean'],
+            'created_at' => ['nullable', 'date'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.purchase_item_id' => ['required', 'exists:purchase_items,id'],
             'items.*.return_quantity' => ['required', 'integer', 'min:1', 'lte:items.*.available_quantity'],
@@ -30,6 +31,7 @@ class CreatePurchaseReturnRequest extends FormRequest
             'purchase_id' => __('keywords.purchase'),
             'reason' => __('keywords.reason'),
             'cash_refund' => __('keywords.cash_refund'),
+            'created_at' => __('keywords.created_at'),
             'items.*.purchase_item_id' => __('keywords.purchase_item'),
             'items.*.return_quantity' => __('keywords.return_quantity'),
         ];

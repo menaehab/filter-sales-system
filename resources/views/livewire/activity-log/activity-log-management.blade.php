@@ -75,7 +75,6 @@
     <x-data-table :searchable="false" :paginated="false" :headers="[
         ['label' => __('keywords.activity_type'), 'key' => 'event'],
         ['label' => __('keywords.model_type'), 'key' => 'subject_type'],
-        ['label' => 'ID', 'key' => 'subject_id'],
         ['label' => __('keywords.performed_by'), 'key' => 'causer'],
         ['label' => __('keywords.date'), 'key' => 'created_at'],
         ['label' => __('keywords.actions'), 'key' => 'actions', 'sortable' => false],
@@ -83,6 +82,7 @@
 
 
         @forelse($this->activities as $activity)
+
             <tr class="transition-colors hover:bg-gray-50" wire:key="activity-{{ $activity->id }}">
                 {{-- Activity Type --}}
                 <td class="whitespace-nowrap px-5 py-4">
@@ -91,6 +91,17 @@
                             'created' => 'emerald',
                             'updated' => 'blue',
                             'deleted' => 'rose',
+                            'activity_read_notification', 'activity_read_all_notifications' => 'blue',
+                            'activity_delete_notification',
+                            'activity_delete_all_read_notifications',
+                            'activity_delete_all_notifications'
+                                => 'rose',
+                            'activity_send_customer_installment_reminder',
+                            'activity_send_supplier_installment_reminder',
+                            'activity_send_filter_candle_reminder',
+                            'activity_send_low_stock_alert'
+                                => 'amber',
+                            'activity_mark_filter_candle_replaced' => 'teal',
                             default => 'gray',
                         };
                     @endphp
@@ -103,12 +114,6 @@
                         {{ $this->translateModelType($activity->subject_type) }}
                     </span>
                 </td>
-
-                {{-- Subject ID --}}
-                <td class="px-5 py-4">
-                    <span class="text-sm text-gray-600">{{ $activity->subject_id ?? '-' }}</span>
-                </td>
-
                 {{-- Performed By --}}
                 <td class="px-5 py-4">
                     <span class="text-sm text-gray-700">{{ $activity->causer?->name ?? __('keywords.system') }}</span>
@@ -152,10 +157,10 @@
                                             </thead>
                                             <tbody>
                                                 @foreach ($activity->properties['old'] as $key => $value)
-                                                    @if (!($key == 'slug') && !($key == 'updated_at'))
+                                                    @if (!($key == 'slug') && !($key == 'updated_at') && !($key == 'id') && !\Illuminate\Support\Str::endsWith($key, '_id'))
                                                         <tr class="border-b border-rose-100 align-top last:border-b-0">
                                                             <td class="py-2 pe-3 font-medium text-gray-700">
-                                                                {{ $this->translateAttributeLabel($key) }}</td>
+                                                                {{ __('keywords.' . $key) }}</td>
                                                             <td class="py-2 wrap-break-word text-gray-700">
                                                                 {{ $this->formatAttributeValue($value) }}
                                                             </td>
@@ -183,11 +188,11 @@
                                             </thead>
                                             <tbody>
                                                 @foreach ($activity->properties['attributes'] as $key => $value)
-                                                    @if (!($key == 'slug') && !($key == 'updated_at'))
+                                                    @if (!($key == 'slug') && !($key == 'updated_at') && !($key == 'id') && !\Illuminate\Support\Str::endsWith($key, '_id'))
                                                         <tr
                                                             class="border-b border-emerald-100 align-top last:border-b-0">
                                                             <td class="py-2 pe-3 font-medium text-gray-700">
-                                                                {{ $this->translateAttributeLabel($key) }}</td>
+                                                                {{ __('keywords.' . $key) }}</td>
                                                             <td class="py-2 wrap-break-word text-gray-700">
                                                                 {{ $this->formatAttributeValue($value) }}
                                                             </td>

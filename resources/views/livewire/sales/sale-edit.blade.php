@@ -71,6 +71,11 @@
                     <x-input name="dealer_name" label="{{ __('keywords.dealer_name') }}"
                         placeholder="{{ __('keywords.enter_dealer_name') }}" wire:model.live="dealer_name"
                         type="text" maxlength="255" />
+
+                    @if ($canManageCreatedAt)
+                        <x-input type="datetime-local" name="created_at" label="{{ __('keywords.created_at') }}"
+                            wire:model.live="created_at" />
+                    @endif
                 </div>
             </div>
         </div>

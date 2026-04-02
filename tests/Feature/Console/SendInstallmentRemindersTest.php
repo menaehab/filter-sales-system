@@ -102,7 +102,7 @@ it('sends reminders to admin users for due unpaid installments only', function (
         'purchase_id' => $fullyPaidPurchase->id,
     ]);
 
-    $this->artisan('installments:remind')
+    $this->artisan('suppliers:installments-remind')
         ->expectsOutput('Sent reminders for 1 installment(s).')
         ->assertExitCode(0);
 
@@ -141,7 +141,7 @@ it('reports when there are no installments due', function () {
         'updated_at' => now()->subDays(10),
     ])->saveQuietly();
 
-    $this->artisan('installments:remind')
+    $this->artisan('suppliers:installments-remind')
         ->expectsOutput('No installments due.')
         ->assertExitCode(0);
 

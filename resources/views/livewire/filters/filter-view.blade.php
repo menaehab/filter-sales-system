@@ -329,6 +329,11 @@
                         <p class="text-xs text-red-600">{{ $message }}</p>
                     @enderror
 
+                    @if ($canManageCreatedAt)
+                        <x-input type="datetime-local" name="readingForm.created_at"
+                            label="{{ __('keywords.created_at') }}" wire:model.live="readingForm.created_at" />
+                    @endif
+
                     @if (!$filter->installed_at && $readingForm['before_installment'])
                         <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
                             <i class="fas fa-info-circle me-1"></i>

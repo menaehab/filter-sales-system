@@ -19,6 +19,7 @@ class SupplierPayment extends Model
         'note',
         'user_id',
         'supplier_id',
+        'created_at',
     ];
 
     public function supplier()

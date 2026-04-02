@@ -53,6 +53,11 @@ class PermissionSeeder extends Seeder
             'view_places',
             'manage_places',
             'manage_created_at',
+            'view_only_customers_in_his_places',
+            'receive_customer_installment_notifications',
+            'receive_supplier_installment_notifications',
+            'receive_low_stock_notifications',
+            'receive_filter_candle_notifications',
         ];
 
         foreach ($permissions as $permission) {

@@ -21,8 +21,15 @@ class PurchaseReturnCreate extends Component
 
     public bool $cash_refund = false;
 
+    public string $created_at = '';
+
     /** @var array<int, array{product_id: int, product_name: string, cost_price: string, available_quantity: float, return_quantity: string, selected: bool}> */
     public array $items = [];
+
+    public function mount(): void
+    {
+        $this->created_at = now()->format('Y-m-d\TH:i');
+    }
 
     public function updatedPurchaseNumber(): void
     {
@@ -91,6 +98,7 @@ class PurchaseReturnCreate extends Component
             'items' => $this->items,
             'reason' => $this->reason,
             'cash_refund' => $this->cash_refund,
+            'created_at' => $this->created_at,
         ];
 
         $validator = \Illuminate\Support\Facades\Validator::make(
@@ -111,6 +119,7 @@ class PurchaseReturnCreate extends Component
             'items' => $this->items,
             'reason' => $validated['reason'] ?? '',
             'cash_refund' => $validated['cash_refund'] ?? false,
+            'created_at' => $validated['created_at'] ?? null,
         ]);
 
         session()->flash('success', __('keywords.purchase_return_created'));
@@ -124,8 +133,15 @@ class PurchaseReturnCreate extends Component
         $this->resetErrorBag('purchase_number');
     }
 
+    public function getCanManageCreatedAtProperty(): bool
+    {
+        return (bool) auth()->user()?->can('manage_created_at');
+    }
+
     public function render()
     {
-        return view('livewire.purchase-returns.purchase-return-create');
+        return view('livewire.purchase-returns.purchase-return-create', [
+            'canManageCreatedAt' => $this->canManageCreatedAt,
+        ]);
     }
 }

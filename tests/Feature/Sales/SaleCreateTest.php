@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\WaterFilter;
 use App\Models\WaterReading;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 
@@ -131,6 +132,73 @@ it('creates an installment sale with down payment and next installment date', fu
     ]);
 
     Carbon::setTestNow();
+});
+
+it('allows setting created_at on sale create when user has manage_created_at permission', function () {
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create([
+        'cost_price' => 40,
+        'quantity' => 5,
+    ]);
+
+    Livewire::test('sales.sale-create')
+        ->assertSeeHtml('name="created_at"')
+        ->set('customer_id', $customer->id)
+        ->set('payment_type', 'cash')
+        ->set('created_at', '2026-01-10T09:30')
+        ->set('cart', [[
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'category_name' => 'Filters',
+            'cost_price' => '40',
+            'sell_price' => '70',
+            'available_quantity' => 5,
+            'quantity' => '2',
+        ]])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $sale = Sale::sole();
+    $payment = CustomerPayment::sole();
+
+    expect($sale->created_at->toDateTimeString())->toBe('2026-01-10 09:30:00');
+    expect($payment->created_at->toDateTimeString())->toBe('2026-01-10 09:30:00');
+});
+
+it('ignores created_at on sale create when user lacks manage_created_at permission', function () {
+    $limitedUser = User::factory()->create();
+    $limitedUser->givePermissionTo('manage_sales');
+    $this->actingAs($limitedUser);
+
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create([
+        'cost_price' => 30,
+        'quantity' => 5,
+    ]);
+
+    Livewire::test('sales.sale-create')
+        ->assertDontSeeHtml('name="created_at"')
+        ->set('customer_id', $customer->id)
+        ->set('payment_type', 'cash')
+        ->set('created_at', '2020-01-01T00:00')
+        ->set('cart', [[
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'category_name' => 'Filters',
+            'cost_price' => '30',
+            'sell_price' => '55',
+            'available_quantity' => 5,
+            'quantity' => '1',
+        ]])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $sale = Sale::sole();
+    $payment = CustomerPayment::sole();
+
+    expect($sale->created_at->greaterThanOrEqualTo(now()->subMinute()))->toBeTrue();
+    expect($sale->created_at->toDateTimeString())->not->toBe('2020-01-01 00:00:00');
+    expect($payment->created_at->toDateTimeString())->not->toBe('2020-01-01 00:00:00');
 });
 
 it('validates sale fields before saving', function () {

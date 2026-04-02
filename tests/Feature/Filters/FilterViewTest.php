@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use App\Enums\WaterQualityTypeEnum;
 use App\Models\Customer;
@@ -52,6 +52,58 @@ it('creates a water reading', function () {
         'water_quality' => WaterQualityTypeEnum::GOOD->value,
         'water_filter_id' => $filter->id,
     ]);
+});
+
+it('allows setting reading created_at when user has manage_created_at permission', function () {
+    $customer = Customer::factory()->create();
+    $filter = WaterFilter::create([
+        'filter_model' => 'Model Created At',
+        'address' => 'Address Created At',
+        'customer_id' => $customer->id,
+    ]);
+
+    Livewire::test('filters.filter-view', ['filter' => $filter])
+        ->assertSeeHtml('name="readingForm.created_at"')
+        ->set('readingForm.technician_name', 'Created At Tech')
+        ->set('readingForm.tds', 200)
+        ->set('readingForm.water_quality', WaterQualityTypeEnum::FAIR->value)
+        ->set('readingForm.created_at', '2026-07-07T09:25')
+        ->call('createReading')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('water_readings', [
+        'water_filter_id' => $filter->id,
+        'technician_name' => 'Created At Tech',
+        'created_at' => '2026-07-07 09:25:00',
+    ]);
+});
+
+it('ignores reading created_at when user lacks manage_created_at permission', function () {
+    $limitedUser = User::factory()->create();
+    $limitedUser->givePermissionTo('manage_water_filters');
+    $this->actingAs($limitedUser);
+
+    $customer = Customer::factory()->create();
+    $filter = WaterFilter::create([
+        'filter_model' => 'Model No Permission',
+        'address' => 'Address No Permission',
+        'customer_id' => $customer->id,
+    ]);
+
+    Livewire::test('filters.filter-view', ['filter' => $filter])
+        ->assertDontSeeHtml('name="readingForm.created_at"')
+        ->set('readingForm.technician_name', 'No Permission Tech')
+        ->set('readingForm.tds', 180)
+        ->set('readingForm.water_quality', WaterQualityTypeEnum::GOOD->value)
+        ->set('readingForm.created_at', '2020-01-01T00:00')
+        ->call('createReading')
+        ->assertHasNoErrors();
+
+    $reading = $filter->readings()->latest('id')->first();
+
+    expect($reading)->not->toBeNull();
+    expect($reading->created_at->greaterThanOrEqualTo(now()->subMinute()))->toBeTrue();
+    expect($reading->created_at->toDateTimeString())->not->toBe('2020-01-01 00:00:00');
 });
 
 it('validates required water reading fields', function () {

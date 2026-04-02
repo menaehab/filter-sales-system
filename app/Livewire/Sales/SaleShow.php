@@ -20,6 +20,8 @@ class SaleShow extends Component
 
     public string $payNote = '';
 
+    public string $payCreatedAt = '';
+
     public ?int $payFromSaleId = null;
 
     public bool $printAfterPayment = false;
@@ -51,6 +53,7 @@ class SaleShow extends Component
 
         $this->payMethod = 'cash';
         $this->payNote = '';
+        $this->payCreatedAt = now()->format('Y-m-d\TH:i');
         $this->dispatch('open-modal-pay-sale');
     }
 
@@ -58,13 +61,24 @@ class SaleShow extends Component
     {
         $this->authorizePaySales();
 
-        $this->validate([
-            'payAmount' => 'required|numeric|min:0.01',
-            'payMethod' => 'required|string',
-        ], [], [
-            'payAmount' => __('keywords.amount'),
-            'payMethod' => __('keywords.payment_method'),
-        ]);
+        $request = new \App\Http\Requests\CustomerPayments\CreateCustomerPaymentRequest;
+
+        $formData = [
+            'sale_id' => $this->paySaleId,
+            'amount' => $this->payAmount,
+            'payment_method' => $this->payMethod,
+            'note' => $this->payNote,
+            'created_at' => $this->payCreatedAt,
+        ];
+
+        $validator = \Illuminate\Support\Facades\Validator::make(
+            $formData,
+            $request->rules(),
+            $request->messages(),
+            $request->attributes()
+        );
+
+        $validated = $validator->validate();
 
         $sale = Sale::with('paymentAllocations')->findOrFail($this->sale->id);
 
@@ -73,9 +87,10 @@ class SaleShow extends Component
         }
 
         $payment = $action->execute($sale->id, [
-            'amount' => $this->payAmount,
-            'payment_method' => $this->payMethod,
+            'amount' => $validated['amount'],
+            'payment_method' => $validated['payment_method'],
             'note' => $this->payNote ?: null,
+            'created_at' => $validated['created_at'] ?? null,
         ]);
 
         if (! $payment) {
@@ -106,7 +121,13 @@ class SaleShow extends Component
         $this->payAmount = '';
         $this->payMethod = 'cash';
         $this->payNote = '';
+        $this->payCreatedAt = '';
         $this->printAfterPayment = false;
+    }
+
+    public function getCanManageCreatedAtProperty(): bool
+    {
+        return (bool) auth()->user()?->can('manage_created_at');
     }
 
     protected function authorizePaySales(): void
@@ -118,6 +139,7 @@ class SaleShow extends Component
     {
         return view('livewire.sales.sale-show', [
             'sale' => $this->sale,
+            'canManageCreatedAt' => $this->canManageCreatedAt,
         ]);
     }
 }

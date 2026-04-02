@@ -9,6 +9,7 @@ use App\Models\ProductMovement;
 use App\Models\Purchase;
 use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 final class CreatePurchaseReturnAction
@@ -26,6 +27,7 @@ final class CreatePurchaseReturnAction
                 'cash_refund' => (bool) ($data['cash_refund'] ?? false),
                 'purchase_id' => $purchase->id,
                 'user_id' => auth()->id(),
+                'created_at' => $this->resolveCreatedAt(data_get($data, 'created_at')),
             ]);
 
             $this->createReturnItems($purchaseReturn, $data['items']);
@@ -67,5 +69,14 @@ final class CreatePurchaseReturnAction
                 'product_id' => $item['product_id'],
             ]);
         }
+    }
+
+    private function resolveCreatedAt(mixed $createdAt): Carbon
+    {
+        if (auth()->user()?->can('manage_created_at') && filled($createdAt)) {
+            return Carbon::parse((string) $createdAt);
+        }
+
+        return Carbon::now();
     }
 }

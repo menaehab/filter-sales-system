@@ -11,7 +11,6 @@ use App\Livewire\Traits\HasForm;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Purchase;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -38,6 +37,8 @@ class PurchaseManagement extends Component
     public string $payMethod = 'cash';
 
     public string $payNote = '';
+
+    public string $payCreatedAt = '';
 
     public ?int $payFromPurchaseId = null;
 
@@ -146,6 +147,7 @@ class PurchaseManagement extends Component
 
         $this->payMethod = 'cash';
         $this->payNote = '';
+        $this->payCreatedAt = now()->format('Y-m-d\TH:i');
         $this->dispatch('open-modal-pay-purchase');
     }
 
@@ -161,6 +163,7 @@ class PurchaseManagement extends Component
             'amount' => $this->payAmount,
             'payment_method' => $this->payMethod,
             'note' => $this->payNote,
+            'created_at' => $this->payCreatedAt,
         ];
 
         $validator = \Illuminate\Support\Facades\Validator::make($formData, $request->rules(), $request->messages(), $request->attributes());
@@ -171,6 +174,7 @@ class PurchaseManagement extends Component
             'amount' => $validated['amount'],
             'payment_method' => $validated['payment_method'],
             'note' => $validated['note'] ?? null,
+            'created_at' => $validated['created_at'] ?? null,
         ]);
 
         $printAfterPayment = $this->printAfterPayment;
@@ -191,7 +195,13 @@ class PurchaseManagement extends Component
         $this->payAmount = '';
         $this->payMethod = 'cash';
         $this->payNote = '';
+        $this->payCreatedAt = '';
         $this->printAfterPayment = false;
+    }
+
+    public function getCanManageCreatedAtProperty(): bool
+    {
+        return (bool) auth()->user()?->can('manage_created_at');
     }
 
     protected function authorizeManagePurchases(): void
@@ -224,6 +234,8 @@ class PurchaseManagement extends Component
 
     public function render()
     {
-        return view('livewire.purchases.purchase-management');
+        return view('livewire.purchases.purchase-management', [
+            'canManageCreatedAt' => $this->canManageCreatedAt,
+        ]);
     }
 }

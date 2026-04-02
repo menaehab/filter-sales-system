@@ -20,6 +20,12 @@ class CustomerView extends Component
     public function mount(Customer $customer): void
     {
         $this->customer = $customer;
+
+        if (auth()->user()->can('view_only_customers_in_his_places')) {
+            if (! auth()->user()->places->pluck('id')->contains($customer->place_id)) {
+                abort(403);
+            }
+        }
     }
 
     public function setActiveTab(string $tab): void

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductMovement;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -158,4 +159,86 @@ it('validates edited sale data before updating', function () {
             'items.0.sell_price' => 'required',
             'items.0.quantity' => 'required',
         ]);
+});
+
+it('allows setting created_at on sale edit when user has manage_created_at permission', function () {
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create([
+        'quantity' => 10,
+    ]);
+
+    $sale = Sale::create([
+        'dealer_name' => 'Dealer',
+        'user_name' => auth()->user()->name,
+        'total_price' => 100,
+        'payment_type' => 'cash',
+        'user_id' => auth()->id(),
+        'customer_id' => $customer->id,
+        'created_at' => '2025-01-01 08:00:00',
+        'updated_at' => '2025-01-01 08:00:00',
+    ]);
+
+    SaleItem::create([
+        'sell_price' => 50,
+        'cost_price' => 40,
+        'quantity' => 2,
+        'sale_id' => $sale->id,
+        'product_id' => $product->id,
+    ]);
+
+    $product->decrement('quantity', 2);
+
+    Livewire::test('sales.sale-edit', ['sale' => $sale])
+        ->assertSeeHtml('name="created_at"')
+        ->set('items.0.quantity', '2')
+        ->set('created_at', '2026-02-02T11:22')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $sale->refresh();
+
+    expect($sale->created_at->toDateTimeString())->toBe('2026-02-02 11:22:00');
+});
+
+it('ignores created_at on sale edit when user lacks manage_created_at permission', function () {
+    $limitedUser = User::factory()->create();
+    $limitedUser->givePermissionTo('manage_sales');
+    $this->actingAs($limitedUser);
+
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create([
+        'quantity' => 10,
+    ]);
+
+    $sale = Sale::create([
+        'dealer_name' => 'Dealer',
+        'user_name' => $limitedUser->name,
+        'total_price' => 100,
+        'payment_type' => 'cash',
+        'user_id' => $limitedUser->id,
+        'customer_id' => $customer->id,
+        'created_at' => '2025-03-05 10:00:00',
+        'updated_at' => '2025-03-05 10:00:00',
+    ]);
+
+    SaleItem::create([
+        'sell_price' => 50,
+        'cost_price' => 40,
+        'quantity' => 2,
+        'sale_id' => $sale->id,
+        'product_id' => $product->id,
+    ]);
+
+    $product->decrement('quantity', 2);
+
+    Livewire::test('sales.sale-edit', ['sale' => $sale])
+        ->assertDontSeeHtml('name="created_at"')
+        ->set('items.0.quantity', '2')
+        ->set('created_at', '2026-04-10T09:45')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $sale->refresh();
+
+    expect($sale->created_at->toDateTimeString())->toBe('2025-03-05 10:00:00');
 });

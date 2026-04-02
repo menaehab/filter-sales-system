@@ -15,6 +15,7 @@ class WaterReading extends Model
         'water_quality',
         'before_installment',
         'water_filter_id',
+        'created_at',
     ];
 
     protected $casts = [

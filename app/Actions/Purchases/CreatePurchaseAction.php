@@ -11,6 +11,7 @@ use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use App\Models\SupplierPaymentAllocation;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 final class CreatePurchaseAction
@@ -40,6 +41,8 @@ final class CreatePurchaseAction
             $installmentAmount,
             $appliedCredit
         ) {
+            $createdAt = $this->resolveCreatedAt(data_get($data, 'created_at'));
+
             $purchase = Purchase::create([
                 'supplier_name' => $supplier->name,
                 'user_name' => auth()->user()->name,
@@ -49,10 +52,11 @@ final class CreatePurchaseAction
                 'installment_months' => $months,
                 'user_id' => auth()->id(),
                 'supplier_id' => $supplier->id,
+                'created_at' => $createdAt,
             ]);
 
             $this->createPurchaseItems($purchase, $data['items']);
-            $this->createPayments($purchase, $supplier, $downPayment, $appliedCredit, $isInstallment);
+            $this->createPayments($purchase, $supplier, $downPayment, $appliedCredit, $isInstallment, $createdAt);
 
             return $purchase;
         });
@@ -98,7 +102,8 @@ final class CreatePurchaseAction
         Supplier $supplier,
         float $downPayment,
         float $appliedCredit,
-        bool $isInstallment
+        bool $isInstallment,
+        Carbon $createdAt
     ): void {
         if ($downPayment > 0) {
             $payment = SupplierPayment::create([
@@ -107,6 +112,7 @@ final class CreatePurchaseAction
                 'note' => $isInstallment ? __('keywords.down_payment') : __('keywords.cash_payment'),
                 'supplier_id' => $supplier->id,
                 'user_id' => auth()->id(),
+                'created_at' => $createdAt,
             ]);
 
             SupplierPaymentAllocation::create([
@@ -123,6 +129,7 @@ final class CreatePurchaseAction
                 'note' => __('keywords.applied_supplier_credit'),
                 'supplier_id' => $supplier->id,
                 'user_id' => auth()->id(),
+                'created_at' => $createdAt,
             ]);
 
             SupplierPaymentAllocation::create([
@@ -131,5 +138,14 @@ final class CreatePurchaseAction
                 'purchase_id' => $purchase->id,
             ]);
         }
+    }
+
+    private function resolveCreatedAt(mixed $createdAt): Carbon
+    {
+        if (auth()->user()?->can('manage_created_at') && filled($createdAt)) {
+            return Carbon::parse((string) $createdAt);
+        }
+
+        return Carbon::now();
     }
 }

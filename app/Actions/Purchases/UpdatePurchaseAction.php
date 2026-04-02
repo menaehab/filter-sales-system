@@ -9,6 +9,8 @@ use App\Models\ProductMovement;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Supplier;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 final class UpdatePurchaseAction
@@ -41,12 +43,22 @@ final class UpdatePurchaseAction
                 'installment_amount' => $installmentAmount,
                 'installment_months' => $months,
                 'supplier_id' => $supplier->id,
+                'created_at' => $this->resolveCreatedAt($purchase, data_get($data, 'created_at')),
             ]);
 
             $this->createNewItems($purchase, $data['items']);
 
             return $purchase->fresh();
         });
+    }
+
+    private function resolveCreatedAt(Purchase $purchase, mixed $createdAt): CarbonInterface
+    {
+        if (auth()->user()?->can('manage_created_at') && filled($createdAt)) {
+            return Carbon::parse((string) $createdAt);
+        }
+
+        return $purchase->created_at;
     }
 
     private function calculateTotalPrice(array $items): float

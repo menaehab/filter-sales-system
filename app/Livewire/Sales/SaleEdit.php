@@ -35,6 +35,8 @@ class SaleEdit extends Component
 
     public string $dealer_name = '';
 
+    public string $created_at = '';
+
     /** @var array<int, array{product_id: string, product_name: string, sell_price: string, cost_price: string, quantity: string}> */
     public array $items = [];
 
@@ -54,6 +56,7 @@ class SaleEdit extends Component
         $this->discount = (string) ($sale->discount_value ?? '0');
         $this->with_vat = (bool) ($sale->with_vat ?? false);
         $this->dealer_name = $sale->dealer_name ?? '';
+        $this->created_at = $sale->created_at?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i');
 
         $this->items = $sale->items->map(fn ($item) => [
             'product_id' => (string) $item->product_id,
@@ -233,6 +236,7 @@ class SaleEdit extends Component
             'discount' => 'nullable|numeric|min:0',
             'with_vat' => 'boolean',
             'dealer_name' => 'nullable|string|max:255',
+            'created_at' => 'nullable|date',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.sell_price' => 'required|numeric|min:0.01',
@@ -251,6 +255,7 @@ class SaleEdit extends Component
             'discount' => __('keywords.discount'),
             'with_vat' => __('keywords.apply_vat'),
             'dealer_name' => __('keywords.dealer_name'),
+            'created_at' => __('keywords.created_at'),
         ];
 
         foreach ($this->items as $i => $item) {
@@ -288,8 +293,14 @@ class SaleEdit extends Component
             'discount' => $this->discount,
             'with_vat' => $this->with_vat,
             'dealer_name' => $this->dealer_name,
+            'created_at' => $this->created_at,
             'items' => $this->items,
         ];
+    }
+
+    public function getCanManageCreatedAtProperty(): bool
+    {
+        return (bool) auth()->user()?->can('manage_created_at');
     }
 
     // ==========================================
@@ -313,6 +324,7 @@ class SaleEdit extends Component
         return view('livewire.sales.sale-edit', [
             'customers' => $this->customers,
             'products' => $this->products,
+            'canManageCreatedAt' => $this->canManageCreatedAt,
         ]);
     }
 }

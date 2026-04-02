@@ -21,8 +21,8 @@
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
                     <div>
                         <x-input name="sale_number" label="{{ __('keywords.sale_number') }}"
-                            placeholder="{{ __('keywords.enter_sale_number') }}" wire:model.live.debounce.500ms="sale_number"
-                            required />
+                            placeholder="{{ __('keywords.enter_sale_number') }}"
+                            wire:model.live.debounce.500ms="sale_number" required />
                     </div>
 
                     @if ($this->sale)
@@ -35,15 +35,18 @@
                                 <div class="grid grid-cols-2 gap-2 text-sm">
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.customer') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ $this->sale->customer?->name ?? '—' }}</span>
+                                        <span
+                                            class="font-medium text-gray-900">{{ $this->sale->customer?->name ?? '—' }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.dealer_name') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ $this->sale->dealer_name ?: '—' }}</span>
+                                        <span
+                                            class="font-medium text-gray-900">{{ $this->sale->dealer_name ?: '—' }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.total_price') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ number_format($this->sale->total_price, 2) }}
+                                        <span
+                                            class="font-medium text-gray-900">{{ number_format($this->sale->total_price, 2) }}
                                             {{ __('keywords.currency') }}</span>
                                     </div>
                                     <div>
@@ -114,8 +117,7 @@
                                 <x-input name="items.{{ $index }}.return_quantity"
                                     label="{{ __('keywords.return_quantity') }}" placeholder="0"
                                     wire:model.live="items.{{ $index }}.return_quantity" type="number"
-                                    min="1" step="1" :max="$item['available_quantity']"
-                                    :disabled="!$item['selected']" />
+                                    min="1" step="1" :max="$item['available_quantity']" :disabled="!$item['selected']" />
                             </div>
 
                             {{-- Line Total --}}
@@ -143,6 +145,11 @@
                     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                         <x-textarea name="reason" label="{{ __('keywords.reason') }}" class="col-span-2"
                             placeholder="{{ __('keywords.enter_return_reason') }}" wire:model="reason" />
+
+                        @if ($canManageCreatedAt)
+                            <x-input type="datetime-local" name="created_at" label="{{ __('keywords.created_at') }}"
+                                wire:model.live="created_at" />
+                        @endif
 
                         <div>
                             <label class="mb-1.5 block text-sm font-medium text-gray-700">

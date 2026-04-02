@@ -84,4 +84,18 @@ class Customer extends Model
     {
         return $this->belongsTo(Place::class);
     }
+
+    public function scopeByUserPlaces($query)
+    {
+        $user = auth()->user();
+
+        if (! $user->can('view_only_customers_in_his_places')) {
+
+            return $query;
+        }
+
+        $placeIds = $user->places()->pluck('places.id');
+
+        return $query->whereIn('place_id', $placeIds);
+    }
 }

@@ -10,6 +10,8 @@ use App\Models\ProductMovement;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Support\SalePriceCalculator;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -64,6 +66,7 @@ final class UpdateSaleAction
                 'installment_months' => $isInstallment ? (int) $data['installment_months'] : null,
                 'with_vat' => (bool) ($data['with_vat'] ?? false),
                 'customer_id' => $customer->id,
+                'created_at' => $this->resolveCreatedAt($sale, data_get($data, 'created_at')),
             ]);
 
             // Create new sale items
@@ -97,5 +100,14 @@ final class UpdateSaleAction
 
             return $sale->fresh(['items', 'customer']);
         });
+    }
+
+    private function resolveCreatedAt(Sale $sale, mixed $createdAt): CarbonInterface
+    {
+        if (auth()->user()?->can('manage_created_at') && filled($createdAt)) {
+            return Carbon::parse((string) $createdAt);
+        }
+
+        return $sale->created_at;
     }
 }
