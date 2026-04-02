@@ -11,10 +11,15 @@ class Maintenance extends Model
 
     protected $fillable = [
         'cost',
+        'technician_name',
         'description',
         'user_id',
         'water_filter_id',
         'created_at',
+    ];
+
+    protected $casts = [
+        'cost' => 'decimal:2',
     ];
 
     public function user()
@@ -30,5 +35,10 @@ class Maintenance extends Model
     public function items()
     {
         return $this->hasMany(MaintenanceItem::class);
+    }
+
+    public function candleChanges()
+    {
+        return $this->hasMany(WaterFilterCandleChange::class);
     }
 }

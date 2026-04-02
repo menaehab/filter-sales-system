@@ -9,7 +9,7 @@ class UpdatePurchaseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->canAny(['manage_purchases', 'edit_purchases']) ?? false;
     }
 
     public function rules(): array

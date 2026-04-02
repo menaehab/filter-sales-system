@@ -97,10 +97,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('customers')
         ->middleware('permission:view_customers|manage_customers');
 
-    Route::livewire('/customers/{customer:slug}', 'customers.customer-details')
-        ->name('customers.show')
-        ->middleware('permission:view_customers|manage_customers');
-
     Route::livewire('/customers/{customer:slug}/view', 'customers.customer-view')
         ->name('customers.view')
         ->middleware('permission:view_customers|manage_customers');

@@ -11,7 +11,7 @@ class CreatePlaceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('manage_places') ?? false;
     }
 
     /**

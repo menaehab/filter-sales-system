@@ -183,9 +183,72 @@ class WaterFilter extends Model
         return 'success';
     }
 
-    public function markCandleReplaced(string $candleType, ?User $user = null): void
+    public function markCandleReplaced(
+        string $candleType,
+        ?User $user = null,
+        ?Maintenance $maintenance = null,
+        ?CarbonInterface $replacedAt = null
+    ): void
     {
-        $candleMap = [
+        $this->markCandlesReplaced([$candleType], $user, $maintenance, $replacedAt);
+    }
+
+    public function markCandlesReplaced(
+        array $candleTypes,
+        ?User $user = null,
+        ?Maintenance $maintenance = null,
+        ?CarbonInterface $replacedAt = null
+    ): void
+    {
+        $candleMap = $this->getCandleMap();
+
+        $validCandles = collect($candleTypes)
+            ->filter(fn ($candleType) => is_string($candleType) && isset($candleMap[$candleType]))
+            ->unique()
+            ->values();
+
+        if ($validCandles->isEmpty()) {
+            return;
+        }
+
+        $replacedAt = $replacedAt ? Carbon::parse($replacedAt) : now();
+        $updatePayload = [];
+        $changesPayload = [];
+        $changedNames = [];
+
+        foreach ($validCandles as $candleType) {
+            $candle = $candleMap[$candleType];
+
+            $updatePayload[$candle['field']] = $replacedAt;
+            $changedNames[] = $candle['name'];
+
+            $changesPayload[] = [
+                'maintenance_id' => $maintenance?->id,
+                'user_id' => $user?->id,
+                'candle_key' => $candleType,
+                'candle_name' => $candle['name'],
+                'replaced_at' => $replacedAt,
+            ];
+        }
+
+        $this->update($updatePayload);
+        $this->candleChanges()->createMany($changesPayload);
+
+        activity()
+            ->performedOn($this)
+            ->causedBy($user)
+            ->withProperties([
+                'candle_keys' => $validCandles->all(),
+                'candle_names' => $changedNames,
+                'maintenance_id' => $maintenance?->id,
+                'replaced_at' => $replacedAt->toDateTimeString(),
+            ])
+            ->log(__('keywords.activity_mark_filter_candle_replaced'));
+    }
+
+    protected function getCandleMap(): array
+    {
+        return [
             'candle_1' => ['field' => 'candle_1_replaced_at', 'name' => __('keywords.candle_1')],
             'candle_2_3' => ['field' => 'candle_2_3_replaced_at', 'name' => __('keywords.candle_2_3')],
             'candle_4' => ['field' => 'candle_4_replaced_at', 'name' => __('keywords.candle_4')],
@@ -193,33 +256,6 @@ class WaterFilter extends Model
             'candle_6' => ['field' => 'candle_6_replaced_at', 'name' => __('keywords.candle_6')],
             'candle_7' => ['field' => 'candle_7_replaced_at', 'name' => __('keywords.candle_7')],
         ];
-
-        $candle = $candleMap[$candleType] ?? null;
-
-        if (! $candle) {
-            return;
-        }
-
-        $replacedAt = now();
-
-        $this->update([$candle['field'] => $replacedAt]);
-
-        $this->candleChanges()->create([
-            'user_id' => $user?->id,
-            'candle_key' => $candleType,
-            'candle_name' => $candle['name'],
-            'replaced_at' => $replacedAt,
-        ]);
-
-        activity()
-            ->performedOn($this)
-            ->causedBy($user)
-            ->withProperties([
-                'candle_key' => $candleType,
-                'candle_name' => $candle['name'],
-                'replaced_at' => $replacedAt->toDateTimeString(),
-            ])
-            ->log(__('keywords.activity_mark_filter_candle_replaced'));
     }
 
     public function maintenances()

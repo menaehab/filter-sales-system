@@ -8,7 +8,7 @@ class CreateCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('manage_categories') ?? false;
     }
 
     public function rules(): array

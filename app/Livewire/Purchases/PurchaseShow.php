@@ -2,9 +2,8 @@
 
 namespace App\Livewire\Purchases;
 
+use App\Actions\SupplierPayments\CreateSupplierPaymentAction;
 use App\Models\Purchase;
-use App\Models\SupplierPayment;
-use App\Models\SupplierPaymentAllocation;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -55,7 +54,7 @@ class PurchaseShow extends Component
         $this->dispatch('open-modal-pay-purchase');
     }
 
-    public function submitPayment(): void
+    public function submitPayment(CreateSupplierPaymentAction $action): void
     {
         $this->authorizePayPurchases();
 
@@ -69,44 +68,18 @@ class PurchaseShow extends Component
 
         $purchase = Purchase::with('paymentAllocations')->findOrFail($this->purchase->id);
 
-        $amount = (float) $this->payAmount;
-
-        if ($amount <= 0 || $purchase->isFullyPaid()) {
+        if ($purchase->isFullyPaid()) {
             return;
         }
 
-        $allocations = [];
-
-        $maxPayable = $purchase->remaining_amount;
-        $amount = min($amount, $maxPayable);
-
-        if ($amount > 0) {
-            $allocations[] = [
-                'purchase_id' => $purchase->id,
-                'amount' => $amount,
-            ];
-        }
-
-        $totalAllocated = collect($allocations)->sum('amount');
-
-        if ($totalAllocated <= 0) {
-            return;
-        }
-
-        $payment = SupplierPayment::create([
-            'amount' => $totalAllocated,
+        $payment = $action->execute($purchase->id, [
+            'amount' => $this->payAmount,
             'payment_method' => $this->payMethod,
             'note' => $this->payNote ?: null,
-            'supplier_id' => $purchase->supplier_id,
-            'user_id' => auth()->id(),
         ]);
 
-        foreach ($allocations as $allocation) {
-            SupplierPaymentAllocation::create([
-                'amount' => $allocation['amount'],
-                'supplier_payment_id' => $payment->id,
-                'purchase_id' => $allocation['purchase_id'],
-            ]);
+        if (! $payment) {
+            return;
         }
 
         $printAfterPayment = $this->printAfterPayment;

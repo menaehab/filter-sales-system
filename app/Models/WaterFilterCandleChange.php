@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class WaterFilterCandleChange extends Model
 {
     protected $fillable = [
+        'maintenance_id',
         'water_filter_id',
         'user_id',
         'candle_key',
@@ -21,6 +22,11 @@ class WaterFilterCandleChange extends Model
     public function waterFilter()
     {
         return $this->belongsTo(WaterFilter::class);
+    }
+
+    public function maintenance()
+    {
+        return $this->belongsTo(Maintenance::class);
     }
 
     public function user()

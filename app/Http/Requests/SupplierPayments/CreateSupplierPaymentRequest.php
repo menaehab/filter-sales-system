@@ -9,7 +9,11 @@ class CreateSupplierPaymentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->canAny([
+            'manage_supplier_payment_allocations',
+            'manage_purchases',
+            'pay_purchases',
+        ]) ?? false;
     }
 
     public function rules(): array

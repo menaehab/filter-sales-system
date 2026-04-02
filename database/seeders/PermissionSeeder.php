@@ -52,6 +52,7 @@ class PermissionSeeder extends Seeder
             'view_dashboard',
             'view_places',
             'manage_places',
+            'manage_created_at',
         ];
 
         foreach ($permissions as $permission) {

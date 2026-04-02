@@ -2,6 +2,7 @@
 
 namespace App\Livewire\PurchaseReturns;
 
+use App\Actions\PurchaseReturns\DeletePurchaseReturnAction;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
@@ -70,17 +71,13 @@ class PurchaseReturnManagement extends Component
         $this->openDeleteModal($id, 'open-modal-delete-purchase-return');
     }
 
-    public function delete(): void
+    public function delete(DeletePurchaseReturnAction $action): void
     {
         $this->authorizeManagePurchaseReturns();
 
-        $purchaseReturn = PurchaseReturn::with('items')->findOrFail($this->deleteId);
+        $purchaseReturn = PurchaseReturn::findOrFail($this->deleteId);
+        $action->execute($purchaseReturn);
 
-        foreach ($purchaseReturn->items as $item) {
-            $item->product?->increment('quantity', $item->quantity);
-        }
-
-        $purchaseReturn->delete();
         $this->deleteId = null;
         $this->dispatch('close-modal-delete-purchase-return');
         $this->resetPage();

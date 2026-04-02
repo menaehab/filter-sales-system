@@ -9,7 +9,11 @@ class CreateCustomerPaymentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->canAny([
+            'manage_customer_payment_allocations',
+            'manage_sales',
+            'pay_sales',
+        ]) ?? false;
     }
 
     public function rules(): array

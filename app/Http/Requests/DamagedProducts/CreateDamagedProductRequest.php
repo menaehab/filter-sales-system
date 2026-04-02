@@ -8,7 +8,7 @@ class CreateDamagedProductRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('manage_damaged_products') ?? false;
     }
 
     public function rules(): array

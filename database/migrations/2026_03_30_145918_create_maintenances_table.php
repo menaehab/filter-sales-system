@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('maintenances', function (Blueprint $table) {
             $table->id();
             $table->decimal('cost', 10, 2);
+            $table->string('technician_name');
             $table->text('description')->nullable();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('water_filter_id')->constrained('water_filters')->cascadeOnDelete();

@@ -8,7 +8,7 @@ class CreateCustomerRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('manage_customers') ?? false;
     }
 
     public function rules(): array

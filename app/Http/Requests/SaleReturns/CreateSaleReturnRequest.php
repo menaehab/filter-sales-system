@@ -8,7 +8,7 @@ class CreateSaleReturnRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->canAny(['manage_sale_returns', 'add_sale_returns']) ?? false;
     }
 
     public function rules(): array

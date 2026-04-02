@@ -66,11 +66,6 @@ class User extends Authenticatable
             ->implode('');
     }
 
-    public function users()
-    {
-        return $this->hasMany(SupplierPayment::class);
-    }
-
     public function sales()
     {
         return $this->hasMany(Sale::class);

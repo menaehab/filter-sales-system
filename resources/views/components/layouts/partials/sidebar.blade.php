@@ -4,19 +4,13 @@
         'translate-x-0' :
         (document.documentElement.dir === 'rtl' ? 'translate-x-full' : '-translate-x-full')"
     class="fixed inset-y-0 start-0 z-50 flex w-64 flex-col bg-gray-900 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto">
+
     {{-- Sidebar header --}}
     <div class="flex h-16 items-center gap-3 px-6">
-        <!-- Logo container -->
         <div class="flex h-12 w-14 items-center justify-center rounded-lg overflow-hidden shadow-sm">
             <img src="{{ asset('images/logo.jpg') }}" alt="Logo" class="h-full w-full object-cover rounded-lg">
         </div>
-
-        <!-- App name -->
-        <span class="text-md font-semibold text-white">
-            {{ __('keywords.app') }}
-        </span>
-
-        <!-- Close button for sidebar on mobile -->
+        <span class="text-md font-semibold text-white">{{ __('keywords.app') }}</span>
         <button @click="sidebarOpen = false"
             class="ms-auto text-gray-400 hover:text-white lg:hidden transition-colors duration-200">
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -32,19 +26,8 @@
                 if (saved) {
                     try {
                         const parsed = JSON.parse(saved);
-                        this.openGroups = {
-                            main: parsed.main ?? this.openGroups.main,
-                            sales: parsed.sales ?? this.openGroups.sales,
-                            purchases: parsed.purchases ?? this.openGroups.purchases,
-                            people: parsed.people ?? this.openGroups.people,
-                            inventory: parsed.inventory ?? this.openGroups.inventory,
-                            system: parsed.system ?? this.openGroups.system,
-                        };
-                    } catch (
-                        e
-                    ) {
-                        // ignore invalid json
-                    }
+                        this.openGroups = { ...this.openGroups, ...parsed };
+                    } catch (e) {}
                 }
             },
             save() {
@@ -52,11 +35,11 @@
             },
             openGroups: {
                 main: {{ request()->routeIs('home') ? 'true' : 'false' }},
-                sales: {{ request()->routeIs('sales.*') || request()->routeIs('sale-returns.*') || request()->routeIs('customer-payments*') ? 'true' : 'false' }},
-                purchases: {{ request()->routeIs('purchases.*') || request()->routeIs('purchase-returns.*') || request()->routeIs('supplier-payments*') ? 'true' : 'false' }},
-                people: {{ request()->routeIs('customers.*') || request()->routeIs('suppliers.*') || request()->routeIs('filters*') ? 'true' : 'false' }},
-                inventory: {{ request()->routeIs('categories.*') || request()->routeIs('products.*') || request()->routeIs('damaged-products*') || request()->routeIs('expenses*') ? 'true' : 'false' }},
-                system: {{ request()->routeIs('dashboard') || request()->routeIs('activities*') || request()->routeIs('users') || request()->routeIs('users.*') || request()->routeIs('places*') ? 'true' : 'false' }},
+                sales: {{ request()->routeIs('sales*') ? 'true' : 'false' }},
+                purchases: {{ request()->routeIs('purchases*') ? 'true' : 'false' }},
+                people: {{ request()->routeIs('customers*') || request()->routeIs('suppliers*') || request()->routeIs('filters*') ? 'true' : 'false' }},
+                inventory: {{ request()->routeIs('categories*') || request()->routeIs('products*') || request()->routeIs('damaged-products*') || request()->routeIs('expenses*') ? 'true' : 'false' }},
+                system: {{ request()->routeIs('dashboard') || request()->routeIs('activities*') || request()->routeIs('users*') || request()->routeIs('places*') ? 'true' : 'false' }},
             },
             toggleGroup(key) {
                 this.openGroups[key] = !this.openGroups[key];
@@ -64,6 +47,7 @@
             }
     }">
 
+        {{-- Main --}}
         <div class="space-y-1">
             <button type="button" @click="toggleGroup('main')"
                 class="w-full flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 transition-colors">
@@ -78,6 +62,7 @@
             </div>
         </div>
 
+        {{-- Sales --}}
         @canany(['manage_sales', 'view_sales', 'add_sales', 'edit_sales', 'pay_sales', 'manage_sale_returns',
             'view_sale_returns', 'add_sale_returns', 'edit_sale_returns', 'manage_customer_payment_allocations',
             'view_customer_payment_allocations'])
@@ -90,28 +75,27 @@
                 </button>
                 <div x-show="openGroups.sales" x-collapse class="space-y-1">
                     @canany(['manage_sales', 'view_sales', 'add_sales', 'edit_sales', 'pay_sales'])
-                        <x-sidebar-link href="{{ route('sales') }}" icon="fas fa-cash-register" :active="request()->routeIs('sales.*')">
+                        <x-sidebar-link href="{{ route('sales') }}" icon="fas fa-cash-register" :active="request()->routeIs('sales*')">
                             {{ __('keywords.sales') }}
                         </x-sidebar-link>
                     @endcanany
-
                     @canany(['manage_sale_returns', 'view_sale_returns', 'add_sale_returns', 'edit_sale_returns'])
-                        <x-sidebar-link href="{{ route('sale-returns') }}" icon="fas fa-rotate-left" :active="request()->routeIs('sale-returns.*')">
+                        <x-sidebar-link href="{{ route('sale-returns') }}" icon="fas fa-rotate-left" :active="request()->routeIs('sale-returns*')">
                             {{ __('keywords.sale_returns') }}
                         </x-sidebar-link>
                     @endcanany
-
-                    @canAny(['manage_customer_payment_allocations', 'view_customer_payment_allocations'])
+                    @canany(['manage_customer_payment_allocations', 'view_customer_payment_allocations'])
                         <x-sidebar-link href="{{ route('customer-payments') }}" icon="fas fa-sack-dollar" :active="request()->routeIs('customer-payments*')">
                             {{ __('keywords.customer_payments') }}
                         </x-sidebar-link>
-                    @endcanAny
+                    @endcanany
                 </div>
             </div>
         @endcanany
 
+        {{-- Purchases --}}
         @canany(['manage_purchases', 'view_purchases', 'add_purchases', 'edit_purchases', 'pay_purchases',
-            'manage_purchases_returns', 'view_purchase_returns', 'add_purchase_returns', 'edit_purchase_returns',
+            'manage_purchase_returns', 'view_purchase_returns', 'add_purchase_returns', 'edit_purchase_returns',
             'manage_supplier_payment_allocations', 'view_supplier_payment_allocations'])
             <div class="space-y-1">
                 <button type="button" @click="toggleGroup('purchases')"
@@ -122,28 +106,27 @@
                 </button>
                 <div x-show="openGroups.purchases" x-collapse class="space-y-1">
                     @canany(['manage_purchases', 'view_purchases', 'add_purchases', 'edit_purchases', 'pay_purchases'])
-                        <x-sidebar-link href="{{ route('purchases') }}" icon="fas fa-file-invoice" :active="request()->routeIs('purchases.*')">
+                        <x-sidebar-link href="{{ route('purchases') }}" icon="fas fa-file-invoice" :active="request()->routeIs('purchases*')">
                             {{ __('keywords.purchases') }}
                         </x-sidebar-link>
                     @endcanany
-
-                    @canany(['manage_purchases_returns', 'view_purchase_returns', 'add_purchase_returns',
+                    @canany(['manage_purchase_returns', 'view_purchase_returns', 'add_purchase_returns',
                         'edit_purchase_returns'])
-                        <x-sidebar-link href="{{ route('purchase-returns') }}" icon="fas fa-rotate-left" :active="request()->routeIs('purchase-returns.*')">
+                        <x-sidebar-link href="{{ route('purchase-returns') }}" icon="fas fa-rotate-left" :active="request()->routeIs('purchase-returns*')">
                             {{ __('keywords.purchase_returns') }}
                         </x-sidebar-link>
                     @endcanany
-
-                    @canAny(['manage_supplier_payment_allocations', 'view_supplier_payment_allocations'])
+                    @canany(['manage_supplier_payment_allocations', 'view_supplier_payment_allocations'])
                         <x-sidebar-link href="{{ route('supplier-payments') }}" icon="fas fa-hand-holding-dollar"
                             :active="request()->routeIs('supplier-payments*')">
                             {{ __('keywords.supplier_payments') }}
                         </x-sidebar-link>
-                    @endcanAny
+                    @endcanany
                 </div>
             </div>
         @endcanany
 
+        {{-- People --}}
         @canany(['manage_customers', 'view_customers', 'manage_suppliers', 'view_suppliers', 'manage_water_filters',
             'view_water_filters'])
             <div class="space-y-1">
@@ -154,18 +137,16 @@
                         :class="openGroups.people ? 'rotate-180' : ''"></i>
                 </button>
                 <div x-show="openGroups.people" x-collapse class="space-y-1">
-                    @canAny(['manage_customers', 'view_customers'])
-                        <x-sidebar-link href="{{ route('customers') }}" icon="fas fa-users" :active="request()->routeIs('customers.*')">
+                    @canany(['manage_customers', 'view_customers'])
+                        <x-sidebar-link href="{{ route('customers') }}" icon="fas fa-users" :active="request()->routeIs('customers*')">
                             {{ __('keywords.customers') }}
                         </x-sidebar-link>
-                    @endcanAny
-
-                    @canAny(['manage_suppliers', 'view_suppliers'])
-                        <x-sidebar-link href="{{ route('suppliers') }}" icon="fas fa-truck" :active="request()->routeIs('suppliers.*')">
+                    @endcanany
+                    @canany(['manage_suppliers', 'view_suppliers'])
+                        <x-sidebar-link href="{{ route('suppliers') }}" icon="fas fa-truck" :active="request()->routeIs('suppliers*')">
                             {{ __('keywords.suppliers') }}
                         </x-sidebar-link>
-                    @endcanAny
-
+                    @endcanany
                     @canany(['manage_water_filters', 'view_water_filters'])
                         <x-sidebar-link href="{{ route('filters') }}" icon="fas fa-filter" :active="request()->routeIs('filters*')">
                             {{ __('keywords.filters') }}
@@ -175,6 +156,7 @@
             </div>
         @endcanany
 
+        {{-- Inventory --}}
         @canany(['manage_categories', 'manage_products', 'manage_damaged_products', 'view_damaged_products',
             'manage_expenses', 'view_expenses'])
             <div class="space-y-1">
@@ -186,23 +168,20 @@
                 </button>
                 <div x-show="openGroups.inventory" x-collapse class="space-y-1">
                     @can('manage_categories')
-                        <x-sidebar-link href="{{ route('categories') }}" icon="fas fa-tag" :active="request()->routeIs('categories.*')">
+                        <x-sidebar-link href="{{ route('categories') }}" icon="fas fa-tag" :active="request()->routeIs('categories*')">
                             {{ __('keywords.categories') }}
                         </x-sidebar-link>
                     @endcan
-
                     @can('manage_products')
-                        <x-sidebar-link href="{{ route('products') }}" icon="fas fa-cube" :active="request()->routeIs('products.*')">
+                        <x-sidebar-link href="{{ route('products') }}" icon="fas fa-cube" :active="request()->routeIs('products*')">
                             {{ __('keywords.products') }}
                         </x-sidebar-link>
                     @endcan
-
                     @canany(['manage_damaged_products', 'view_damaged_products'])
                         <x-sidebar-link href="{{ route('damaged-products') }}" icon="fas fa-trash-alt" :active="request()->routeIs('damaged-products*')">
                             {{ __('keywords.damaged_products') }}
                         </x-sidebar-link>
                     @endcanany
-
                     @canany(['manage_expenses', 'view_expenses'])
                         <x-sidebar-link href="{{ route('expenses') }}" icon="fas fa-wallet" :active="request()->routeIs('expenses*')">
                             {{ __('keywords.expenses') }}
@@ -212,6 +191,7 @@
             </div>
         @endcanany
 
+        {{-- System --}}
         @canany(['view_dashboard', 'view_activities', 'manage_users', 'manage_places', 'view_places'])
             <div class="space-y-1">
                 <button type="button" @click="toggleGroup('system')"
@@ -226,19 +206,16 @@
                             {{ __('keywords.dashboard') }}
                         </x-sidebar-link>
                     @endcan
-
                     @can('view_activities')
                         <x-sidebar-link href="{{ route('activities') }}" icon="fas fa-list" :active="request()->routeIs('activities*')">
                             {{ __('keywords.activity_logs') }}
                         </x-sidebar-link>
                     @endcan
-
                     @can('manage_users')
                         <x-sidebar-link href="{{ route('users') }}" icon="fas fa-cog" :active="request()->routeIs('users*')">
                             {{ __('keywords.users') }}
                         </x-sidebar-link>
                     @endcan
-
                     @canany(['manage_places', 'view_places'])
                         <x-sidebar-link href="{{ route('places') }}" icon="fas fa-location-dot" :active="request()->routeIs('places*')">
                             {{ __('keywords.places') }}
@@ -247,6 +224,7 @@
                 </div>
             </div>
         @endcanany
+
     </nav>
 
     {{-- Sidebar footer --}}
@@ -257,10 +235,8 @@
                 {{ auth()->user()->name[0] ?? 'A' }}
             </div>
             <div class="flex-1 min-w-0">
-                <p class="truncate text-sm font-medium text-white">{{ auth()->user()->name ?? 'Admin User' }}
-                </p>
-                <p class="truncate text-xs text-gray-400">{{ auth()->user()->email ?? 'admin@example.com' }}
-                </p>
+                <p class="truncate text-sm font-medium text-white">{{ auth()->user()->name ?? 'Admin User' }}</p>
+                <p class="truncate text-xs text-gray-400">{{ auth()->user()->email ?? 'admin@example.com' }}</p>
             </div>
         </div>
     </div>

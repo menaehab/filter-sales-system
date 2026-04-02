@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('water_filter_candle_changes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('water_filter_id')->constrained('water_filters')->onDelete('cascade');
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('candle_key', 30);
             $table->string('candle_name');
             $table->timestamp('replaced_at');
+            $table->foreignId('water_filter_id')->constrained('water_filters')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('maintenance_id')->nullable()->constrained('maintenances')->nullOnDelete();
             $table->timestamps();
 
             $table->index(['water_filter_id', 'replaced_at']);

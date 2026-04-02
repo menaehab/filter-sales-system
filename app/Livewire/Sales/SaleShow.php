@@ -2,8 +2,7 @@
 
 namespace App\Livewire\Sales;
 
-use App\Models\CustomerPayment;
-use App\Models\CustomerPaymentAllocation;
+use App\Actions\CustomerPayments\CreateCustomerPaymentAction;
 use App\Models\Sale;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -55,7 +54,7 @@ class SaleShow extends Component
         $this->dispatch('open-modal-pay-sale');
     }
 
-    public function submitPayment(): void
+    public function submitPayment(CreateCustomerPaymentAction $action): void
     {
         $this->authorizePaySales();
 
@@ -68,43 +67,19 @@ class SaleShow extends Component
         ]);
 
         $sale = Sale::with('paymentAllocations')->findOrFail($this->sale->id);
-        $amount = (float) $this->payAmount;
 
-        if ($amount <= 0 || $sale->isFullyPaid()) {
+        if ($sale->isFullyPaid()) {
             return;
         }
 
-        $allocations = [];
-        $maxPayable = $sale->remaining_amount;
-        $amount = min($amount, $maxPayable);
-
-        if ($amount > 0) {
-            $allocations[] = [
-                'sale_id' => $sale->id,
-                'amount' => $amount,
-            ];
-        }
-
-        $totalAllocated = collect($allocations)->sum('amount');
-
-        if ($totalAllocated <= 0) {
-            return;
-        }
-
-        $payment = CustomerPayment::create([
-            'amount' => $totalAllocated,
+        $payment = $action->execute($sale->id, [
+            'amount' => $this->payAmount,
             'payment_method' => $this->payMethod,
             'note' => $this->payNote ?: null,
-            'customer_id' => $sale->customer_id,
-            'user_id' => auth()->id(),
         ]);
 
-        foreach ($allocations as $allocation) {
-            CustomerPaymentAllocation::create([
-                'amount' => $allocation['amount'],
-                'customer_payment_id' => $payment->id,
-                'sale_id' => $allocation['sale_id'],
-            ]);
+        if (! $payment) {
+            return;
         }
 
         $printAfterPayment = $this->printAfterPayment;

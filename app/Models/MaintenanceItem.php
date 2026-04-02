@@ -17,11 +17,6 @@ class MaintenanceItem extends Model
         return $this->belongsTo(Maintenance::class);
     }
 
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
-
     public function saleItem()
     {
         return $this->belongsTo(SaleItem::class);
