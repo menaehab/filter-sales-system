@@ -83,42 +83,47 @@
                     <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                         <div class="flex items-center justify-end gap-1">
                             <a href="{{ route('sales.print', $sale) }}" target="_blank"
-                                class="rounded-lg p-1.5 text-gray-400 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                                class="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-gray-500 hover:bg-purple-50 hover:text-purple-600 transition-colors"
                                 title="{{ __('keywords.print') }}">
-                                <i class="fas fa-print text-sm"></i>
+                                <img src="/images/icons/print.svg" alt="" class="h-4 w-4" aria-hidden="true">
+                                <span class="text-xs font-medium">{{ __('keywords.print') }}</span>
                             </a>
 
                             @canany(['manage_sales', 'pay_sales'])
                                 @if (!$sale->isFullyPaid())
                                     <button wire:click="openPayModal({{ $sale->id }})"
-                                        class="rounded-lg p-1.5 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                                        class="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
                                         title="{{ __('keywords.pay') }}">
-                                        <i class="fas fa-money-bill-wave text-sm"></i>
+                                        <img src="/images/icons/pay.svg" alt="" class="h-4 w-4" aria-hidden="true">
+                                        <span class="text-xs font-medium">{{ __('keywords.pay') }}</span>
                                     </button>
                                 @endif
                             @endcanany
 
                             @canany(['manage_sales', 'view_sales'])
                                 <a href="{{ route('sales.show', $sale) }}"
-                                    class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                    class="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-gray-500 hover:bg-sky-50 hover:text-sky-600 transition-colors"
                                     title="{{ __('keywords.view') }}">
-                                    <i class="fas fa-eye text-sm"></i>
+                                    <img src="/images/icons/view.svg" alt="" class="h-4 w-4" aria-hidden="true">
+                                    <span class="text-xs font-medium">{{ __('keywords.view') }}</span>
                                 </a>
                             @endcanany
 
                             @canany(['manage_sales', 'edit_sales'])
                                 <a href="{{ route('sales.edit', $sale) }}"
-                                    class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                    class="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-gray-500 hover:bg-sky-50 hover:text-sky-600 transition-colors"
                                     title="{{ __('keywords.edit') }}">
-                                    <i class="fas fa-pen-to-square text-sm"></i>
+                                    <img src="/images/icons/edit.svg" alt="" class="h-4 w-4" aria-hidden="true">
+                                    <span class="text-xs font-medium">{{ __('keywords.edit') }}</span>
                                 </a>
                             @endcanany
 
                             @can('manage_sales')
                                 <button wire:click="setDelete({{ $sale->id }})"
-                                    class="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                    class="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
                                     title="{{ __('keywords.delete') }}">
-                                    <i class="fas fa-trash-can text-sm"></i>
+                                    <img src="/images/icons/delete.svg" alt="" class="h-4 w-4" aria-hidden="true">
+                                    <span class="text-xs font-medium">{{ __('keywords.delete') }}</span>
                                 </button>
                             @endcan
                         </div>

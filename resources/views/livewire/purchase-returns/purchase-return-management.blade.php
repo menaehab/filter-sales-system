@@ -58,25 +58,28 @@
                     <div class="flex items-center justify-end gap-1">
                         @canany(['manage_purchase_returns', 'view_purchase_returns'])
                             <a href="{{ route('purchase-returns.show', $return) }}"
-                                class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                class="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-gray-500 hover:bg-sky-50 hover:text-sky-600 transition-colors"
                                 title="{{ __('keywords.view') }}">
-                                <i class="fas fa-eye text-sm"></i>
+                                <img src="/images/icons/view.svg" alt="" class="h-4 w-4" aria-hidden="true">
+                                <span class="text-xs font-medium">{{ __('keywords.view') }}</span>
                             </a>
                         @endcanany
 
                         @canany(['manage_purchase_returns', 'edit_purchase_returns'])
                             <a href="{{ route('purchase-returns.edit', $return) }}"
-                                class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                                class="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-gray-500 hover:bg-sky-50 hover:text-sky-600 transition-colors"
                                 title="{{ __('keywords.edit') }}">
-                                <i class="fas fa-pen-to-square text-sm"></i>
+                                <img src="/images/icons/edit.svg" alt="" class="h-4 w-4" aria-hidden="true">
+                                <span class="text-xs font-medium">{{ __('keywords.edit') }}</span>
                             </a>
                         @endcanany
 
                         @can('manage_purchase_returns')
                             <button wire:click="setDelete({{ $return->id }})"
-                                class="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                class="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
                                 title="{{ __('keywords.delete') }}">
-                                <i class="fas fa-trash-can text-sm"></i>
+                                <img src="/images/icons/delete.svg" alt="" class="h-4 w-4" aria-hidden="true">
+                                <span class="text-xs font-medium">{{ __('keywords.delete') }}</span>
                             </button>
                         @endcan
                     </div>
