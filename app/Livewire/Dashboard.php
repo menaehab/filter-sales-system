@@ -62,6 +62,12 @@ class Dashboard extends Component
     }
 
     #[Computed]
+    public function totalMaintenanceRevenue(): float
+    {
+        return $this->statsService->getTotalMaintenanceCosts($this->dateFrom, $this->dateTo);
+    }
+
+    #[Computed]
     public function totalSupplierPayments(): float
     {
         return $this->statsService->getTotalSupplierPayments($this->dateFrom, $this->dateTo);
