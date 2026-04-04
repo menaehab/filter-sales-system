@@ -62,6 +62,11 @@
                             placeholder="{{ __('keywords.enter_months_count') }}" wire:model.live="installment_months"
                             type="number" min="1" max="60" required />
                     @endif
+
+                    @if ($canManageCreatedAt)
+                        <x-input type="datetime-local" name="created_at" label="{{ __('keywords.created_at') }}"
+                            wire:model.live="created_at" />
+                    @endif
                 </div>
             </div>
         </div>

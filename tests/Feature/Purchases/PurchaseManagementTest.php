@@ -4,6 +4,7 @@ use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use App\Models\SupplierPaymentAllocation;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 
@@ -140,6 +141,7 @@ it('allocates supplier payments directly to the specified purchase', function ()
     $component->set('payAmount', '200')
         ->set('payMethod', 'bank_transfer')
         ->set('payNote', 'Wire transfer')
+        ->set('payCreatedAt', '2026-03-11T09:00')
         ->call('submitPayment')
         ->assertHasNoErrors()
         ->assertDispatched('close-modal-pay-purchase');
@@ -169,11 +171,68 @@ it('allocates supplier payments directly to the specified purchase', function ()
     $newerPurchase->refresh();
 
     $this->assertFalse($oldestPurchase->isFullyPaid());
-    $this->assertEquals('2026-04-11', $oldestPurchase->next_installment_date?->toDateString());
+    $this->assertEquals('2026-04-01', $oldestPurchase->next_installment_date?->toDateString());
     $this->assertTrue($newerPurchase->isFullyPaid());
     $this->assertNull($newerPurchase->next_installment_date);
 
     Carbon::setTestNow();
+});
+
+it('allows setting payment created_at when user has manage_created_at permission', function () {
+    $supplier = Supplier::factory()->create();
+
+    $purchase = Purchase::create([
+        'supplier_name' => $supplier->name,
+        'user_name' => auth()->user()->name,
+        'total_price' => 150,
+        'payment_type' => 'cash',
+        'user_id' => auth()->id(),
+        'supplier_id' => $supplier->id,
+    ]);
+
+    Livewire::test('purchases.purchase-management')
+        ->call('openPayModal', $purchase->id)
+        ->assertSeeHtml('name="payCreatedAt"')
+        ->set('payAmount', '150')
+        ->set('payMethod', 'cash')
+        ->set('payCreatedAt', '2026-05-10T12:35')
+        ->call('submitPayment')
+        ->assertHasNoErrors();
+
+    $payment = SupplierPayment::sole();
+
+    expect($payment->created_at->toDateTimeString())->toBe('2026-05-10 12:35:00');
+});
+
+it('ignores payment created_at when user lacks manage_created_at permission', function () {
+    $limitedUser = User::factory()->create();
+    $limitedUser->givePermissionTo('pay_purchases');
+    $this->actingAs($limitedUser);
+
+    $supplier = Supplier::factory()->create();
+
+    $purchase = Purchase::create([
+        'supplier_name' => $supplier->name,
+        'user_name' => $limitedUser->name,
+        'total_price' => 110,
+        'payment_type' => 'cash',
+        'user_id' => $limitedUser->id,
+        'supplier_id' => $supplier->id,
+    ]);
+
+    Livewire::test('purchases.purchase-management')
+        ->call('openPayModal', $purchase->id)
+        ->assertDontSeeHtml('name="payCreatedAt"')
+        ->set('payAmount', '110')
+        ->set('payMethod', 'cash')
+        ->set('payCreatedAt', '2020-01-01T00:00')
+        ->call('submitPayment')
+        ->assertHasNoErrors();
+
+    $payment = SupplierPayment::sole();
+
+    expect($payment->created_at->greaterThanOrEqualTo(now()->subMinute()))->toBeTrue();
+    expect($payment->created_at->toDateTimeString())->not->toBe('2020-01-01 00:00:00');
 });
 
 it('deletes a purchase from the management component', function () {

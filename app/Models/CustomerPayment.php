@@ -16,6 +16,7 @@ class CustomerPayment extends Model
         'note',
         'customer_id',
         'user_id',
+        'created_at',
     ];
 
     public function customer()

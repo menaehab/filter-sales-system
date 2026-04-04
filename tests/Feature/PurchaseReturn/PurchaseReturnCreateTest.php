@@ -7,6 +7,7 @@ use App\Models\PurchaseReturn;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use App\Models\SupplierPaymentAllocation;
+use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -234,4 +235,79 @@ it('creates supplier credit when return is saved without cash refund', function 
     $supplier->refresh();
     $this->assertEquals(120.0, (float) $supplier->available_credit);
     $this->assertEquals(-120.0, (float) $supplier->balance);
+});
+
+it('allows setting created_at on purchase return create when user has manage_created_at permission', function () {
+    $supplier = Supplier::factory()->create();
+    $product = Product::factory()->create(['quantity' => 10]);
+
+    $purchase = Purchase::factory()->create([
+        'supplier_name' => $supplier->name,
+        'user_name' => auth()->user()->name,
+        'total_price' => 100,
+        'payment_type' => 'cash',
+        'user_id' => auth()->id(),
+        'supplier_id' => $supplier->id,
+    ]);
+
+    PurchaseItem::factory()->create([
+        'product_name' => $product->name,
+        'cost_price' => 100,
+        'quantity' => 2,
+        'purchase_id' => $purchase->id,
+        'product_id' => $product->id,
+    ]);
+
+    Livewire::test('purchase-returns.purchase-return-create')
+        ->set('purchase_number', $purchase->number)
+        ->assertSeeHtml('name="created_at"')
+        ->set('items.0.selected', true)
+        ->set('items.0.return_quantity', '1')
+        ->set('created_at', '2026-02-18T13:50')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $return = PurchaseReturn::sole();
+
+    expect($return->created_at->toDateTimeString())->toBe('2026-02-18 13:50:00');
+});
+
+it('ignores created_at on purchase return create when user lacks manage_created_at permission', function () {
+    $limitedUser = User::factory()->create();
+    $limitedUser->givePermissionTo('manage_purchase_returns');
+    $this->actingAs($limitedUser);
+
+    $supplier = Supplier::factory()->create();
+    $product = Product::factory()->create(['quantity' => 10]);
+
+    $purchase = Purchase::factory()->create([
+        'supplier_name' => $supplier->name,
+        'user_name' => $limitedUser->name,
+        'total_price' => 100,
+        'payment_type' => 'cash',
+        'user_id' => $limitedUser->id,
+        'supplier_id' => $supplier->id,
+    ]);
+
+    PurchaseItem::factory()->create([
+        'product_name' => $product->name,
+        'cost_price' => 100,
+        'quantity' => 2,
+        'purchase_id' => $purchase->id,
+        'product_id' => $product->id,
+    ]);
+
+    Livewire::test('purchase-returns.purchase-return-create')
+        ->set('purchase_number', $purchase->number)
+        ->assertDontSeeHtml('name="created_at"')
+        ->set('items.0.selected', true)
+        ->set('items.0.return_quantity', '1')
+        ->set('created_at', '2020-01-01T00:00')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $return = PurchaseReturn::sole();
+
+    expect($return->created_at->greaterThanOrEqualTo(now()->subMinute()))->toBeTrue();
+    expect($return->created_at->toDateTimeString())->not->toBe('2020-01-01 00:00:00');
 });

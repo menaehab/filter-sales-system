@@ -72,7 +72,10 @@ class WaterFilter extends Model
 
     public function latestReading()
     {
-        return $this->readings()->latest()->first();
+        return $this->readings()
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->first();
     }
 
     public function getCandle1IntervalMonthsAttribute(): int
@@ -188,8 +191,7 @@ class WaterFilter extends Model
         ?User $user = null,
         ?Maintenance $maintenance = null,
         ?CarbonInterface $replacedAt = null
-    ): void
-    {
+    ): void {
         $this->markCandlesReplaced([$candleType], $user, $maintenance, $replacedAt);
     }
 
@@ -198,8 +200,7 @@ class WaterFilter extends Model
         ?User $user = null,
         ?Maintenance $maintenance = null,
         ?CarbonInterface $replacedAt = null
-    ): void
-    {
+    ): void {
         $candleMap = $this->getCandleMap();
 
         $validCandles = collect($candleTypes)

@@ -20,6 +20,7 @@ class PurchaseReturn extends Model
         'cash_refund',
         'purchase_id',
         'user_id',
+        'created_at',
     ];
 
     public function purchase()

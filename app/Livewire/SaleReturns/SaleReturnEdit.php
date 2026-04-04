@@ -6,6 +6,8 @@ use App\Models\Product;
 use App\Models\ProductMovement;
 use App\Models\SaleReturn;
 use App\Models\SaleReturnItem;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -19,6 +21,8 @@ class SaleReturnEdit extends Component
 
     public bool $cash_refund = false;
 
+    public string $created_at = '';
+
     /** @var array<int, array{product_id: int, product_name: string, sell_price: string, available_quantity: float, return_quantity: string, selected: bool, original_return_quantity: float}> */
     public array $items = [];
 
@@ -27,6 +31,7 @@ class SaleReturnEdit extends Component
         $this->saleReturn = $saleReturn->load(['sale.items.product', 'items']);
         $this->reason = $saleReturn->reason ?? '';
         $this->cash_refund = (bool) $saleReturn->cash_refund;
+        $this->created_at = $saleReturn->created_at?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i');
 
         $returnItems = $saleReturn->items->keyBy('product_id');
 
@@ -62,6 +67,7 @@ class SaleReturnEdit extends Component
         $rules = [
             'reason' => 'nullable|string|max:1000',
             'cash_refund' => 'boolean',
+            'created_at' => 'nullable|date',
         ];
 
         foreach ($this->items as $i => $item) {
@@ -78,6 +84,7 @@ class SaleReturnEdit extends Component
         $attrs = [
             'reason' => __('keywords.reason'),
             'cash_refund' => __('keywords.cash_refund'),
+            'created_at' => __('keywords.created_at'),
         ];
 
         foreach ($this->items as $i => $item) {
@@ -117,6 +124,7 @@ class SaleReturnEdit extends Component
                 'total_price' => $totalPrice,
                 'reason' => $this->reason ?: null,
                 'cash_refund' => $this->cash_refund,
+                'created_at' => $this->resolveCreatedAt(),
             ]);
 
             foreach ($this->items as $item) {
@@ -149,8 +157,24 @@ class SaleReturnEdit extends Component
         $this->redirect(route('sale-returns'), navigate: true);
     }
 
+    private function resolveCreatedAt(): CarbonInterface
+    {
+        if (! $this->canManageCreatedAt || blank($this->created_at)) {
+            return $this->saleReturn->created_at->copy();
+        }
+
+        return Carbon::parse($this->created_at);
+    }
+
+    public function getCanManageCreatedAtProperty(): bool
+    {
+        return (bool) auth()->user()?->can('manage_created_at');
+    }
+
     public function render()
     {
-        return view('livewire.sale-returns.sale-return-edit');
+        return view('livewire.sale-returns.sale-return-edit', [
+            'canManageCreatedAt' => $this->canManageCreatedAt,
+        ]);
     }
 }

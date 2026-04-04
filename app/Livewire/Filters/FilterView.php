@@ -10,6 +10,7 @@ use App\Models\SaleItem;
 use App\Models\WaterFilter;
 use App\Models\WaterReading;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -29,6 +30,7 @@ class FilterView extends Component
         'tds' => '',
         'water_quality' => '',
         'before_installment' => false,
+        'created_at' => '',
     ];
 
     public array $maintenanceForm = [
@@ -43,6 +45,7 @@ class FilterView extends Component
     public function mount(WaterFilter $filter): void
     {
         $this->filter = $filter->load('customer');
+        $this->resetReadingForm();
         $this->resetMaintenanceForm();
     }
 
@@ -156,11 +159,13 @@ class FilterView extends Component
             'readingForm.tds' => 'required|numeric|min:0',
             'readingForm.water_quality' => 'required|in:'.implode(',', WaterQualityTypeEnum::values()),
             'readingForm.before_installment' => 'boolean',
+            'readingForm.created_at' => 'nullable|date',
         ], [], [
             'readingForm.technician_name' => __('keywords.technician_name'),
             'readingForm.tds' => __('keywords.tds'),
             'readingForm.water_quality' => __('keywords.water_quality'),
             'readingForm.before_installment' => __('keywords.before_installment'),
+            'readingForm.created_at' => __('keywords.created_at'),
         ]);
 
         // Check if trying to add before_installment reading when one already exists
@@ -179,6 +184,7 @@ class FilterView extends Component
             'water_quality' => $this->readingForm['water_quality'],
             'before_installment' => $this->readingForm['before_installment'],
             'water_filter_id' => $this->filter->id,
+            'created_at' => $this->resolveReadingCreatedAt(),
         ]);
 
         $this->filter->refresh();
@@ -397,7 +403,19 @@ class FilterView extends Component
             'tds' => '',
             'water_quality' => '',
             'before_installment' => false,
+            'created_at' => now()->format('Y-m-d\TH:i'),
         ];
+    }
+
+    protected function resolveReadingCreatedAt(): CarbonInterface
+    {
+        $createdAt = $this->readingForm['created_at'] ?? null;
+
+        if ($this->canManageCreatedAt && filled($createdAt)) {
+            return Carbon::parse($createdAt);
+        }
+
+        return now();
     }
 
     protected function resetMaintenanceForm(array $selectedCandles = []): void

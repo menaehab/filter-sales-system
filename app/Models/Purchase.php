@@ -23,6 +23,7 @@ class Purchase extends Model
         'installment_months',
         'user_id',
         'supplier_id',
+        'created_at',
     ];
 
     public function items()

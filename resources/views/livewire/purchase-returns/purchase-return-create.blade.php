@@ -35,7 +35,8 @@
                                 <div class="grid grid-cols-2 gap-2 text-sm">
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.supplier') }}:</span>
-                                        <span class="font-medium text-gray-900">{{ $this->purchase->supplier_name }}</span>
+                                        <span
+                                            class="font-medium text-gray-900">{{ $this->purchase->supplier_name }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.total_price') }}:</span>
@@ -144,6 +145,11 @@
                     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                         <x-textarea name="reason" label="{{ __('keywords.reason') }}" class="col-span-2"
                             placeholder="{{ __('keywords.enter_return_reason') }}" wire:model="reason" />
+
+                        @if ($canManageCreatedAt)
+                            <x-input type="datetime-local" name="created_at" label="{{ __('keywords.created_at') }}"
+                                wire:model.live="created_at" />
+                        @endif
 
                         <div>
                             <label class="mb-1.5 block text-sm font-medium text-gray-700">

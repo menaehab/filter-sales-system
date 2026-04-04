@@ -26,11 +26,14 @@
                         </div>
                         <div>
                             <span class="text-gray-500">{{ __('keywords.customer') }}:</span>
-                            <span class="font-medium text-gray-900">{{ $saleReturn->sale->customer?->name ?? '—' }}</span>
+                            <span
+                                class="font-medium text-gray-900">{{ $saleReturn->sale->customer?->name ?? '—' }}</span>
                         </div>
                         <div>
                             <span class="text-gray-500">{{ __('keywords.total_price') }}:</span>
-                            <span class="font-medium text-gray-900">{{ number_format($saleReturn->sale->total_price, 2) }} {{ __('keywords.currency') }}</span>
+                            <span
+                                class="font-medium text-gray-900">{{ number_format($saleReturn->sale->total_price, 2) }}
+                                {{ __('keywords.currency') }}</span>
                         </div>
                         <div>
                             <span class="text-gray-500">{{ __('keywords.number') }}:</span>
@@ -68,13 +71,15 @@
 
                         {{-- Product Name --}}
                         <div class="flex-1 min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-gray-700">{{ __('keywords.product') }}</label>
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-gray-700">{{ __('keywords.product') }}</label>
                             <div class="text-sm font-medium text-gray-900 py-2">{{ $item['product_name'] }}</div>
                         </div>
 
                         {{-- Sell Price --}}
                         <div class="w-full sm:w-36">
-                            <label class="mb-1.5 block text-sm font-medium text-gray-700">{{ __('keywords.sell_price') }}</label>
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-gray-700">{{ __('keywords.sell_price') }}</label>
                             <div class="text-sm text-gray-700 py-2">
                                 {{ number_format((float) $item['sell_price'], 2) }} {{ __('keywords.currency') }}
                             </div>
@@ -82,8 +87,10 @@
 
                         {{-- Available Quantity --}}
                         <div class="w-full sm:w-28">
-                            <label class="mb-1.5 block text-sm font-medium text-gray-700">{{ __('keywords.available_quantity') }}</label>
-                            <div class="text-sm text-gray-700 py-2">{{ number_format($item['available_quantity'], 2) }}</div>
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-gray-700">{{ __('keywords.available_quantity') }}</label>
+                            <div class="text-sm text-gray-700 py-2">{{ number_format($item['available_quantity'], 2) }}
+                            </div>
                         </div>
 
                         {{-- Return Quantity --}}
@@ -91,13 +98,13 @@
                             <x-input name="items.{{ $index }}.return_quantity"
                                 label="{{ __('keywords.return_quantity') }}" placeholder="0"
                                 wire:model.live="items.{{ $index }}.return_quantity" type="number"
-                                min="1" step="1" :max="$item['available_quantity']"
-                                :disabled="!$item['selected']" />
+                                min="1" step="1" :max="$item['available_quantity']" :disabled="!$item['selected']" />
                         </div>
 
                         {{-- Line Total --}}
                         <div class="w-full sm:w-32 pt-0 sm:pt-7">
-                            <div class="text-sm font-medium {{ $item['selected'] ? 'text-red-600' : 'text-gray-400' }}">
+                            <div
+                                class="text-sm font-medium {{ $item['selected'] ? 'text-red-600' : 'text-gray-400' }}">
                                 {{ number_format(((float) ($item['sell_price'] ?: 0)) * ((float) ($item['return_quantity'] ?: 0)), 2) }}
                                 {{ __('keywords.currency') }}
                             </div>
@@ -119,6 +126,11 @@
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     <x-textarea name="reason" label="{{ __('keywords.reason') }}" class="col-span-2"
                         placeholder="{{ __('keywords.enter_return_reason') }}" wire:model="reason" />
+
+                    @if ($canManageCreatedAt)
+                        <x-input type="datetime-local" name="created_at" label="{{ __('keywords.created_at') }}"
+                            wire:model.live="created_at" />
+                    @endif
 
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-gray-700">

@@ -219,6 +219,8 @@ it('logs activity when marking notification as read', function () {
 
     $this->assertDatabaseHas('activity_log', [
         'causer_id' => $user->id,
+        'subject_type' => get_class($user),
+        'subject_id' => $user->id,
         'description' => 'قراءة إشعار',
     ]);
 });
@@ -239,6 +241,8 @@ it('logs activity when deleting notification', function () {
 
     $this->assertDatabaseHas('activity_log', [
         'causer_id' => $user->id,
+        'subject_type' => get_class($user),
+        'subject_id' => $user->id,
         'description' => 'حذف إشعار',
     ]);
 });

@@ -7,6 +7,7 @@ use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use App\Models\SupplierPaymentAllocation;
+use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -167,4 +168,90 @@ it('validates edited purchase data before updating', function () {
             'items.0.cost_price' => 'required',
             'items.0.quantity' => 'required',
         ]);
+});
+
+it('allows setting created_at on purchase edit when user has manage_created_at permission', function () {
+    $supplier = Supplier::factory()->create(['name' => 'CreatedAt Supplier']);
+    $product = Product::factory()->create([
+        'cost_price' => 20,
+        'quantity' => 5,
+    ]);
+
+    $purchase = Purchase::create([
+        'supplier_name' => $supplier->name,
+        'user_name' => auth()->user()->name,
+        'total_price' => 40,
+        'payment_type' => 'cash',
+        'down_payment' => 40,
+        'installment_amount' => null,
+        'installment_months' => null,
+        'user_id' => auth()->id(),
+        'supplier_id' => $supplier->id,
+        'created_at' => '2025-01-01 08:00:00',
+        'updated_at' => '2025-01-01 08:00:00',
+    ]);
+
+    PurchaseItem::create([
+        'product_name' => $product->name,
+        'cost_price' => 20,
+        'quantity' => 2,
+        'purchase_id' => $purchase->id,
+        'product_id' => $product->id,
+    ]);
+
+    Livewire::test('purchases.purchase-edit', ['purchase' => $purchase])
+        ->assertSeeHtml('name="created_at"')
+        ->set('items.0.quantity', '2')
+        ->set('created_at', '2026-03-03T12:20')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $purchase->refresh();
+
+    expect($purchase->created_at->toDateTimeString())->toBe('2026-03-03 12:20:00');
+});
+
+it('ignores created_at on purchase edit when user lacks manage_created_at permission', function () {
+    $limitedUser = User::factory()->create();
+    $limitedUser->givePermissionTo('manage_purchases');
+    $this->actingAs($limitedUser);
+
+    $supplier = Supplier::factory()->create(['name' => 'No Permission Supplier']);
+    $product = Product::factory()->create([
+        'cost_price' => 20,
+        'quantity' => 5,
+    ]);
+
+    $purchase = Purchase::create([
+        'supplier_name' => $supplier->name,
+        'user_name' => $limitedUser->name,
+        'total_price' => 40,
+        'payment_type' => 'cash',
+        'down_payment' => 40,
+        'installment_amount' => null,
+        'installment_months' => null,
+        'user_id' => $limitedUser->id,
+        'supplier_id' => $supplier->id,
+        'created_at' => '2025-02-01 07:30:00',
+        'updated_at' => '2025-02-01 07:30:00',
+    ]);
+
+    PurchaseItem::create([
+        'product_name' => $product->name,
+        'cost_price' => 20,
+        'quantity' => 2,
+        'purchase_id' => $purchase->id,
+        'product_id' => $product->id,
+    ]);
+
+    Livewire::test('purchases.purchase-edit', ['purchase' => $purchase])
+        ->assertDontSeeHtml('name="created_at"')
+        ->set('items.0.quantity', '2')
+        ->set('created_at', '2026-04-10T09:45')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $purchase->refresh();
+
+    expect($purchase->created_at->toDateTimeString())->toBe('2025-02-01 07:30:00');
 });

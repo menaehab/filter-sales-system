@@ -7,6 +7,7 @@ use App\Models\PurchaseItem;
 use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
 use App\Models\Supplier;
+use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -329,4 +330,124 @@ it('replaces old return items and movements when product selection changes', fun
         'product_id' => $product2->id,
         'quantity' => '-4.00',
     ]);
+});
+
+it('allows setting created_at on purchase return edit when user has manage_created_at permission', function () {
+    $supplier = Supplier::factory()->create();
+    $product = Product::factory()->create(['quantity' => 10]);
+
+    $purchase = Purchase::factory()->create([
+        'supplier_name' => $supplier->name,
+        'user_name' => auth()->user()->name,
+        'total_price' => 100,
+        'payment_type' => 'cash',
+        'user_id' => auth()->id(),
+        'supplier_id' => $supplier->id,
+    ]);
+
+    PurchaseItem::factory()->create([
+        'product_name' => $product->name,
+        'cost_price' => 100,
+        'quantity' => 2,
+        'purchase_id' => $purchase->id,
+        'product_id' => $product->id,
+    ]);
+
+    $return = PurchaseReturn::factory()->create([
+        'total_price' => 100,
+        'purchase_id' => $purchase->id,
+        'user_id' => auth()->id(),
+        'created_at' => '2025-09-01 08:00:00',
+        'updated_at' => '2025-09-01 08:00:00',
+    ]);
+
+    PurchaseReturnItem::factory()->create([
+        'cost_price' => 100,
+        'quantity' => 1,
+        'purchase_return_id' => $return->id,
+        'product_id' => $product->id,
+    ]);
+
+    ProductMovement::create([
+        'quantity' => -1,
+        'movable_type' => PurchaseReturn::class,
+        'movable_id' => $return->id,
+        'product_id' => $product->id,
+    ]);
+
+    $product->decrement('quantity', 1);
+
+    Livewire::test('purchase-returns.purchase-return-edit', ['purchaseReturn' => $return])
+        ->assertSeeHtml('name="created_at"')
+        ->set('items.0.selected', true)
+        ->set('items.0.return_quantity', '1')
+        ->set('created_at', '2026-10-04T16:40')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $return->refresh();
+
+    expect($return->created_at->toDateTimeString())->toBe('2026-10-04 16:40:00');
+});
+
+it('ignores created_at on purchase return edit when user lacks manage_created_at permission', function () {
+    $limitedUser = User::factory()->create();
+    $limitedUser->givePermissionTo('manage_purchase_returns');
+    $this->actingAs($limitedUser);
+
+    $supplier = Supplier::factory()->create();
+    $product = Product::factory()->create(['quantity' => 10]);
+
+    $purchase = Purchase::factory()->create([
+        'supplier_name' => $supplier->name,
+        'user_name' => $limitedUser->name,
+        'total_price' => 100,
+        'payment_type' => 'cash',
+        'user_id' => $limitedUser->id,
+        'supplier_id' => $supplier->id,
+    ]);
+
+    PurchaseItem::factory()->create([
+        'product_name' => $product->name,
+        'cost_price' => 100,
+        'quantity' => 2,
+        'purchase_id' => $purchase->id,
+        'product_id' => $product->id,
+    ]);
+
+    $return = PurchaseReturn::factory()->create([
+        'total_price' => 100,
+        'purchase_id' => $purchase->id,
+        'user_id' => $limitedUser->id,
+        'created_at' => '2025-11-01 07:15:00',
+        'updated_at' => '2025-11-01 07:15:00',
+    ]);
+
+    PurchaseReturnItem::factory()->create([
+        'cost_price' => 100,
+        'quantity' => 1,
+        'purchase_return_id' => $return->id,
+        'product_id' => $product->id,
+    ]);
+
+    ProductMovement::create([
+        'quantity' => -1,
+        'movable_type' => PurchaseReturn::class,
+        'movable_id' => $return->id,
+        'product_id' => $product->id,
+    ]);
+
+    $product->decrement('quantity', 1);
+
+    Livewire::test('purchase-returns.purchase-return-edit', ['purchaseReturn' => $return])
+        ->assertDontSeeHtml('name="created_at"')
+        ->set('items.0.selected', true)
+        ->set('items.0.return_quantity', '1')
+        ->set('created_at', '2026-12-12T12:12')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $return->refresh();
+
+    expect($return->created_at->toDateTimeString())->toBe('2025-11-01 07:15:00');
 });

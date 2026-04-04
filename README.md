@@ -169,7 +169,7 @@ composer run lint
 
 Scheduled in `routes/console.php`:
 
-- `installments:remind`
+- `suppliers:installments-remind`
 - `filters:candle-remind`
 - `customers:installment-remind`
 - `products:low-stock-alert`

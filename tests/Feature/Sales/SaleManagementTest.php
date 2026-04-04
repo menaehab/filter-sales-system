@@ -4,6 +4,7 @@ use App\Models\Customer;
 use App\Models\CustomerPayment;
 use App\Models\CustomerPaymentAllocation;
 use App\Models\Sale;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 
@@ -141,6 +142,7 @@ it('allocates customer payments directly to the specified sale', function () {
     $component->set('payAmount', '200')
         ->set('payMethod', 'bank_transfer')
         ->set('payNote', 'Wire transfer')
+        ->set('payCreatedAt', '2026-03-11T09:00')
         ->call('submitPayment')
         ->assertHasNoErrors()
         ->assertDispatched('close-modal-pay-sale');
@@ -170,11 +172,68 @@ it('allocates customer payments directly to the specified sale', function () {
     $newerSale->refresh();
 
     $this->assertFalse($oldestSale->isFullyPaid());
-    $this->assertEquals('2026-04-11', $oldestSale->next_installment_date?->toDateString());
+    $this->assertEquals('2026-04-01', $oldestSale->next_installment_date?->toDateString());
     $this->assertTrue($newerSale->isFullyPaid());
     $this->assertNull($newerSale->next_installment_date);
 
     Carbon::setTestNow();
+});
+
+it('allows setting payment created_at when user has manage_created_at permission', function () {
+    $customer = Customer::factory()->create();
+
+    $sale = Sale::create([
+        'dealer_name' => 'Dealer',
+        'user_name' => auth()->user()->name,
+        'total_price' => 150,
+        'payment_type' => 'cash',
+        'user_id' => auth()->id(),
+        'customer_id' => $customer->id,
+    ]);
+
+    Livewire::test('sales.sale-management')
+        ->call('openPayModal', $sale->id)
+        ->assertSeeHtml('name="payCreatedAt"')
+        ->set('payAmount', '150')
+        ->set('payMethod', 'cash')
+        ->set('payCreatedAt', '2026-05-05T10:10')
+        ->call('submitPayment')
+        ->assertHasNoErrors();
+
+    $payment = CustomerPayment::sole();
+
+    expect($payment->created_at->toDateTimeString())->toBe('2026-05-05 10:10:00');
+});
+
+it('ignores payment created_at when user lacks manage_created_at permission', function () {
+    $limitedUser = User::factory()->create();
+    $limitedUser->givePermissionTo('pay_sales');
+    $this->actingAs($limitedUser);
+
+    $customer = Customer::factory()->create();
+
+    $sale = Sale::create([
+        'dealer_name' => 'Dealer',
+        'user_name' => $limitedUser->name,
+        'total_price' => 120,
+        'payment_type' => 'cash',
+        'user_id' => $limitedUser->id,
+        'customer_id' => $customer->id,
+    ]);
+
+    Livewire::test('sales.sale-management')
+        ->call('openPayModal', $sale->id)
+        ->assertDontSeeHtml('name="payCreatedAt"')
+        ->set('payAmount', '120')
+        ->set('payMethod', 'cash')
+        ->set('payCreatedAt', '2020-01-01T00:00')
+        ->call('submitPayment')
+        ->assertHasNoErrors();
+
+    $payment = CustomerPayment::sole();
+
+    expect($payment->created_at->greaterThanOrEqualTo(now()->subMinute()))->toBeTrue();
+    expect($payment->created_at->toDateTimeString())->not->toBe('2020-01-01 00:00:00');
 });
 
 it('deletes a sale from the management component', function () {

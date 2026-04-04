@@ -78,7 +78,8 @@
 
             <div class="flex-1 overflow-y-auto p-4">
                 @error('cart')
-                    <p class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">{{ $message }}</p>
+                    <p class="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+                        {{ $message }}</p>
                 @enderror
 
                 @if (count($cart) === 0)
@@ -88,7 +89,8 @@
                 @else
                     <div class="space-y-3">
                         @foreach ($cart as $index => $item)
-                            <div class="rounded-lg border border-gray-100 bg-gray-50 p-3" wire:key="cart-item-{{ $item['product_id'] }}">
+                            <div class="rounded-lg border border-gray-100 bg-gray-50 p-3"
+                                wire:key="cart-item-{{ $item['product_id'] }}">
                                 <div class="flex items-start justify-between gap-2">
                                     <div>
                                         <p class="text-sm font-medium text-gray-900">{{ $item['product_name'] }}</p>
@@ -112,7 +114,8 @@
                                     </div>
 
                                     <div class="w-28">
-                                        <label class="mb-1 block text-xs text-gray-500">{{ __('keywords.sell_price') }}</label>
+                                        <label
+                                            class="mb-1 block text-xs text-gray-500">{{ __('keywords.sell_price') }}</label>
                                         <input type="number" step="0.01" min="0.01"
                                             wire:model.live="cart.{{ $index }}.sell_price"
                                             class="w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
@@ -149,22 +152,26 @@
                     @endif
                     <div class="flex items-center justify-between text-gray-900">
                         <span>{{ __('keywords.invoice_total') }}</span>
-                        <span class="font-semibold">{{ number_format($this->total_price, 2) }} {{ __('keywords.currency') }}</span>
+                        <span class="font-semibold">{{ number_format($this->total_price, 2) }}
+                            {{ __('keywords.currency') }}</span>
                     </div>
                     @if ($this->applied_customer_credit > 0)
                         <div class="flex items-center justify-between text-emerald-600">
                             <span>{{ __('keywords.applied_customer_credit') }}</span>
-                            <span>- {{ number_format($this->applied_customer_credit, 2) }} {{ __('keywords.currency') }}</span>
+                            <span>- {{ number_format($this->applied_customer_credit, 2) }}
+                                {{ __('keywords.currency') }}</span>
                         </div>
                     @endif
-                    <div class="flex items-center justify-between border-t border-gray-200 pt-2 text-base font-bold text-gray-900">
+                    <div
+                        class="flex items-center justify-between border-t border-gray-200 pt-2 text-base font-bold text-gray-900">
                         <span>{{ __('keywords.cash_due_now') }}</span>
                         <span>{{ number_format($this->cash_amount_due, 2) }} {{ __('keywords.currency') }}</span>
                     </div>
                 </div>
 
                 <div class="mt-4">
-                    <x-button variant="primary" class="w-full" wire:click="openPaymentModal" wire:loading.attr="disabled">
+                    <x-button variant="primary" class="w-full" wire:click="openPaymentModal"
+                        wire:loading.attr="disabled">
                         <span wire:loading.remove wire:target="openPaymentModal">{{ __('keywords.pay') }}</span>
                         <span wire:loading wire:target="openPaymentModal">{{ __('keywords.loading') }}</span>
                     </x-button>
@@ -194,13 +201,15 @@
                                 class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                                 <div class="max-h-52 overflow-y-auto">
                                     @forelse ($this->customers as $id => $name)
-                                        <button type="button" wire:click="selectCustomer({{ $id }}, '{{ addslashes($name) }}')"
+                                        <button type="button"
+                                            wire:click="selectCustomer({{ $id }}, '{{ addslashes($name) }}')"
                                             @click="open = false"
                                             class="block w-full px-3 py-2 text-start text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 {{ (int) $customer_id === (int) $id ? 'bg-emerald-50 text-emerald-700' : '' }}">
                                             {{ $name }}
                                         </button>
                                     @empty
-                                        <div class="px-3 py-2 text-sm text-gray-500">{{ __('keywords.no_customers_found') }}</div>
+                                        <div class="px-3 py-2 text-sm text-gray-500">
+                                            {{ __('keywords.no_customers_found') }}</div>
                                     @endforelse
                                 </div>
                             </div>
@@ -217,15 +226,20 @@
                         </button>
 
                         @if ($this->selectedCustomer)
-                            <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                            <div
+                                class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
                                 <div class="flex items-center justify-between gap-3">
                                     <span>{{ __('keywords.customer_balance') }}</span>
-                                    <span class="font-semibold">{{ number_format($this->selectedCustomer->balance, 2) }} {{ __('keywords.currency') }}</span>
+                                    <span
+                                        class="font-semibold">{{ number_format($this->selectedCustomer->balance, 2) }}
+                                        {{ __('keywords.currency') }}</span>
                                 </div>
                                 @if ($this->available_customer_credit > 0)
                                     <div class="mt-1 flex items-center justify-between gap-3">
                                         <span>{{ __('keywords.available_customer_credit') }}</span>
-                                        <span class="font-semibold text-emerald-700">{{ number_format($this->available_customer_credit, 2) }} {{ __('keywords.currency') }}</span>
+                                        <span
+                                            class="font-semibold text-emerald-700">{{ number_format($this->available_customer_credit, 2) }}
+                                            {{ __('keywords.currency') }}</span>
                                     </div>
                                 @endif
                             </div>
@@ -233,6 +247,11 @@
 
                         <x-input name="dealer_name" label="{{ __('keywords.dealer_name') }}"
                             placeholder="{{ __('keywords.dealer_name') }}" wire:model.live="dealer_name" />
+
+                        @if ($canManageCreatedAt)
+                            <x-input type="datetime-local" name="created_at" label="{{ __('keywords.created_at') }}"
+                                wire:model.live="created_at" />
+                        @endif
                     </div>
 
                     <div class="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -261,15 +280,18 @@
 
                         @if ($payment_type === 'installment')
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                <x-input name="down_payment" label="{{ __('keywords.down_payment') }}" placeholder="0.00"
-                                    wire:model.live="down_payment" type="number" step="0.01" required />
+                                <x-input name="down_payment" label="{{ __('keywords.down_payment') }}"
+                                    placeholder="0.00" wire:model.live="down_payment" type="number" step="0.01"
+                                    required />
 
                                 <x-input name="installment_months" label="{{ __('keywords.installment_months') }}"
                                     placeholder="{{ __('keywords.enter_months_count') }}"
-                                    wire:model.live="installment_months" type="number" min="1" max="60" required />
+                                    wire:model.live="installment_months" type="number" min="1"
+                                    max="60" required />
 
-                                <x-input name="interest_rate" label="{{ __('keywords.interest_rate') }}" placeholder="0"
-                                    wire:model.live="interest_rate" type="number" step="0.01" min="0" max="100" required />
+                                <x-input name="interest_rate" label="{{ __('keywords.interest_rate') }}"
+                                    placeholder="0" wire:model.live="interest_rate" type="number" step="0.01"
+                                    min="0" max="100" required />
                             </div>
                         @endif
 
@@ -277,19 +299,22 @@
                             wire:model.live="discount" type="number" step="0.01" min="0" />
 
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                            <label
+                                class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
                                 <input type="checkbox" wire:model.live="with_vat"
                                     class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
                                 <span>{{ __('keywords.apply_vat') }}</span>
                             </label>
 
-                            <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                            <label
+                                class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
                                 <input type="checkbox" wire:model.live="includeWaterReading"
                                     class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
                                 <span>{{ __('keywords.include_water_reading') }}</span>
                             </label>
 
-                            <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700 sm:col-span-2">
+                            <label
+                                class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700 sm:col-span-2">
                                 <input type="checkbox" wire:model.live="printAfterSave"
                                     class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
                                 <span>{{ __('keywords.print_after_save') }}</span>
@@ -306,12 +331,13 @@
                             </p>
 
                             <x-button variant="secondary" size="sm" wire:click="openCreateFilterModal"
-                                wire:loading.attr="disabled" :disabled="! $customer_id">
+                                wire:loading.attr="disabled" :disabled="!$customer_id">
                                 <span wire:loading.remove wire:target="openCreateFilterModal">
                                     <i class="fas fa-plus text-xs"></i>
                                     {{ __('keywords.add_filter') }}
                                 </span>
-                                <span wire:loading wire:target="openCreateFilterModal">{{ __('keywords.loading') }}</span>
+                                <span wire:loading
+                                    wire:target="openCreateFilterModal">{{ __('keywords.loading') }}</span>
                             </x-button>
                         </div>
 
@@ -333,8 +359,7 @@
                             },
                         }" class="relative">
                             <input type="text" x-model="search" @focus="open = true" @click="open = true"
-                                @click.outside="open = false"
-                                placeholder="{{ __('keywords.select_filter') }}"
+                                @click.outside="open = false" placeholder="{{ __('keywords.select_filter') }}"
                                 class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 ps-3 pe-8 text-sm text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                                 {{ !$customer_id ? 'disabled' : '' }} />
                             <input type="hidden" wire:model="water_filter_id" />
@@ -346,7 +371,8 @@
                             @if (!$customer_id)
                                 <p class="mt-1 text-xs text-gray-500">{{ __('keywords.select_customer_first') }}</p>
                             @elseif (empty($customerFilters))
-                                <p class="mt-1 text-xs text-amber-600">{{ __('keywords.no_filters_for_customer') }}</p>
+                                <p class="mt-1 text-xs text-amber-600">{{ __('keywords.no_filters_for_customer') }}
+                                </p>
                             @endif
 
                             <div x-show="open && filters.length > 0" x-cloak
@@ -371,7 +397,8 @@
                                 wire:model.live="waterReading.technician_name" required />
 
                             <x-input name="waterReading.tds" label="{{ __('keywords.tds') }}" placeholder="0"
-                                wire:model.live="waterReading.tds" type="number" step="0.01" min="0" required />
+                                wire:model.live="waterReading.tds" type="number" step="0.01" min="0"
+                                required />
 
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-gray-700">
@@ -381,7 +408,8 @@
                                     class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                                     <option value="">{{ __('keywords.select_water_quality') }}</option>
                                     @foreach ($waterQualityOptions as $quality)
-                                        <option value="{{ $quality->value }}">{{ __('keywords.' . $quality->label()) }}</option>
+                                        <option value="{{ $quality->value }}">
+                                            {{ __('keywords.' . $quality->label()) }}</option>
                                     @endforeach
                                 </select>
                                 @error('waterReading.water_quality')
@@ -390,7 +418,8 @@
                             </div>
 
                             <div class="flex items-end pb-1">
-                                <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                                <label
+                                    class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
                                     <input type="checkbox" wire:model.live="waterReading.before_installment"
                                         class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
                                     <span>{{ __('keywords.before_installment') }}</span>
@@ -399,7 +428,8 @@
 
                             @if ($waterReading['before_installment'] ?? false)
                                 <div class="sm:col-span-2 space-y-3 rounded-lg border border-emerald-200 bg-white p-3">
-                                    <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                                    <label
+                                        class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
                                         <input type="checkbox" wire:model.live="includeAfterInstallationReading"
                                             class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
                                         <span>{{ __('keywords.add_after_installment_reading') }}</span>
@@ -418,13 +448,16 @@
 
                                             <div>
                                                 <label class="mb-1.5 block text-sm font-medium text-gray-700">
-                                                    {{ __('keywords.water_quality') }} <span class="text-red-500">*</span>
+                                                    {{ __('keywords.water_quality') }} <span
+                                                        class="text-red-500">*</span>
                                                 </label>
                                                 <select wire:model.live="afterWaterReading.water_quality"
                                                     class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                                                    <option value="">{{ __('keywords.select_water_quality') }}</option>
+                                                    <option value="">{{ __('keywords.select_water_quality') }}
+                                                    </option>
                                                     @foreach ($waterQualityOptions as $quality)
-                                                        <option value="{{ $quality->value }}">{{ __('keywords.' . $quality->label()) }}</option>
+                                                        <option value="{{ $quality->value }}">
+                                                            {{ __('keywords.' . $quality->label()) }}</option>
                                                     @endforeach
                                                 </select>
                                                 @error('afterWaterReading.water_quality')
@@ -442,69 +475,89 @@
                 <div class="space-y-2 rounded-lg bg-gray-50 p-4 text-sm">
                     <div class="flex justify-between">
                         <span class="text-gray-500">{{ __('keywords.subtotal') }}</span>
-                        <span class="font-medium">{{ number_format($this->base_total, 2) }} {{ __('keywords.currency') }}</span>
+                        <span class="font-medium">{{ number_format($this->base_total, 2) }}
+                            {{ __('keywords.currency') }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-500">{{ __('keywords.discount') }}</span>
-                        <span class="font-medium text-red-600">- {{ number_format($this->discount_amount, 2) }} {{ __('keywords.currency') }}</span>
+                        <span class="font-medium text-red-600">- {{ number_format($this->discount_amount, 2) }}
+                            {{ __('keywords.currency') }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-500">{{ __('keywords.total_after_discount') }}</span>
-                        <span class="font-medium">{{ number_format($this->total_after_discount, 2) }} {{ __('keywords.currency') }}</span>
+                        <span class="font-medium">{{ number_format($this->total_after_discount, 2) }}
+                            {{ __('keywords.currency') }}</span>
                     </div>
                     @if ($with_vat)
                         <div class="flex justify-between">
                             <span class="text-gray-500">{{ __('keywords.vat_amount') }} (14%)</span>
-                            <span class="font-medium">+ {{ number_format($this->vat_amount, 2) }} {{ __('keywords.currency') }}</span>
+                            <span class="font-medium">+ {{ number_format($this->vat_amount, 2) }}
+                                {{ __('keywords.currency') }}</span>
                         </div>
                     @endif
                     <div class="flex justify-between">
                         <span class="text-gray-500">{{ __('keywords.total_after_vat') }}</span>
-                        <span class="font-medium">{{ number_format($this->subtotal_after_vat, 2) }} {{ __('keywords.currency') }}</span>
+                        <span class="font-medium">{{ number_format($this->subtotal_after_vat, 2) }}
+                            {{ __('keywords.currency') }}</span>
                     </div>
                     @if ($this->applied_customer_credit > 0)
                         <div class="flex justify-between">
                             <span class="text-gray-500">{{ __('keywords.applied_customer_credit') }}</span>
-                            <span class="font-medium text-emerald-600">- {{ number_format($this->applied_customer_credit, 2) }} {{ __('keywords.currency') }}</span>
+                            <span class="font-medium text-emerald-600">-
+                                {{ number_format($this->applied_customer_credit, 2) }}
+                                {{ __('keywords.currency') }}</span>
                         </div>
                     @endif
                     <div class="flex justify-between">
                         <span class="text-gray-500">{{ __('keywords.cash_due_now') }}</span>
-                        <span class="font-medium text-emerald-600">{{ number_format($this->cash_amount_due, 2) }} {{ __('keywords.currency') }}</span>
+                        <span class="font-medium text-emerald-600">{{ number_format($this->cash_amount_due, 2) }}
+                            {{ __('keywords.currency') }}</span>
                     </div>
                     @if ($payment_type === 'installment')
                         <div class="flex justify-between">
                             <span class="text-gray-500">{{ __('keywords.remaining_for_installments') }}</span>
-                            <span class="font-medium text-red-600">{{ number_format($this->remaining_after_down_payment, 2) }} {{ __('keywords.currency') }}</span>
+                            <span
+                                class="font-medium text-red-600">{{ number_format($this->remaining_after_down_payment, 2) }}
+                                {{ __('keywords.currency') }}</span>
                         </div>
                         @if ((float) ($interest_rate ?: 0) > 0)
                             <div class="flex justify-between">
                                 <span class="text-gray-500">{{ __('keywords.interest_amount') }}</span>
-                                <span class="font-medium text-amber-600">+ {{ number_format($this->interest_amount, 2) }} {{ __('keywords.currency') }}</span>
+                                <span class="font-medium text-amber-600">+
+                                    {{ number_format($this->interest_amount, 2) }}
+                                    {{ __('keywords.currency') }}</span>
                             </div>
                         @endif
                         @if ($this->installment_months_surcharge_total > 0)
                             <div class="flex justify-between">
                                 <span class="text-gray-500">{{ __('keywords.installment_monthly_fee') }}</span>
-                                <span class="font-medium text-amber-600">+ {{ number_format($this->installment_months_surcharge_total, 2) }} {{ __('keywords.currency') }}</span>
+                                <span class="font-medium text-amber-600">+
+                                    {{ number_format($this->installment_months_surcharge_total, 2) }}
+                                    {{ __('keywords.currency') }}</span>
                             </div>
                             <p class="text-xs text-gray-500">{{ __('keywords.installment_monthly_fee_hint') }}</p>
                         @endif
                         <div class="flex justify-between border-t pt-2">
-                            <span class="font-medium text-gray-700">{{ __('keywords.installment_financed_total') }}</span>
-                            <span class="font-bold text-gray-900">{{ number_format($this->installment_total, 2) }} {{ __('keywords.currency') }}</span>
+                            <span
+                                class="font-medium text-gray-700">{{ __('keywords.installment_financed_total') }}</span>
+                            <span class="font-bold text-gray-900">{{ number_format($this->installment_total, 2) }}
+                                {{ __('keywords.currency') }}</span>
                         </div>
                         @if ((int) ($installment_months ?: 0) > 0)
                             <div class="flex justify-between border-t pt-2">
-                                <span class="font-medium text-gray-700">{{ __('keywords.monthly_installment') }}</span>
-                                <span class="font-bold text-blue-600">{{ number_format($this->installment_amount, 2) }} {{ __('keywords.currency') }} / {{ __('keywords.month') }}</span>
+                                <span
+                                    class="font-medium text-gray-700">{{ __('keywords.monthly_installment') }}</span>
+                                <span
+                                    class="font-bold text-blue-600">{{ number_format($this->installment_amount, 2) }}
+                                    {{ __('keywords.currency') }} / {{ __('keywords.month') }}</span>
                             </div>
                         @endif
                     @endif
 
                     <div class="flex justify-between border-t pt-2">
                         <span class="font-medium text-gray-700">{{ __('keywords.invoice_total') }}</span>
-                        <span class="font-bold text-gray-900">{{ number_format($this->total_price, 2) }} {{ __('keywords.currency') }}</span>
+                        <span class="font-bold text-gray-900">{{ number_format($this->total_price, 2) }}
+                            {{ __('keywords.currency') }}</span>
                     </div>
                 </div>
             </div>
@@ -524,7 +577,8 @@
         <x-slot:body>
             <div class="space-y-4">
                 <x-input name="newFilter.filter_model" label="{{ __('keywords.filter_model') }}"
-                    placeholder="{{ __('keywords.enter_filter_model') }}" wire:model.blur="newFilter.filter_model" required />
+                    placeholder="{{ __('keywords.enter_filter_model') }}" wire:model.blur="newFilter.filter_model"
+                    required />
 
                 <x-input name="newFilter.address" label="{{ __('keywords.filter_address') }}"
                     placeholder="{{ __('keywords.enter_address') }}" wire:model.blur="newFilter.address" required />

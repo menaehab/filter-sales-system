@@ -247,6 +247,11 @@
                 <x-textarea name="payNote" label="{{ __('keywords.note') }}"
                     placeholder="{{ __('keywords.enter_note') }}" wire:model="payNote" />
 
+                @if ($canManageCreatedAt)
+                    <x-input type="datetime-local" name="payCreatedAt" label="{{ __('keywords.created_at') }}"
+                        wire:model.live="payCreatedAt" />
+                @endif
+
                 <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
                     <input type="checkbox" wire:model.live="printAfterPayment"
                         class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">

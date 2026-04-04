@@ -5,6 +5,7 @@ use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use App\Models\SupplierPaymentAllocation;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 
@@ -121,6 +122,67 @@ it('creates an installment purchase with down payment and next installment date'
     ]);
 
     Carbon::setTestNow();
+});
+
+it('allows setting created_at on purchase create when user has manage_created_at permission', function () {
+    $supplier = Supplier::factory()->create();
+    $product = Product::factory()->create([
+        'cost_price' => 30,
+        'quantity' => 0,
+    ]);
+
+    Livewire::test('purchases.purchase-create')
+        ->assertSeeHtml('name="created_at"')
+        ->set('supplier_id', $supplier->id)
+        ->set('payment_type', 'cash')
+        ->set('created_at', '2026-01-12T10:40')
+        ->set('items', [[
+            'product_id' => (string) $product->id,
+            'product_name' => $product->name,
+            'cost_price' => '45',
+            'quantity' => '2',
+        ]])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $purchase = Purchase::sole();
+    $payment = SupplierPayment::sole();
+
+    expect($purchase->created_at->toDateTimeString())->toBe('2026-01-12 10:40:00');
+    expect($payment->created_at->toDateTimeString())->toBe('2026-01-12 10:40:00');
+});
+
+it('ignores created_at on purchase create when user lacks manage_created_at permission', function () {
+    $limitedUser = User::factory()->create();
+    $limitedUser->givePermissionTo('manage_purchases');
+    $this->actingAs($limitedUser);
+
+    $supplier = Supplier::factory()->create();
+    $product = Product::factory()->create([
+        'cost_price' => 30,
+        'quantity' => 0,
+    ]);
+
+    Livewire::test('purchases.purchase-create')
+        ->assertDontSeeHtml('name="created_at"')
+        ->set('supplier_id', $supplier->id)
+        ->set('payment_type', 'cash')
+        ->set('created_at', '2020-01-01T00:00')
+        ->set('items', [[
+            'product_id' => (string) $product->id,
+            'product_name' => $product->name,
+            'cost_price' => '60',
+            'quantity' => '1',
+        ]])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $purchase = Purchase::sole();
+    $payment = SupplierPayment::sole();
+
+    expect($purchase->created_at->greaterThanOrEqualTo(now()->subMinute()))->toBeTrue();
+    expect($purchase->created_at->toDateTimeString())->not->toBe('2020-01-01 00:00:00');
+    expect($payment->created_at->toDateTimeString())->not->toBe('2020-01-01 00:00:00');
 });
 
 it('validates purchase fields before saving', function () {

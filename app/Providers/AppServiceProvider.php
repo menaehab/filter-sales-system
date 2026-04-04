@@ -55,7 +55,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $cacheKey = 'installment_reminder_sent_'.now()->toDateString();
         if (cache()->missing($cacheKey)) {
-            Artisan::call('installments:remind');
+            Artisan::call('suppliers:installments-remind');
             cache()->put($cacheKey, true, now()->endOfDay());
         }
     }

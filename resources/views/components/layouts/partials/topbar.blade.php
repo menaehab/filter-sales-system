@@ -44,7 +44,7 @@
             x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="transform opacity-100 scale-100"
             x-transition:leave-end="transform opacity-0 scale-95"
-            class="absolute inset-e-0 mt-3 w-88 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl ring-1 ring-black/5 sm:w-96">
+            class="absolute left-0 top-full mt-3 w-88 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl ring-1 ring-black/5 sm:w-96 z-40">
 
             {{-- Header with actions --}}
             <div class="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
@@ -139,21 +139,6 @@
         </div>
     </div>
 
-    <x-modal name="confirm-action" title="{{ __('keywords.confirm') }}" maxWidth="sm">
-        <x-slot:body>
-            <p class="text-sm text-gray-600">{{ __('keywords.are_you_sure') }}</p>
-        </x-slot:body>
-        <x-slot:footer>
-            <x-button variant="secondary" @click="$dispatch('close-modal-confirm-action')">
-                {{ __('keywords.cancel') }}
-            </x-button>
-            <x-button variant="danger"
-                @click="$dispatch('confirmed-confirm-action'); $dispatch('close-modal-confirm-action')">
-                {{ __('keywords.confirm') }}
-            </x-button>
-        </x-slot:footer>
-    </x-modal>
-
     <script>
         function notificationPanel() {
             return {
@@ -161,7 +146,10 @@
                 confirmMessage: '',
                 confirmAction: null,
                 setConfirm(message, action) {
-                    window.confirmModalMessage = message;
+                    const messageElement = document.getElementById('confirmActionMessage');
+                    if (messageElement) {
+                        messageElement.textContent = message;
+                    }
                     this.confirmAction = action;
                     window.dispatchEvent(new CustomEvent('open-modal-confirm-action'));
                 },
@@ -174,7 +162,6 @@
                         }
                     }
                     this.confirmAction = null;
-                    window.confirmModalMessage = '';
                 },
                 async markAsRead(id) {
                     try {
@@ -298,7 +285,7 @@
             x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="transform opacity-100 scale-100"
             x-transition:leave-end="transform opacity-0 scale-95"
-            class="absolute inset-e-0 mt-3 w-52 rounded-xl border border-gray-200 bg-white py-1.5 shadow-lg ring-1 ring-black/5 ltr:origin-top-right rtl:origin-top-left">
+            class="absolute left-0 top-full mt-3 w-52 rounded-xl border border-gray-200 bg-white py-1.5 shadow-lg ring-1 ring-black/5 z-40">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit"
@@ -306,4 +293,32 @@
             </form>
         </div>
     </div>
+
 </header>
+
+{{-- Confirm action modal --}}
+<div x-data>
+    <template x-teleport="body">
+        <x-modal name="confirm-action" title="{{ __('keywords.confirm') }}" maxWidth="sm">
+            <x-slot:body>
+                <div class="flex items-start gap-4">
+                    <div
+                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 ring-1 ring-red-100">
+                        <i class="fas fa-triangle-exclamation text-sm text-red-500" aria-hidden="true"></i>
+                    </div>
+                    <p id="confirmActionMessage" class="pt-2 text-sm leading-relaxed text-gray-600">
+                        {{ __('keywords.are_you_sure') }}</p>
+                </div>
+            </x-slot:body>
+            <x-slot:footer>
+                <x-button variant="secondary" @click="$dispatch('close-modal-confirm-action')">
+                    {{ __('keywords.cancel') }}
+                </x-button>
+                <x-button variant="danger"
+                    @click="$dispatch('confirmed-confirm-action'); $dispatch('close-modal-confirm-action')">
+                    {{ __('keywords.confirm') }}
+                </x-button>
+            </x-slot:footer>
+        </x-modal>
+    </template>
+</div>

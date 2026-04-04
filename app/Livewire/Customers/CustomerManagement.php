@@ -123,6 +123,11 @@ class CustomerManagement extends Component
         $this->resetPage();
     }
 
+    protected function applyAdditionalFilters(\Illuminate\Database\Eloquent\Builder $query): void
+    {
+        $query->byUserPlaces();
+    }
+
     #[Computed]
     public function customers()
     {

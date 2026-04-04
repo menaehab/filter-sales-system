@@ -23,6 +23,10 @@ class PurchaseCreate extends Component
 
     public bool $printAfterSave = false;
 
+    public string $created_at = '';
+
+    public array $form = [];
+
     public array $items = [];
 
     public array $newSupplier = [
@@ -48,6 +52,12 @@ class PurchaseCreate extends Component
     public function mount(): void
     {
         $this->addItem();
+        $this->created_at = now()->format('Y-m-d\TH:i');
+    }
+
+    public function getCanManageCreatedAtProperty(): bool
+    {
+        return (bool) auth()->user()?->can('manage_created_at');
     }
 
     // ==========================================
@@ -275,6 +285,7 @@ class PurchaseCreate extends Component
             'payment_type' => $this->payment_type,
             'down_payment' => $this->down_payment,
             'installment_months' => $this->installment_months,
+            'created_at' => $this->created_at,
             'items' => $this->items,
         ];
 
@@ -297,6 +308,7 @@ class PurchaseCreate extends Component
             'suppliers' => $this->suppliers,
             'products' => $this->products,
             'categories' => $this->categories,
+            'canManageCreatedAt' => $this->canManageCreatedAt,
         ]);
     }
 }

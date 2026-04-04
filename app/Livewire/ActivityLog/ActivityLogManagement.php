@@ -203,19 +203,6 @@ class ActivityLogManagement extends Component
         return Str::headline($event);
     }
 
-    public function translateAttributeLabel(string $attribute): string
-    {
-        $normalized = Str::snake(str_replace('.', '_', $attribute));
-        $key = 'keywords.'.$normalized;
-        $translated = __($key);
-
-        if ($translated !== $key) {
-            return $translated;
-        }
-
-        return Str::headline(str_replace(['.', '_'], ' ', $attribute));
-    }
-
     public function formatAttributeValue(mixed $value): string
     {
         if (is_null($value)) {

@@ -618,7 +618,7 @@ Remaining gap to senior consistency bar:
 ### Scheduler Surface
 
 - Daily commands configured in `routes/console.php`:
-    - `installments:remind`
+    - `suppliers:installments-remind`
     - `filters:candle-remind`
     - `customers:installment-remind`
     - `products:low-stock-alert`

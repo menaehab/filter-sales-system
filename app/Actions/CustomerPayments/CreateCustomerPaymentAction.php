@@ -7,6 +7,7 @@ namespace App\Actions\CustomerPayments;
 use App\Models\CustomerPayment;
 use App\Models\CustomerPaymentAllocation;
 use App\Models\Sale;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 final class CreateCustomerPaymentAction
@@ -34,6 +35,7 @@ final class CreateCustomerPaymentAction
                 'note' => $data['note'] ?? null,
                 'customer_id' => $sale->customer_id,
                 'user_id' => auth()->id(),
+                'created_at' => $this->resolveCreatedAt(data_get($data, 'created_at')),
             ]);
 
             foreach ($allocations as $allocation) {
@@ -63,5 +65,14 @@ final class CreateCustomerPaymentAction
         }
 
         return $allocations;
+    }
+
+    private function resolveCreatedAt(mixed $createdAt): Carbon
+    {
+        if (auth()->user()?->can('manage_created_at') && filled($createdAt)) {
+            return Carbon::parse((string) $createdAt);
+        }
+
+        return Carbon::now();
     }
 }

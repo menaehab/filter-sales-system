@@ -15,12 +15,13 @@ class SendCustomerInstallmentReminders extends Command
 
     public function handle(): void
     {
+        /** @var \Illuminate\Support\Collection<int, Sale> $dueInstallments */
         $dueInstallments = Sale::query()
             ->whereNotNull('installment_months')
             ->where('installment_months', '>', 0)
             ->with('customer')
             ->get()
-            ->filter(function ($sale) {
+            ->filter(function (Sale $sale): bool {
                 return ! $sale->isFullyPaid()
                     && $sale->next_installment_date
                     && $sale->next_installment_date->lte(now());
@@ -32,7 +33,17 @@ class SendCustomerInstallmentReminders extends Command
             return;
         }
 
-        $users = User::all();
+        /** @var \Illuminate\Support\Collection<int, User> $users */
+        $users = User::all()
+            ->filter(fn (User $user): bool => $user->can('receive_customer_installment_notifications'))
+            ->values();
+
+        if ($users->isEmpty()) {
+            $this->warn('No users with customer installment notification permission found.');
+
+            return;
+        }
+
         $notificationCount = 0;
 
         foreach ($dueInstallments as $sale) {
@@ -43,6 +54,7 @@ class SendCustomerInstallmentReminders extends Command
 
             // Log activity for each installment notification
             activity()
+                ->event('activity_send_customer_installment_reminder')
                 ->withProperties([
                     'sale_id' => $sale->id,
                     'sale_number' => $sale->number,

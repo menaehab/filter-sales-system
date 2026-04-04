@@ -40,7 +40,7 @@
                 class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 ps-3 pe-8 text-sm text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
 
             <button x-show="selected" @click="clear()" type="button"
-                class="absolute end-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                class="absolute inset-e-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 <i class="fas fa-times text-xs"></i>
             </button>
 
@@ -65,6 +65,30 @@
             </div>
         </div>
     </x-search-toolbar>
+
+    <div class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p class="text-sm font-semibold text-gray-900">{{ __('keywords.candle_needs_replacement') }}</p>
+
+            @if (!empty($candleNeedsReplacement))
+                <button type="button" wire:click="clearCandleNeedsReplacement"
+                    class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">
+                    {{ __('keywords.clear') }}
+                </button>
+            @endif
+        </div>
+
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            @foreach ($this->candleFilterOptions as $candleKey => $candleLabel)
+                <label
+                    class="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50">
+                    <input type="checkbox" value="{{ $candleKey }}" wire:model.live="candleNeedsReplacement"
+                        class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    <span class="font-medium">{{ $candleLabel }}</span>
+                </label>
+            @endforeach
+        </div>
+    </div>
 
     {{-- Filters table --}}
     <x-data-table :searchable="false" :paginated="false" :headers="[
