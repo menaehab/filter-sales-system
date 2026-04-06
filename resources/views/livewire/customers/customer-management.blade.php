@@ -15,6 +15,7 @@
     {{-- Customers table --}}
     <x-data-table :searchable="false" :paginated="false" :headers="[
         ['key' => 'name', 'label' => __('keywords.name')],
+        ['key' => 'code', 'label' => __('keywords.code')],
         ['key' => 'phone', 'label' => __('keywords.phone')],
         ['key' => 'national_number', 'label' => __('keywords.national_number')],
         ['key' => 'address', 'label' => __('keywords.address')],
@@ -26,6 +27,9 @@
             <tr class="hover:bg-gray-50 transition-colors">
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm font-medium text-gray-900">{{ $customer->name }}</span>
+                </td>
+                <td class="whitespace-nowrap px-4 py-3">
+                    <span class="text-sm text-gray-500">{{ $customer->code ?? '—' }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-500">{{ $customer->phone ?? '—' }}</span>
@@ -68,6 +72,8 @@
                 <div class="space-y-5">
                     <x-input name="form.name" label="{{ __('keywords.name') }}"
                         placeholder="{{ __('keywords.enter_name') }}" wire:model.blur="form.name" required />
+                    <x-input name="form.code" label="{{ __('keywords.code') }}"
+                        placeholder="{{ __('keywords.enter_code') }}" wire:model.blur="form.code" />
                     <x-select name="form.place_id" label="{{ __('keywords.places') }}" wire:model.blur="form.place_id"
                         :options="$this->placeOptions" placeholder="{{ __('keywords.select_place') }}" required />
                     <x-input name="form.phone" label="{{ __('keywords.phone') }}"
@@ -91,6 +97,8 @@
                 <div class="space-y-5">
                     <x-input name="form.name" label="{{ __('keywords.name') }}"
                         placeholder="{{ __('keywords.enter_name') }}" wire:model.blur="form.name" required />
+                    <x-input name="form.code" label="{{ __('keywords.code') }}"
+                        placeholder="{{ __('keywords.enter_code') }}" wire:model.blur="form.code" />
                     <x-select name="form.place_id" label="{{ __('keywords.places') }}" wire:model.blur="form.place_id"
                         :options="$this->placeOptions" placeholder="{{ __('keywords.select_place') }}" required />
                     <x-input name="form.phone" label="{{ __('keywords.phone') }}"

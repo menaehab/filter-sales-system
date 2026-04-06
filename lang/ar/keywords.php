@@ -50,7 +50,8 @@ return [
     'edit_user' => 'تعديل المستخدم',
     'delete_user' => 'حذف المستخدم',
     'delete_user_confirmation' => 'هل أنت متأكد أنك تريد حذف هذا المستخدم؟.',
-
+    'enter_your_code' => 'أدخل الكود',
+    'enter_code' => 'أدخل الكود',
     'search' => 'بحث',
     'results' => 'نتائج',
     'enter_name' => 'أدخل الاسم',
@@ -677,4 +678,5 @@ return [
     'installment_amount' => 'قيمة القسط',
     'discount_value' => 'قيمة الخصم',
     'view_only_customers_in_his_places' => 'عرض العملاء في أماكنه فقط',
+    'code' => 'الكود',
 ];

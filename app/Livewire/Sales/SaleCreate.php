@@ -34,6 +34,7 @@ class SaleCreate extends Component
     public array $newCustomer = [
         'name' => '',
         'place_id' => '',
+        'code' => '',
         'phone' => '',
         'national_number' => '',
         'address' => '',
@@ -292,6 +293,7 @@ class SaleCreate extends Component
         $this->newCustomer = [
             'name' => '',
             'place_id' => '',
+            'code' => '',
             'phone' => '',
             'national_number' => '',
             'address' => '',
@@ -585,7 +587,8 @@ class SaleCreate extends Component
             $query->where(function ($q) {
                 $q->where('name', 'like', '%'.$this->customerSearch.'%')
                     ->orWhere('phone', 'like', '%'.$this->customerSearch.'%')
-                    ->orWhere('national_number', 'like', '%'.$this->customerSearch.'%');
+                    ->orWhere('national_number', 'like', '%'.$this->customerSearch.'%')
+                    ->orWhere('code', 'like', '%'.$this->customerSearch.'%');
             });
         }
 

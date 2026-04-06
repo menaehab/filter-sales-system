@@ -13,6 +13,7 @@ final class CreateCustomerAction
         return Customer::create([
             'name' => $data['name'],
             'phone' => $data['phone'] ?? null,
+            'code' => $data['code'],
             'national_number' => $data['national_number'] ?? null,
             'address' => $data['address'] ?? null,
             'place_id' => $data['place_id'],
