@@ -13,6 +13,7 @@ final class UpdateCustomerAction
         $customer->update([
             'name' => $data['name'],
             'phone' => $data['phone'] ?? null,
+            'code' => $data['code'],
             'national_number' => $data['national_number'] ?? null,
             'address' => $data['address'] ?? null,
             'place_id' => $data['place_id'],

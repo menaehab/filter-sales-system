@@ -611,6 +611,9 @@
                     {{ __('keywords.add_place') }}
                 </button>
 
+                <x-input name="newCustomer.code" label="{{ __('keywords.code') }}"
+                    placeholder="{{ __('keywords.enter_your_code') }}" wire:model.blur="newCustomer.code" />
+
                 <x-input name="newCustomer.phone" label="{{ __('keywords.phone') }}"
                     placeholder="{{ __('keywords.enter_your_phone') }}" wire:model.blur="newCustomer.phone" />
 

@@ -30,6 +30,7 @@ class CustomerManagement extends Component
         return [
             'name' => '',
             'phone' => '',
+            'code' => '',
             'national_number' => '',
             'address' => '',
             'place_id' => '',
@@ -43,7 +44,7 @@ class CustomerManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['name', 'phone', 'national_number', 'address', 'place.name'];
+        return ['name', 'phone', 'code', 'national_number', 'address', 'place.name'];
     }
 
     protected function getWithRelations(): array
@@ -104,6 +105,7 @@ class CustomerManagement extends Component
         $this->form = [
             'name' => $customer->name,
             'phone' => $customer->phone,
+            'code' => $customer->code,
             'national_number' => $customer->national_number,
             'address' => $customer->address,
             'place_id' => (string) $customer->place_id,
