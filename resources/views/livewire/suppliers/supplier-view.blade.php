@@ -19,8 +19,9 @@
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.phone') }}</span>
-                    <span
-                        class="font-medium text-gray-900">{{ $supplier->phone ?? __('keywords.not_specified') }}</span>
+                    <span class="font-medium text-gray-900">
+                        {{ $supplier->phone_numbers !== [] ? implode(' - ', $supplier->phone_numbers) : __('keywords.not_specified') }}
+                    </span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.created_at') }}</span>

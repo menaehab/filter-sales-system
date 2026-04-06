@@ -55,12 +55,12 @@ class FilterManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['filter_model', 'address', 'customer.name', 'customer.phone'];
+        return ['filter_model', 'address', 'customer.name', 'customer.phones.number'];
     }
 
     protected function getWithRelations(): array
     {
-        return ['customer'];
+        return ['customer', 'customer.phones'];
     }
 
     protected function additionalQueryString(): array

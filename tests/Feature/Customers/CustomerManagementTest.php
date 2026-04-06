@@ -15,7 +15,7 @@ it('creates a customer with selected place', function () {
     Livewire::test('customers.customer-management')
         ->set('form.name', 'Ahmed Ali')
         ->set('form.place_id', (string) $place->id)
-        ->set('form.phone', '')
+        ->set('form.phones.0.number', '')
         ->set('form.national_number', '')
         ->set('form.address', 'Test Address')
         ->call('create')
@@ -43,7 +43,6 @@ it('updates customer place', function () {
     $customer = Customer::factory()->create([
         'name' => 'Customer One',
         'place_id' => $oldPlace->id,
-        'phone' => null,
         'national_number' => null,
     ]);
 

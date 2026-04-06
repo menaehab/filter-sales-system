@@ -87,6 +87,11 @@
                     <x-select name="form.category_id" label="{{ __('keywords.category') }}"
                         wire:model.blur="form.category_id" :options="$this->categories->pluck('name', 'id')->toArray()"
                         placeholder="{{ __('keywords.select_category') }}" required />
+                    <button type="button" wire:click="openCreateCategoryModal"
+                        class="text-xs font-medium text-emerald-600 hover:text-emerald-700">
+                        <i class="fas fa-tags me-1"></i>
+                        {{ __('keywords.add_category') }}
+                    </button>
                     <x-checkbox name="form.for_maintenance" label="{{ __('keywords.for_maintenance') }}"
                         wire:model.blur="form.for_maintenance" />
                 </div>
@@ -116,6 +121,11 @@
                     <x-select name="form.category_id" label="{{ __('keywords.category') }}"
                         wire:model.blur="form.category_id" :options="$this->categories->pluck('name', 'id')->toArray()"
                         placeholder="{{ __('keywords.select_category') }}" required />
+                    <button type="button" wire:click="openCreateCategoryModal"
+                        class="text-xs font-medium text-emerald-600 hover:text-emerald-700">
+                        <i class="fas fa-tags me-1"></i>
+                        {{ __('keywords.add_category') }}
+                    </button>
                     <x-checkbox name="form.for_maintenance" label="{{ __('keywords.for_maintenance') }}"
                         wire:model.blur="form.for_maintenance" />
                 </div>
@@ -124,6 +134,22 @@
                 <x-button variant="secondary"
                     @click="$dispatch('close-modal-edit-product')">{{ __('keywords.cancel') }}</x-button>
                 <x-button variant="primary" wire:click="updateProduct">{{ __('keywords.update') }}</x-button>
+            </x-slot:footer>
+        </x-modal>
+
+        <x-modal name="create-category-inline" title="{{ __('keywords.create_category') }}" maxWidth="lg">
+            <x-slot:body>
+                <div class="space-y-4">
+                    <x-input name="newCategory.name" label="{{ __('keywords.name') }}"
+                        placeholder="{{ __('keywords.enter_name') }}" wire:model.blur="newCategory.name" required />
+                </div>
+            </x-slot:body>
+            <x-slot:footer>
+                <x-button variant="secondary" @click="$dispatch('close-modal-create-category-inline')">
+                    {{ __('keywords.cancel') }}
+                </x-button>
+                <x-button variant="primary"
+                    wire:click="createCategoryInline">{{ __('keywords.add_category') }}</x-button>
             </x-slot:footer>
         </x-modal>
 

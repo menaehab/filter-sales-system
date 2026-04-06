@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\HasLogActivity;
+use App\Traits\HasPhones;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Sluggable\HasSlug;
@@ -10,12 +11,11 @@ use Spatie\Sluggable\SlugOptions;
 
 class Supplier extends Model
 {
-    use HasFactory,HasLogActivity,HasSlug;
+    use HasFactory,HasLogActivity,HasPhones,HasSlug;
 
     protected $fillable = [
         'name',
         'slug',
-        'phone',
     ];
 
     public function getSlugOptions(): SlugOptions

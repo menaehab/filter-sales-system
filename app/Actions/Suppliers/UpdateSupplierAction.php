@@ -12,9 +12,10 @@ final class UpdateSupplierAction
     {
         $supplier->update([
             'name' => $data['name'],
-            'phone' => $data['phone'] ?? null,
         ]);
 
-        return $supplier->fresh();
+        $supplier->syncPhones($data['phones'] ?? []);
+
+        return $supplier->fresh('phones');
     }
 }

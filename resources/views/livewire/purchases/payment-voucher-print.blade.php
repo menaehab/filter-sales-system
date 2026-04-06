@@ -32,8 +32,9 @@
             <div>
                 <p class="mb-2"><strong>{{ __('keywords.supplier') }}:</strong>
                     {{ $payment->supplier?->name ?? '—' }}</p>
-                @if ($payment->supplier?->phone)
-                    <p class="mb-2"><strong>{{ __('keywords.phone') }}:</strong> {{ $payment->supplier->phone }}</p>
+                @if ($payment->supplier?->phone_numbers !== [])
+                    <p class="mb-2"><strong>{{ __('keywords.phone') }}:</strong>
+                        {{ implode(' - ', $payment->supplier->phone_numbers) }}</p>
                 @endif
                 <p class="mb-2"><strong>{{ __('keywords.payment_method') }}:</strong>
                     @switch($payment->payment_method)

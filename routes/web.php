@@ -80,10 +80,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('suppliers')
         ->middleware('permission:view_suppliers|manage_suppliers');
 
-    Route::livewire('/suppliers/{supplier:slug}', 'suppliers.supplier-details')
-        ->name('suppliers.show')
-        ->middleware('permission:view_suppliers|manage_suppliers');
-
     Route::livewire('/suppliers/{supplier:slug}/view', 'suppliers.supplier-view')
         ->name('suppliers.view')
         ->middleware('permission:view_suppliers|manage_suppliers');

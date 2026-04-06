@@ -16,7 +16,7 @@
             search: @entangle('customerSearch'),
             selected: @entangle('customerSlug'),
             get filtered() {
-                const all = @js($this->customers->map(fn($c) => ['name' => $c->name, 'slug' => $c->slug, 'phone' => $c->phone])->toArray());
+                const all = @js($this->customers->map(fn($c) => ['name' => $c->name, 'slug' => $c->slug, 'phone' => $c->phone_numbers !== [] ? implode(' - ', $c->phone_numbers) : '—'])->toArray());
                 const query = this.search.toLowerCase().trim();
         
                 if (!query) {
@@ -111,7 +111,8 @@
                     <span class="text-sm text-gray-900">{{ $filter->customer?->name }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
-                    <span class="text-sm text-gray-500">{{ $filter->customer?->phone ?? '—' }}</span>
+                    <span
+                        class="text-sm text-gray-500">{{ $filter->customer?->phone_numbers !== [] ? implode(' - ', $filter->customer->phone_numbers) : '—' }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-500">{{ $filter->installed_at?->format('Y-m-d') ?? '—' }}</span>
@@ -161,7 +162,7 @@
                         open: false,
                         search: @entangle('customerModalSearch'),
                         selected: @entangle('form.customer_id'),
-                        customers: @js($this->customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone])->toArray()),
+                        customers: @js($this->customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone_numbers !== [] ? implode(' - ', $c->phone_numbers) : '—'])->toArray()),
                         get filtered() {
                             const query = (this.search || '').toString().toLowerCase().trim();
                             if (!query) {
@@ -227,7 +228,7 @@
                         open: false,
                         search: @entangle('customerModalSearch'),
                         selected: @entangle('form.customer_id'),
-                        customers: @js($this->customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone])->toArray()),
+                        customers: @js($this->customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone_numbers !== [] ? implode(' - ', $c->phone_numbers) : '—'])->toArray()),
                         get filtered() {
                             const query = (this.search || '').toString().toLowerCase().trim();
                             if (!query) {

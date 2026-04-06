@@ -10,13 +10,16 @@ final class CreateCustomerAction
 {
     public function execute(array $data): Customer
     {
-        return Customer::create([
+        $customer = Customer::create([
             'name' => $data['name'],
-            'phone' => $data['phone'] ?? null,
             'code' => $data['code'],
             'national_number' => $data['national_number'] ?? null,
             'address' => $data['address'] ?? null,
             'place_id' => $data['place_id'],
         ]);
+
+        $customer->syncPhones($data['phones'] ?? []);
+
+        return $customer->fresh('phones');
     }
 }

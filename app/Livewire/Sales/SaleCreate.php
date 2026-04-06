@@ -3,9 +3,11 @@
 namespace App\Livewire\Sales;
 
 use App\Actions\Places\CreatePlaceAction;
+use App\Actions\Customers\CreateCustomerAction;
 use App\Actions\Sales\CreateSaleAction;
 use App\Enums\WaterQualityTypeEnum;
 use App\Livewire\Traits\HasSaleForm;
+use App\Livewire\Traits\HasPhoneRepeater;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Place;
@@ -19,7 +21,7 @@ use Livewire\Component;
 #[Layout('layouts.app', ['title' => 'pos'])]
 class SaleCreate extends Component
 {
-    use HasSaleForm;
+    use HasPhoneRepeater, HasSaleForm;
 
     public string $customerSearch = '';
 
@@ -35,7 +37,7 @@ class SaleCreate extends Component
         'name' => '',
         'place_id' => '',
         'code' => '',
-        'phone' => '',
+        'phones' => [['number' => '']],
         'national_number' => '',
         'address' => '',
     ];
@@ -294,7 +296,7 @@ class SaleCreate extends Component
             'name' => '',
             'place_id' => '',
             'code' => '',
-            'phone' => '',
+            'phones' => [['number' => '']],
             'national_number' => '',
             'address' => '',
         ];
@@ -328,7 +330,7 @@ class SaleCreate extends Component
         $this->dispatch('open-modal-create-customer-inline');
     }
 
-    public function createCustomerInline(): void
+    public function createCustomerInline(CreateCustomerAction $action): void
     {
         $request = new \App\Http\Requests\Customers\CreateCustomerRequest;
 
@@ -338,7 +340,7 @@ class SaleCreate extends Component
             collect($request->attributes())->mapWithKeys(fn ($label, $key) => ["newCustomer.{$key}" => $label])->toArray()
         );
 
-        $customer = Customer::create($validated['newCustomer']);
+        $customer = $action->execute($validated['newCustomer']);
 
         $this->customer_id = $customer->id;
         $this->customerSearch = $customer->name;
@@ -586,7 +588,7 @@ class SaleCreate extends Component
         if (filled($this->customerSearch)) {
             $query->where(function ($q) {
                 $q->where('name', 'like', '%'.$this->customerSearch.'%')
-                    ->orWhere('phone', 'like', '%'.$this->customerSearch.'%')
+                    ->orWhereHas('phones', fn ($phoneQuery) => $phoneQuery->where('number', 'like', '%'.$this->customerSearch.'%'))
                     ->orWhere('national_number', 'like', '%'.$this->customerSearch.'%')
                     ->orWhere('code', 'like', '%'.$this->customerSearch.'%');
             });

@@ -8,6 +8,7 @@ use App\Actions\Suppliers\UpdateSupplierAction;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
+use App\Livewire\Traits\HasPhoneRepeater;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Supplier;
 use Livewire\Attributes\Computed;
@@ -17,7 +18,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class SupplierManagement extends Component
 {
-    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
+    use HasCrudModals, HasCrudQuery, HasForm, HasPhoneRepeater, WithSearchAndPagination;
 
     public function mount(): void
     {
@@ -28,7 +29,7 @@ class SupplierManagement extends Component
     {
         return [
             'name' => '',
-            'phone' => '',
+            'phones' => [['number' => '']],
         ];
     }
 
@@ -39,7 +40,12 @@ class SupplierManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['name', 'phone'];
+        return ['name', 'phones.number'];
+    }
+
+    protected function getWithRelations(): array
+    {
+        return ['phones'];
     }
 
     public function create(CreateSupplierAction $action): void
@@ -89,7 +95,11 @@ class SupplierManagement extends Component
 
         $this->form = [
             'name' => $supplier->name,
-            'phone' => $supplier->phone,
+            'phones' => collect($supplier->phone_numbers)
+                ->map(fn (string $number) => ['number' => $number])
+                ->whenEmpty(fn ($phones) => $phones->push(['number' => '']))
+                ->values()
+                ->all(),
         ];
     }
 
