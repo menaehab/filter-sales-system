@@ -32,7 +32,9 @@
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.phone') }}</span>
-                    <span class="font-medium text-gray-900">{{ $filter->customer?->phone ?? '—' }}</span>
+                    <span class="font-medium text-gray-900">
+                        {{ $filter->customer?->phone_numbers !== [] ? implode(' - ', $filter->customer->phone_numbers) : '—' }}
+                    </span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.installed_at') }}</span>

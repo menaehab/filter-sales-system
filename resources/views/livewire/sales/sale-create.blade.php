@@ -614,8 +614,7 @@
                 <x-input name="newCustomer.code" label="{{ __('keywords.code') }}"
                     placeholder="{{ __('keywords.enter_your_code') }}" wire:model.blur="newCustomer.code" />
 
-                <x-input name="newCustomer.phone" label="{{ __('keywords.phone') }}"
-                    placeholder="{{ __('keywords.enter_your_phone') }}" wire:model.blur="newCustomer.phone" />
+                <x-phone-repeater name="newCustomer.phones" :label="__('keywords.phone')" :placeholder="__('keywords.enter_your_phone')" />
 
                 <x-input name="newCustomer.national_number" label="{{ __('keywords.national_number') }}"
                     placeholder="{{ __('keywords.enter_national_number') }}"

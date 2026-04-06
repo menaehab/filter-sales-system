@@ -10,14 +10,21 @@ beforeEach(function () {
 it('creates a supplier', function () {
     Livewire::test('suppliers.supplier-management')
         ->set('form.name', 'John Doe')
-        ->set('form.phone', '01234567890')
+        ->set('form.phones.0.number', '01234567890')
         ->call('create')
         ->assertHasNoErrors()
         ->assertDispatched('close-modal-create-supplier');
 
     $this->assertDatabaseHas('suppliers', [
         'name' => 'John Doe',
-        'phone' => '01234567890',
+    ]);
+
+    $supplier = Supplier::where('name', 'John Doe')->firstOrFail();
+
+    $this->assertDatabaseHas('phones', [
+        'number' => '01234567890',
+        'phoneable_type' => $supplier->getMorphClass(),
+        'phoneable_id' => $supplier->id,
     ]);
 });
 
@@ -29,12 +36,13 @@ it('validates supplier data when creating', function () {
 });
 
 it('updates a supplier', function () {
-    $supplier = Supplier::factory()->create(['name' => 'Old Name', 'phone' => '01234567890']);
+    $supplier = Supplier::factory()->create(['name' => 'Old Name']);
+    $supplier->syncPhones([['number' => '01234567890']]);
 
     Livewire::test('suppliers.supplier-management')
         ->call('openEdit', $supplier->id)
         ->set('form.name', 'New Name')
-        ->set('form.phone', '01576543210')
+        ->set('form.phones.0.number', '01576543210')
         ->call('updateSupplier')
         ->assertHasNoErrors()
         ->assertDispatched('close-modal-edit-supplier');
@@ -42,7 +50,12 @@ it('updates a supplier', function () {
     $this->assertDatabaseHas('suppliers', [
         'id' => $supplier->id,
         'name' => 'New Name',
-        'phone' => '01576543210',
+    ]);
+
+    $this->assertDatabaseHas('phones', [
+        'number' => '01576543210',
+        'phoneable_type' => $supplier->getMorphClass(),
+        'phoneable_id' => $supplier->id,
     ]);
 });
 
@@ -60,8 +73,11 @@ it('deletes a supplier', function () {
 });
 
 it('filters suppliers by search term', function () {
-    Supplier::factory()->create(['name' => 'John Doe', 'phone' => '01234567890']);
-    Supplier::factory()->create(['name' => 'Jane Smith', 'phone' => '09876543210']);
+    $john = Supplier::factory()->create(['name' => 'John Doe']);
+    $john->syncPhones([['number' => '01234567890']]);
+
+    $jane = Supplier::factory()->create(['name' => 'Jane Smith']);
+    $jane->syncPhones([['number' => '09876543210']]);
 
     $component = Livewire::test('suppliers.supplier-management')
         ->set('search', 'John');
@@ -86,9 +102,10 @@ it('paginates suppliers using per page selection', function () {
 });
 
 it('show supplier details page', function () {
-    $supplier = Supplier::factory()->create(['name' => 'John Doe', 'phone' => '01234567890']);
+    $supplier = Supplier::factory()->create(['name' => 'John Doe']);
+    $supplier->syncPhones([['number' => '01234567890']]);
 
-    Livewire::test('suppliers.supplier-details', ['supplier' => $supplier])
+    Livewire::test('suppliers.supplier-view', ['supplier' => $supplier])
         ->assertSet('supplier.name', 'John Doe')
         ->assertSet('supplier.phone', '01234567890');
 });

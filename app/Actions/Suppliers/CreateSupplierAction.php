@@ -10,9 +10,12 @@ final class CreateSupplierAction
 {
     public function execute(array $data): Supplier
     {
-        return Supplier::create([
+        $supplier = Supplier::create([
             'name' => $data['name'],
-            'phone' => $data['phone'] ?? null,
         ]);
+
+        $supplier->syncPhones($data['phones'] ?? []);
+
+        return $supplier->fresh('phones');
     }
 }

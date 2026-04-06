@@ -15,7 +15,8 @@ class UpdateSupplierRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:11', 'regex:/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}$/'],
+            'phones' => ['nullable', 'array'],
+            'phones.*.number' => ['nullable', 'string', 'max:11', 'regex:/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}$/'],
         ];
     }
 
@@ -23,7 +24,7 @@ class UpdateSupplierRequest extends FormRequest
     {
         return [
             'name' => __('keywords.name'),
-            'phone' => __('keywords.phone'),
+            'phones.*.number' => __('keywords.phone'),
         ];
     }
 }

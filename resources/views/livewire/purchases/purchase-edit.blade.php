@@ -279,8 +279,7 @@
                     <x-input name="newSupplier.name" label="{{ __('keywords.name') }}"
                         placeholder="{{ __('keywords.enter_name') }}" wire:model.blur="newSupplier.name" required />
 
-                    <x-input name="newSupplier.phone" label="{{ __('keywords.phone') }}"
-                        placeholder="{{ __('keywords.enter_your_phone') }}" wire:model.blur="newSupplier.phone" />
+                    <x-phone-repeater name="newSupplier.phones" :label="__('keywords.phone')" :placeholder="__('keywords.enter_your_phone')" />
                 </div>
             </x-slot:body>
             <x-slot:footer>

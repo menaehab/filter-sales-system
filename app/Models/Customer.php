@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\HasLogActivity;
+use App\Traits\HasPhones;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Sluggable\HasSlug;
@@ -10,13 +11,12 @@ use Spatie\Sluggable\SlugOptions;
 
 class Customer extends Model
 {
-    use HasFactory,HasLogActivity,HasSlug;
+    use HasFactory,HasLogActivity,HasPhones,HasSlug;
 
     protected $fillable = [
         'name',
         'code',
         'slug',
-        'phone',
         'national_number',
         'place_id',
         'address',

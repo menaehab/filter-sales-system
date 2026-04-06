@@ -25,7 +25,9 @@
                     <span class="text-sm font-medium text-gray-900">{{ $supplier->name }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
-                    <span class="text-sm text-gray-500">{{ $supplier->phone ?? '—' }}</span>
+                    <span class="text-sm text-gray-500">
+                        {{ $supplier->phone_numbers !== [] ? implode(' - ', $supplier->phone_numbers) : '—' }}
+                    </span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span @class([
@@ -72,8 +74,7 @@
                 <div class="space-y-5">
                     <x-input name="form.name" label="{{ __('keywords.name') }}"
                         placeholder="{{ __('keywords.enter_name') }}" wire:model.blur="form.name" required />
-                    <x-input name="form.phone" label="{{ __('keywords.phone') }}"
-                        placeholder="{{ __('keywords.enter_your_phone') }}" wire:model.blur="form.phone" />
+                    <x-phone-repeater name="form.phones" :label="__('keywords.phone')" :placeholder="__('keywords.enter_your_phone')" />
                 </div>
             </x-slot:body>
             <x-slot:footer>
@@ -89,8 +90,7 @@
                 <div class="space-y-5">
                     <x-input name="form.name" label="{{ __('keywords.name') }}"
                         placeholder="{{ __('keywords.enter_name') }}" wire:model.blur="form.name" required />
-                    <x-input name="form.phone" label="{{ __('keywords.phone') }}"
-                        placeholder="{{ __('keywords.enter_your_phone') }}" wire:model.blur="form.phone" />
+                    <x-phone-repeater name="form.phones" :label="__('keywords.phone')" :placeholder="__('keywords.enter_your_phone')" />
                 </div>
             </x-slot:body>
             <x-slot:footer>

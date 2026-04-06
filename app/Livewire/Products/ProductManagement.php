@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Products;
 
+use App\Actions\Categories\CreateCategoryAction;
 use App\Actions\Products\CreateProductAction;
 use App\Actions\Products\DeleteProductAction;
 use App\Actions\Products\UpdateProductAction;
@@ -22,6 +23,10 @@ class ProductManagement extends Component
 {
     use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
+    public array $newCategory = [
+        'name' => '',
+    ];
+
     public $categorySlug = '';
 
     public $stockStatus = '';
@@ -31,6 +36,7 @@ class ProductManagement extends Component
     public function mount(): void
     {
         $this->resetForm();
+        $this->newCategory = ['name' => ''];
     }
 
     protected function getModelClass(): string
@@ -84,6 +90,36 @@ class ProductManagement extends Component
         $this->resetForm();
         $this->dispatch('close-modal-create-product');
         $this->resetPage();
+    }
+
+    public function openCreateCategoryModal(): void
+    {
+        $this->newCategory = ['name' => ''];
+        $this->dispatch('open-modal-create-category-inline');
+    }
+
+    public function createCategoryInline(CreateCategoryAction $action): void
+    {
+        $request = new \App\Http\Requests\Categories\CreateCategoryRequest;
+        $validated = $this->validate(
+            collect($request->rules())->mapWithKeys(fn ($rules, $key) => ["newCategory.{$key}" => $rules])->toArray(),
+            $request->messages(),
+            collect($request->attributes())->mapWithKeys(fn ($label, $key) => ["newCategory.{$key}" => $label])->toArray()
+        );
+
+        $category = $action->execute($validated['newCategory']);
+
+        $this->newCategory = ['name' => ''];
+        $this->form['category_id'] = $category->id;
+        $this->dispatch('close-modal-create-category-inline');
+
+        if ($this->editId) {
+            $this->dispatch('open-modal-edit-product');
+
+            return;
+        }
+
+        $this->dispatch('open-modal-create-product');
     }
 
     public function openEdit($id): void

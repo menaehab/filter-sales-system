@@ -20,9 +20,17 @@ class CustomerFactory extends Factory
         return [
             'name' => $this->faker->company(),
             'national_number' => $this->faker->unique()->safeEmail(),
-            'phone' => $this->faker->phoneNumber(),
             'address' => $this->faker->address(),
             'place_id' => Place::factory(),
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (\App\Models\Customer $customer): void {
+            $customer->syncPhones([
+                ['number' => '01'.$this->faker->randomElement(['0', '1', '2', '5']).$this->faker->numerify('########')],
+            ]);
+        });
     }
 }

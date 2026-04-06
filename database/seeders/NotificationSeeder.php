@@ -68,17 +68,28 @@ class NotificationSeeder extends Seeder
         $customer = Customer::firstOrCreate(
             ['name' => 'عميل تجريبي'],
             [
-                'phone' => '01000000001',
                 'national_number' => '12345678901234',
                 'address' => 'عنوان تجريبي',
                 'place_id' => $place->id,
             ]
         );
 
+        if ($customer->phone_numbers === []) {
+            $customer->syncPhones([
+                ['number' => '01000000001'],
+            ]);
+        }
+
         $supplier = Supplier::firstOrCreate(
             ['name' => 'مورد تجريبي'],
-            ['phone' => '01000000002']
+            []
         );
+
+        if ($supplier->phone_numbers === []) {
+            $supplier->syncPhones([
+                ['number' => '01000000002'],
+            ]);
+        }
 
         $category = Category::firstOrCreate(['name' => 'فئة تجريبية']);
 

@@ -40,6 +40,7 @@ return [
     'users_management' => 'إدارة المستخدمين',
     'user' => 'المستخدم',
     'phone' => 'رقم الهاتف',
+    'add_phone' => 'إضافة رقم هاتف',
     'role' => 'الدور',
     'admin' => 'مدير',
     'manager' => 'مشرف',

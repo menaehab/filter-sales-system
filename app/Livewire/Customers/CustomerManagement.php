@@ -5,9 +5,11 @@ namespace App\Livewire\Customers;
 use App\Actions\Customers\CreateCustomerAction;
 use App\Actions\Customers\DeleteCustomerAction;
 use App\Actions\Customers\UpdateCustomerAction;
+use App\Actions\Places\CreatePlaceAction;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
+use App\Livewire\Traits\HasPhoneRepeater;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Customer;
 use App\Models\Place;
@@ -18,18 +20,23 @@ use Livewire\Component;
 #[Layout('layouts.app', ['title' => 'customers_management'])]
 class CustomerManagement extends Component
 {
-    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
+    use HasCrudModals, HasCrudQuery, HasForm, HasPhoneRepeater, WithSearchAndPagination;
+
+    public array $newPlace = [
+        'name' => '',
+    ];
 
     public function mount(): void
     {
         $this->resetForm();
+        $this->newPlace = ['name' => ''];
     }
 
     protected function getDefaultForm(): array
     {
         return [
             'name' => '',
-            'phone' => '',
+            'phones' => [['number' => '']],
             'code' => '',
             'national_number' => '',
             'address' => '',
@@ -44,18 +51,48 @@ class CustomerManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['name', 'phone', 'code', 'national_number', 'address', 'place.name'];
+        return ['name', 'phones.number', 'code', 'national_number', 'address', 'place.name'];
     }
 
     protected function getWithRelations(): array
     {
-        return ['place'];
+        return ['place', 'phones'];
     }
 
     #[Computed]
     public function placeOptions(): array
     {
         return Place::query()->orderBy('name')->pluck('name', 'id')->toArray();
+    }
+
+    public function openCreatePlaceModal(): void
+    {
+        $this->newPlace = ['name' => ''];
+        $this->dispatch('open-modal-create-place-inline');
+    }
+
+    public function createPlaceInline(CreatePlaceAction $action): void
+    {
+        $request = new \App\Http\Requests\Place\CreatePlaceRequest;
+        $validated = $this->validate(
+            collect($request->rules())->mapWithKeys(fn ($rules, $key) => ["newPlace.{$key}" => $rules])->toArray(),
+            $request->messages(),
+            collect($request->attributes())->mapWithKeys(fn ($label, $key) => ["newPlace.{$key}" => $label])->toArray()
+        );
+
+        $place = $action->execute($validated['newPlace']);
+
+        $this->newPlace = ['name' => ''];
+        $this->form['place_id'] = (string) $place->id;
+        $this->dispatch('close-modal-create-place-inline');
+
+        if ($this->editId) {
+            $this->dispatch('open-modal-edit-customer');
+
+            return;
+        }
+
+        $this->dispatch('open-modal-create-customer');
     }
 
     public function create(CreateCustomerAction $action): void
@@ -104,7 +141,11 @@ class CustomerManagement extends Component
 
         $this->form = [
             'name' => $customer->name,
-            'phone' => $customer->phone,
+            'phones' => collect($customer->phone_numbers)
+                ->map(fn (string $number) => ['number' => $number])
+                ->whenEmpty(fn ($phones) => $phones->push(['number' => '']))
+                ->values()
+                ->all(),
             'code' => $customer->code,
             'national_number' => $customer->national_number,
             'address' => $customer->address,

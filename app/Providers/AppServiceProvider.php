@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -25,7 +25,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
-        // $this->installmentReminder();
+        Relation::morphMap([
+            'customer' => \App\Models\Customer::class,
+            'supplier' => \App\Models\Supplier::class,
+        ]);
     }
 
     /**
@@ -49,14 +52,5 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
-    }
-
-    protected function installmentReminder()
-    {
-        $cacheKey = 'installment_reminder_sent_'.now()->toDateString();
-        if (cache()->missing($cacheKey)) {
-            Artisan::call('suppliers:installments-remind');
-            cache()->put($cacheKey, true, now()->endOfDay());
-        }
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Livewire\Purchases;
 
 use App\Actions\Purchases\CreatePurchaseAction;
+use App\Actions\Suppliers\CreateSupplierAction;
+use App\Livewire\Traits\HasPhoneRepeater;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
@@ -13,6 +15,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class PurchaseCreate extends Component
 {
+    use HasPhoneRepeater;
+
     public ?int $supplier_id = null;
 
     public string $payment_type = 'cash';
@@ -31,7 +35,7 @@ class PurchaseCreate extends Component
 
     public array $newSupplier = [
         'name' => '',
-        'phone' => '',
+        'phones' => [['number' => '']],
     ];
 
     public array $newCategory = [
@@ -104,23 +108,24 @@ class PurchaseCreate extends Component
 
     public function openCreateSupplierModal(): void
     {
-        $this->newSupplier = ['name' => '', 'phone' => ''];
+        $this->newSupplier = ['name' => '', 'phones' => [['number' => '']]];
         $this->dispatch('open-modal-create-supplier-inline');
     }
 
-    public function createSupplierInline(): void
+    public function createSupplierInline(CreateSupplierAction $action): void
     {
         $this->validate([
             'newSupplier.name' => ['required', 'string', 'max:255'],
-            'newSupplier.phone' => ['nullable', 'string', 'max:11', 'regex:/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}$/'],
+            'newSupplier.phones' => ['nullable', 'array'],
+            'newSupplier.phones.*.number' => ['nullable', 'string', 'max:11', 'regex:/^(\+201|01|00201)[0-2,5]{1}[0-9]{8}$/'],
         ], [], [
             'newSupplier.name' => __('keywords.name'),
-            'newSupplier.phone' => __('keywords.phone'),
+            'newSupplier.phones.*.number' => __('keywords.phone'),
         ]);
 
-        $supplier = Supplier::create([
+        $supplier = $action->execute([
             'name' => $this->newSupplier['name'],
-            'phone' => $this->newSupplier['phone'] ?: null,
+            'phones' => $this->newSupplier['phones'] ?? [],
         ]);
 
         $this->supplier_id = $supplier->id;
