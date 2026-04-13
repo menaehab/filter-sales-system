@@ -455,6 +455,8 @@ return [
     'enter_filter_model' => 'أدخل كود الفلتر',
     'filter_details' => 'تفاصيل الفلتر',
     'back_to_filters' => 'العودة إلى الفلاتر',
+    'installation_status' => 'حالة التركيب',
+    'is_installed' => 'تم التركيب',
     'installed_at' => 'تاريخ التركيب',
     'not_installed' => 'لم يتم التركيب',
     'before_installment' => 'قبل التركيب',

@@ -26,9 +26,11 @@ class WaterFilter extends Model
         'candle_6_replaced_at',
         'candle_7_replaced_at',
         'customer_id',
+        'is_installed',
     ];
 
     protected $casts = [
+        'is_installed' => 'boolean',
         'installed_at' => 'date',
         'candle_1_replaced_at' => 'date',
         'candle_2_3_replaced_at' => 'date',
@@ -95,7 +97,7 @@ class WaterFilter extends Model
 
     public function getCandle1NextDateAttribute(): ?Carbon
     {
-        if (! $this->installed_at) {
+        if (! $this->hasInstallationDate()) {
             return null;
         }
 
@@ -106,7 +108,7 @@ class WaterFilter extends Model
 
     public function getCandle23NextDateAttribute(): ?Carbon
     {
-        if (! $this->installed_at) {
+        if (! $this->hasInstallationDate()) {
             return null;
         }
 
@@ -117,6 +119,10 @@ class WaterFilter extends Model
 
     public function getCandle4NeedsReplacementAttribute(): bool
     {
+        if (! $this->hasInstallationDate()) {
+            return false;
+        }
+
         $latestReading = $this->latestReading();
 
         return $latestReading && $latestReading->tds >= 100;
@@ -124,7 +130,7 @@ class WaterFilter extends Model
 
     public function getCandle5NextDateAttribute(): ?Carbon
     {
-        if (! $this->installed_at) {
+        if (! $this->hasInstallationDate()) {
             return null;
         }
 
@@ -135,7 +141,7 @@ class WaterFilter extends Model
 
     public function getCandle6NextDateAttribute(): ?Carbon
     {
-        if (! $this->installed_at) {
+        if (! $this->hasInstallationDate()) {
             return null;
         }
 
@@ -146,7 +152,7 @@ class WaterFilter extends Model
 
     public function getCandle7NextDateAttribute(): ?Carbon
     {
-        if (! $this->installed_at) {
+        if (! $this->hasInstallationDate()) {
             return null;
         }
 
@@ -158,15 +164,21 @@ class WaterFilter extends Model
     public function getCandleStatusAttribute(): array
     {
         $now = now();
+        $isInstalled = $this->hasInstallationDate();
 
         return [
             'candle_1' => $this->getCandleStatus($this->candle_1_next_date, $now),
             'candle_2_3' => $this->getCandleStatus($this->candle_2_3_next_date, $now),
-            'candle_4' => $this->candle_4_needs_replacement ? 'danger' : 'success',
+            'candle_4' => ! $isInstalled ? 'unknown' : ($this->candle_4_needs_replacement ? 'danger' : 'success'),
             'candle_5' => $this->getCandleStatus($this->candle_5_next_date, $now),
             'candle_6' => $this->getCandleStatus($this->candle_6_next_date, $now),
             'candle_7' => $this->getCandleStatus($this->candle_7_next_date, $now),
         ];
+    }
+
+    protected function hasInstallationDate(): bool
+    {
+        return (bool) $this->is_installed && $this->installed_at !== null;
     }
 
     protected function getCandleStatus(?Carbon $nextDate, ?CarbonInterface $now): string

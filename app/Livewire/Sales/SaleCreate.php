@@ -74,6 +74,8 @@ class SaleCreate extends Component
             $this->newFilter = [
                 'filter_model' => '',
                 'address' => '',
+                'is_installed' => false,
+                'installed_at' => null,
             ];
             $this->waterReading = [
                 'technician_name' => '',
@@ -105,7 +107,16 @@ class SaleCreate extends Component
             $this->newFilter = [
                 'filter_model' => '',
                 'address' => '',
+                'is_installed' => false,
+                'installed_at' => null,
             ];
+        }
+    }
+
+    public function updatedNewFilterIsInstalled(bool $value): void
+    {
+        if (! $value) {
+            $this->newFilter['installed_at'] = null;
         }
     }
 
@@ -150,6 +161,8 @@ class SaleCreate extends Component
         $this->newFilter = [
             'filter_model' => '',
             'address' => '',
+            'is_installed' => false,
+            'installed_at' => null,
         ];
 
         $this->dispatch('open-modal-create-filter-inline');
@@ -167,21 +180,31 @@ class SaleCreate extends Component
             'customer_id' => ['required', 'exists:customers,id'],
             'newFilter.filter_model' => ['required', 'string', 'max:255'],
             'newFilter.address' => ['required', 'string', 'max:255'],
+            'newFilter.is_installed' => ['required', 'boolean'],
+            'newFilter.installed_at' => ['nullable', 'date', 'required_if:newFilter.is_installed,1'],
         ], [], [
             'customer_id' => __('keywords.customer'),
             'newFilter.filter_model' => __('keywords.filter_model'),
             'newFilter.address' => __('keywords.filter_address'),
+            'newFilter.is_installed' => __('keywords.is_installed'),
+            'newFilter.installed_at' => __('keywords.installed_at'),
         ]);
+
+        $isInstalled = (bool) $validated['newFilter']['is_installed'];
 
         $filter = WaterFilter::create([
             'filter_model' => $validated['newFilter']['filter_model'],
             'address' => $validated['newFilter']['address'],
+            'is_installed' => $isInstalled,
+            'installed_at' => $isInstalled ? ($validated['newFilter']['installed_at'] ?? null) : null,
             'customer_id' => (int) $this->customer_id,
         ]);
 
         $this->newFilter = [
             'filter_model' => '',
             'address' => '',
+            'is_installed' => false,
+            'installed_at' => null,
         ];
 
         $this->selectFilter($filter->id, $filter->filter_model.' - '.$filter->address);
@@ -497,6 +520,8 @@ class SaleCreate extends Component
                 unset($rules['water_filter_id']);
                 $rules['newFilter.filter_model'] = ['required', 'string', 'max:255'];
                 $rules['newFilter.address'] = ['required', 'string', 'max:255'];
+                $rules['newFilter.is_installed'] = ['required', 'boolean'];
+                $rules['newFilter.installed_at'] = ['nullable', 'date', 'required_if:newFilter.is_installed,1'];
             } else {
                 unset($rules['newFilter.filter_model'], $rules['newFilter.address']);
                 $rules['water_filter_id'] = ['required', 'exists:water_filters,id'];
@@ -513,6 +538,8 @@ class SaleCreate extends Component
         $attributes = array_merge($request->attributes(), [
             'newFilter.filter_model' => __('keywords.filter_model'),
             'newFilter.address' => __('keywords.filter_address'),
+            'newFilter.is_installed' => __('keywords.is_installed'),
+            'newFilter.installed_at' => __('keywords.installed_at'),
             'includeAfterInstallationReading' => __('keywords.add_after_installment_reading'),
             'afterWaterReading.technician_name' => __('keywords.technician_name'),
             'afterWaterReading.tds' => __('keywords.tds'),

@@ -37,7 +37,7 @@ class UpdateUserRequest extends FormRequest
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'place_ids' => ['nullable', 'array'],
             'place_ids.*' => ['integer', 'exists:places,id'],
-            'permissions' => ['array'],
+            'permissions' => ['array', 'nullable'],
             'permissions.*' => ['string', 'exists:permissions,name'],
         ];
     }

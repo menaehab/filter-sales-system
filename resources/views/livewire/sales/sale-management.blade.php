@@ -48,8 +48,7 @@
                         <span class="text-sm font-medium text-gray-900">{{ $sale->number }}</span>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
-                        <span
-                            class="text-sm font-medium text-gray-900">{{ $sale->dealer_name ?: $sale->customer?->name ?? '—' }}</span>
+                        <span class="text-sm font-medium text-gray-900">{{ $sale->customer?->name ?? '—' }}</span>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 font-medium">
                         {{ number_format($sale->total_price, 2) }} {{ __('keywords.currency') }}

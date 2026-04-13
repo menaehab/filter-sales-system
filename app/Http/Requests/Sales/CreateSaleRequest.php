@@ -40,16 +40,32 @@ class CreateSaleRequest extends FormRequest
             } else {
                 $rules['newFilter.filter_model'] = ['required', 'string', 'max:255'];
                 $rules['newFilter.address'] = ['required', 'string', 'max:255'];
+                $rules['newFilter.is_installed'] = ['required', 'boolean'];
+                $rules['newFilter.installed_at'] = ['nullable', 'date', 'required_if:newFilter.is_installed,1'];
             }
 
             $waterQualityValues = implode(',', array_column(WaterQualityTypeEnum::cases(), 'value'));
-            $rules['waterReading.technician_name'] = ['required', 'string', 'max:255'];
-            $rules['waterReading.tds'] = ['required', 'numeric', 'min:0'];
-            $rules['waterReading.water_quality'] = ['required', 'in:'.$waterQualityValues];
+            $waterReading = (array) data_get($this->all(), 'waterReading', []);
+            $hasWaterReadingInput = filled(data_get($waterReading, 'technician_name'))
+                || filled(data_get($waterReading, 'tds'))
+                || filled(data_get($waterReading, 'water_quality'))
+                || (bool) data_get($waterReading, 'before_installment', false)
+                || $this->boolean('includeAfterInstallationReading');
+
+            if ($hasWaterReadingInput) {
+                $rules['waterReading.technician_name'] = ['required', 'string', 'max:255'];
+                $rules['waterReading.tds'] = ['required', 'numeric', 'min:0'];
+                $rules['waterReading.water_quality'] = ['required', 'in:'.$waterQualityValues];
+            }
+
             $rules['waterReading.before_installment'] = ['boolean'];
             $rules['includeAfterInstallationReading'] = ['boolean'];
 
-            if (data_get($this->all(), 'waterReading.before_installment') && $this->boolean('includeAfterInstallationReading')) {
+            if (
+                $hasWaterReadingInput
+                && (bool) data_get($waterReading, 'before_installment', false)
+                && $this->boolean('includeAfterInstallationReading')
+            ) {
                 $rules['afterWaterReading.technician_name'] = ['required', 'string', 'max:255'];
                 $rules['afterWaterReading.tds'] = ['required', 'numeric', 'min:0'];
                 $rules['afterWaterReading.water_quality'] = ['required', 'in:'.$waterQualityValues];
@@ -77,6 +93,8 @@ class CreateSaleRequest extends FormRequest
             'water_filter_id' => __('keywords.water_filter'),
             'newFilter.filter_model' => __('keywords.filter_model'),
             'newFilter.address' => __('keywords.filter_address'),
+            'newFilter.is_installed' => __('keywords.is_installed'),
+            'newFilter.installed_at' => __('keywords.installed_at'),
             'waterReading.technician_name' => __('keywords.technician_name'),
             'waterReading.tds' => __('keywords.tds_reading'),
             'waterReading.water_quality' => __('keywords.water_quality'),

@@ -44,8 +44,17 @@ class FilterManagement extends Component
         return [
             'filter_model' => '',
             'address' => '',
+            'is_installed' => false,
+            'installed_at' => null,
             'customer_id' => null,
         ];
+    }
+
+    public function updatedFormIsInstalled($value): void
+    {
+        if (! ((bool) $value)) {
+            $this->form['installed_at'] = null;
+        }
     }
 
     protected function getModelClass(): string
@@ -162,6 +171,10 @@ class FilterManagement extends Component
         $this->form = [
             'filter_model' => $filter->filter_model,
             'address' => $filter->address,
+            'is_installed' => (bool) $filter->is_installed,
+            'installed_at' => $filter->installed_at
+                ? \Illuminate\Support\Carbon::parse($filter->installed_at)->format('Y-m-d')
+                : null,
             'customer_id' => $filter->customer_id,
         ];
 
@@ -244,7 +257,8 @@ class FilterManagement extends Component
     {
         $table = $query->getModel()->getTable();
 
-        $query->whereNotNull("{$table}.installed_at")
+        $query->where("{$table}.is_installed", true)
+            ->whereNotNull("{$table}.installed_at")
             ->whereRaw(
                 "DATE_ADD(COALESCE({$table}.{$replacedAtColumn}, {$table}.installed_at), INTERVAL ? MONTH) <= NOW()",
                 [$intervalMonths]
@@ -255,7 +269,8 @@ class FilterManagement extends Component
     {
         $table = $query->getModel()->getTable();
 
-        $query->whereNotNull("{$table}.installed_at")
+        $query->where("{$table}.is_installed", true)
+            ->whereNotNull("{$table}.installed_at")
             ->whereRaw(
                 "DATE_ADD(\n                    COALESCE({$table}.candle_1_replaced_at, {$table}.installed_at),\n                    INTERVAL CASE (\n                        SELECT pre_reading.water_quality\n                        FROM water_readings AS pre_reading\n                        WHERE pre_reading.water_filter_id = {$table}.id\n                          AND pre_reading.before_installment = 1\n                        ORDER BY pre_reading.created_at ASC, pre_reading.id ASC\n                        LIMIT 1\n                    )\n                        WHEN 'good' THEN 3\n                        WHEN 'fair' THEN 2\n                        WHEN 'poor' THEN 1\n                        ELSE 3\n                    END MONTH\n                ) <= NOW()"
             );
@@ -265,14 +280,16 @@ class FilterManagement extends Component
     {
         $table = $query->getModel()->getTable();
 
-        $query->whereExists(function ($existsQuery) use ($table) {
-            $existsQuery->selectRaw('1')
-                ->from('water_readings as latest_reading')
-                ->whereColumn('latest_reading.water_filter_id', "{$table}.id")
-                ->whereRaw(
-                    "latest_reading.id = (\n                        SELECT wr.id\n                        FROM water_readings AS wr\n                        WHERE wr.water_filter_id = {$table}.id\n                        ORDER BY wr.created_at DESC, wr.id DESC\n                        LIMIT 1\n                    )"
-                )
-                ->where('latest_reading.tds', '>=', 100);
-        });
+        $query->where("{$table}.is_installed", true)
+            ->whereNotNull("{$table}.installed_at")
+            ->whereExists(function ($existsQuery) use ($table) {
+                $existsQuery->selectRaw('1')
+                    ->from('water_readings as latest_reading')
+                    ->whereColumn('latest_reading.water_filter_id', "{$table}.id")
+                    ->whereRaw(
+                        "latest_reading.id = (\n                        SELECT wr.id\n                        FROM water_readings AS wr\n                        WHERE wr.water_filter_id = {$table}.id\n                        ORDER BY wr.created_at DESC, wr.id DESC\n                        LIMIT 1\n                    )"
+                    )
+                    ->where('latest_reading.tds', '>=', 100);
+            });
     }
 }
