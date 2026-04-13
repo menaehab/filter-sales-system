@@ -16,6 +16,8 @@ class CreateWaterFilterRequest extends FormRequest
         return [
             'filter_model' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string', 'max:255'],
+            'is_installed' => ['required', 'boolean'],
+            'installed_at' => ['nullable', 'date', 'required_if:is_installed,1'],
             'customer_id' => ['required', 'exists:customers,id'],
         ];
     }
@@ -25,6 +27,8 @@ class CreateWaterFilterRequest extends FormRequest
         return [
             'filter_model' => __('keywords.filter_model'),
             'address' => __('keywords.address'),
+            'is_installed' => __('keywords.is_installed'),
+            'installed_at' => __('keywords.installed_at'),
             'customer_id' => __('keywords.customer'),
         ];
     }

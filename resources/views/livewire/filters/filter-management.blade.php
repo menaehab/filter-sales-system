@@ -96,6 +96,7 @@
         ['key' => 'address', 'label' => __('keywords.address')],
         ['key' => 'customer', 'label' => __('keywords.customer')],
         ['key' => 'phone', 'label' => __('keywords.phone')],
+        ['key' => 'is_installed', 'label' => __('keywords.installation_status')],
         ['key' => 'installed_at', 'label' => __('keywords.installed_at')],
         ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
     ]">
@@ -115,7 +116,14 @@
                         class="text-sm text-gray-500">{{ $filter->customer?->phone_numbers !== [] ? implode(' - ', $filter->customer->phone_numbers) : '—' }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
-                    <span class="text-sm text-gray-500">{{ $filter->installed_at?->format('Y-m-d') ?? '—' }}</span>
+                    <span class="text-sm text-gray-700">
+                        {{ $filter->is_installed ? __('keywords.yes') : __('keywords.no') }}
+                    </span>
+                </td>
+                <td class="whitespace-nowrap px-4 py-3">
+                    <span class="text-sm text-gray-500">
+                        {{ $filter->is_installed ? $filter->installed_at?->format('Y-m-d') ?? '—' : '—' }}
+                    </span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                     <div class="flex items-center justify-end gap-1">
@@ -140,7 +148,7 @@
                 </td>
             </tr>
         @empty
-            <x-empty-state :title="__('keywords.no_filters_found')" :colspan="6" />
+            <x-empty-state :title="__('keywords.no_filters_found')" :colspan="7" />
         @endforelse
     </x-data-table>
 
@@ -157,6 +165,20 @@
 
                     <x-input name="form.address" label="{{ __('keywords.address') }}"
                         placeholder="{{ __('keywords.enter_address') }}" wire:model.blur="form.address" required />
+
+                    <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                        <input type="checkbox" wire:model.live="form.is_installed"
+                            class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        <span>{{ __('keywords.is_installed') }}</span>
+                    </label>
+                    @error('form.is_installed')
+                        <p class="text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+
+                    @if ($form['is_installed'] ?? false)
+                        <x-input type="date" name="form.installed_at" label="{{ __('keywords.installed_at') }}"
+                            wire:model.blur="form.installed_at" required />
+                    @endif
 
                     <div x-data="{
                         open: false,
@@ -223,6 +245,20 @@
 
                     <x-input name="form.address" label="{{ __('keywords.address') }}"
                         placeholder="{{ __('keywords.enter_address') }}" wire:model.blur="form.address" required />
+
+                    <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                        <input type="checkbox" wire:model.live="form.is_installed"
+                            class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        <span>{{ __('keywords.is_installed') }}</span>
+                    </label>
+                    @error('form.is_installed')
+                        <p class="text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+
+                    @if ($form['is_installed'] ?? false)
+                        <x-input type="date" name="form.installed_at" label="{{ __('keywords.installed_at') }}"
+                            wire:model.blur="form.installed_at" required />
+                    @endif
 
                     <div x-data="{
                         open: false,

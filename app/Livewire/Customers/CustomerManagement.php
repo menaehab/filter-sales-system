@@ -168,7 +168,7 @@ class CustomerManagement extends Component
 
     protected function applyAdditionalFilters(\Illuminate\Database\Eloquent\Builder $query): void
     {
-        $query->byUserPlaces();
+        $query->byUserPlaces()->orderBy('code', 'asc');
     }
 
     #[Computed]

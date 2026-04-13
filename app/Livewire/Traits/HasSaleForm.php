@@ -36,6 +36,8 @@ trait HasSaleForm
     public array $newFilter = [
         'filter_model' => '',
         'address' => '',
+        'is_installed' => false,
+        'installed_at' => null,
     ];
 
     public array $waterReading = [
@@ -78,16 +80,32 @@ trait HasSaleForm
             if ($this->createNewFilter) {
                 $rules['newFilter.filter_model'] = 'required|string|max:255';
                 $rules['newFilter.address'] = 'required|string|max:255';
+                $rules['newFilter.is_installed'] = 'required|boolean';
+                $rules['newFilter.installed_at'] = 'nullable|date|required_if:newFilter.is_installed,1';
             } else {
                 $rules['water_filter_id'] = 'required|exists:water_filters,id';
             }
-            $rules['waterReading.technician_name'] = 'required|string|max:255';
-            $rules['waterReading.tds'] = 'required|numeric|min:0';
-            $rules['waterReading.water_quality'] = 'required|in:'.implode(',', WaterQualityTypeEnum::values());
+
+            $hasWaterReadingInput = filled($this->waterReading['technician_name'] ?? null)
+                || filled($this->waterReading['tds'] ?? null)
+                || filled($this->waterReading['water_quality'] ?? null)
+                || (bool) ($this->waterReading['before_installment'] ?? false)
+                || $this->includeAfterInstallationReading;
+
+            if ($hasWaterReadingInput) {
+                $rules['waterReading.technician_name'] = 'required|string|max:255';
+                $rules['waterReading.tds'] = 'required|numeric|min:0';
+                $rules['waterReading.water_quality'] = 'required|in:'.implode(',', WaterQualityTypeEnum::values());
+            }
+
             $rules['waterReading.before_installment'] = 'boolean';
             $rules['includeAfterInstallationReading'] = 'boolean';
 
-            if (($this->waterReading['before_installment'] ?? false) && $this->includeAfterInstallationReading) {
+            if (
+                $hasWaterReadingInput
+                && ($this->waterReading['before_installment'] ?? false)
+                && $this->includeAfterInstallationReading
+            ) {
                 $rules['afterWaterReading.technician_name'] = 'required|string|max:255';
                 $rules['afterWaterReading.tds'] = 'required|numeric|min:0';
                 $rules['afterWaterReading.water_quality'] = 'required|in:'.implode(',', WaterQualityTypeEnum::values());
@@ -111,6 +129,8 @@ trait HasSaleForm
             'water_filter_id' => __('keywords.filter'),
             'newFilter.filter_model' => __('keywords.filter_model'),
             'newFilter.address' => __('keywords.address'),
+            'newFilter.is_installed' => __('keywords.is_installed'),
+            'newFilter.installed_at' => __('keywords.installed_at'),
             'waterReading.technician_name' => __('keywords.technician_name'),
             'waterReading.tds' => __('keywords.tds'),
             'waterReading.water_quality' => __('keywords.water_quality'),
@@ -150,6 +170,8 @@ trait HasSaleForm
         $this->newFilter = [
             'filter_model' => '',
             'address' => '',
+            'is_installed' => false,
+            'installed_at' => null,
         ];
         $this->waterReading = [
             'technician_name' => '',

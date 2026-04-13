@@ -20,6 +20,7 @@ class SendFilterCandleReminders extends Command
     {
         /** @var \Illuminate\Support\Collection<int, WaterFilter> $filters */
         $filters = WaterFilter::with(['customer', 'readings'])
+            ->where('is_installed', true)
             ->whereNotNull('installed_at')
             ->get();
 
@@ -77,6 +78,10 @@ class SendFilterCandleReminders extends Command
 
     protected function getCandlesNeedingNotification(WaterFilter $filter, CarbonInterface $now, int $warningDays): array
     {
+        if (! $filter->is_installed || ! $filter->installed_at) {
+            return [];
+        }
+
         $candles = [];
 
         // Candle 1: Based on pre-installation water quality
@@ -119,7 +124,7 @@ class SendFilterCandleReminders extends Command
 
     protected function getCandle1DueDate(WaterFilter $filter): ?Carbon
     {
-        if (! $filter->installed_at) {
+        if (! $filter->is_installed || ! $filter->installed_at) {
             return null;
         }
 
@@ -142,7 +147,7 @@ class SendFilterCandleReminders extends Command
 
     protected function getCandleDueDate(WaterFilter $filter, string $replacedAtField, int $months): ?Carbon
     {
-        if (! $filter->installed_at) {
+        if (! $filter->is_installed || ! $filter->installed_at) {
             return null;
         }
 
@@ -153,6 +158,10 @@ class SendFilterCandleReminders extends Command
 
     protected function isCandle4Due(WaterFilter $filter): bool
     {
+        if (! $filter->is_installed || ! $filter->installed_at) {
+            return false;
+        }
+
         $latestReading = $filter->readings()
             ->where('before_installment', false)
             ->latest()

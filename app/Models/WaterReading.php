@@ -28,8 +28,11 @@ class WaterReading extends Model
         static::created(function (WaterReading $reading) {
             if ($reading->before_installment && $reading->waterFilter) {
                 $filter = $reading->waterFilter;
-                if (! $filter->installed_at) {
-                    $filter->update(['installed_at' => $reading->created_at->toDateString()]);
+                if (! $filter->is_installed || ! $filter->installed_at) {
+                    $filter->update([
+                        'is_installed' => true,
+                        'installed_at' => $filter->installed_at ?? $reading->created_at->toDateString(),
+                    ]);
                 }
             }
         });

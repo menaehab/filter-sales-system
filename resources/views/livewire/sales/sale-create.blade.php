@@ -394,15 +394,14 @@
                         <div class="grid grid-cols-1 gap-4 border-t border-emerald-200 pt-3 sm:grid-cols-2">
                             <x-input name="waterReading.technician_name" label="{{ __('keywords.technician_name') }}"
                                 placeholder="{{ __('keywords.technician_name') }}"
-                                wire:model.live="waterReading.technician_name" required />
+                                wire:model.live="waterReading.technician_name" />
 
                             <x-input name="waterReading.tds" label="{{ __('keywords.tds') }}" placeholder="0"
-                                wire:model.live="waterReading.tds" type="number" step="0.01" min="0"
-                                required />
+                                wire:model.live="waterReading.tds" type="number" step="0.01" min="0" />
 
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-gray-700">
-                                    {{ __('keywords.water_quality') }} <span class="text-red-500">*</span>
+                                    {{ __('keywords.water_quality') }}
                                 </label>
                                 <select wire:model.live="waterReading.water_quality"
                                     class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
@@ -582,6 +581,20 @@
 
                 <x-input name="newFilter.address" label="{{ __('keywords.filter_address') }}"
                     placeholder="{{ __('keywords.enter_address') }}" wire:model.blur="newFilter.address" required />
+
+                <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                    <input type="checkbox" wire:model.live="newFilter.is_installed"
+                        class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    <span>{{ __('keywords.is_installed') }}</span>
+                </label>
+                @error('newFilter.is_installed')
+                    <p class="text-xs text-red-600">{{ $message }}</p>
+                @enderror
+
+                @if ($newFilter['is_installed'] ?? false)
+                    <x-input type="date" name="newFilter.installed_at" label="{{ __('keywords.installed_at') }}"
+                        wire:model.blur="newFilter.installed_at" required />
+                @endif
             </div>
         </x-slot:body>
         <x-slot:footer>

@@ -190,36 +190,53 @@ final class CreateSaleAction
         $filterId = $data['water_filter_id'] ?? null;
 
         if (! empty($data['createNewFilter']) && ! empty($data['newFilter'])) {
+            $isInstalled = (bool) data_get($data, 'newFilter.is_installed', false);
+
             $newFilter = WaterFilter::create([
                 'filter_model' => $data['newFilter']['filter_model'],
                 'address' => $data['newFilter']['address'],
+                'is_installed' => $isInstalled,
+                'installed_at' => $isInstalled ? data_get($data, 'newFilter.installed_at') : null,
                 'customer_id' => $customer->id,
             ]);
             $filterId = $newFilter->id;
         }
 
-        if ($filterId && ! empty($data['waterReading'])) {
+        $waterReading = (array) data_get($data, 'waterReading', []);
+
+        if (! $filterId || ! $this->hasCompleteReadingPayload($waterReading)) {
+            return;
+        }
+
+        WaterReading::create([
+            'technician_name' => $waterReading['technician_name'],
+            'tds' => $waterReading['tds'],
+            'water_quality' => $waterReading['water_quality'],
+            'before_installment' => (bool) ($waterReading['before_installment'] ?? false),
+            'water_filter_id' => $filterId,
+        ]);
+
+        $afterReading = (array) data_get($data, 'afterWaterReading', []);
+
+        if (
+            (bool) ($waterReading['before_installment'] ?? false)
+            && ! empty($data['includeAfterInstallationReading'])
+            && $this->hasCompleteReadingPayload($afterReading)
+        ) {
             WaterReading::create([
-                'technician_name' => $data['waterReading']['technician_name'],
-                'tds' => $data['waterReading']['tds'],
-                'water_quality' => $data['waterReading']['water_quality'],
-                'before_installment' => $data['waterReading']['before_installment'] ?? false,
+                'technician_name' => $afterReading['technician_name'],
+                'tds' => $afterReading['tds'],
+                'water_quality' => $afterReading['water_quality'],
+                'before_installment' => false,
                 'water_filter_id' => $filterId,
             ]);
-
-            if (
-                ! empty($data['waterReading']['before_installment'])
-                && ! empty($data['includeAfterInstallationReading'])
-                && ! empty($data['afterWaterReading'])
-            ) {
-                WaterReading::create([
-                    'technician_name' => $data['afterWaterReading']['technician_name'],
-                    'tds' => $data['afterWaterReading']['tds'],
-                    'water_quality' => $data['afterWaterReading']['water_quality'],
-                    'before_installment' => false,
-                    'water_filter_id' => $filterId,
-                ]);
-            }
         }
+    }
+
+    private function hasCompleteReadingPayload(array $reading): bool
+    {
+        return filled(data_get($reading, 'technician_name'))
+            && filled(data_get($reading, 'tds'))
+            && filled(data_get($reading, 'water_quality'));
     }
 }

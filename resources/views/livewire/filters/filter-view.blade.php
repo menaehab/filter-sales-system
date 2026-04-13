@@ -37,9 +37,15 @@
                     </span>
                 </div>
                 <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">{{ __('keywords.installation_status') }}</span>
+                    <span class="font-medium text-gray-900">
+                        {{ $filter->is_installed ? __('keywords.yes') : __('keywords.no') }}
+                    </span>
+                </div>
+                <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.installed_at') }}</span>
                     <span
-                        class="font-medium text-gray-900">{{ $filter->installed_at?->format('Y-m-d') ?? __('keywords.not_installed') }}</span>
+                        class="font-medium text-gray-900">{{ $filter->is_installed ? $filter->installed_at?->format('Y-m-d') ?? '—' : __('keywords.not_installed') }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.created_at') }}</span>
@@ -336,7 +342,7 @@
                             label="{{ __('keywords.created_at') }}" wire:model.live="readingForm.created_at" />
                     @endif
 
-                    @if (!$filter->installed_at && $readingForm['before_installment'])
+                    @if (!$filter->is_installed && $readingForm['before_installment'])
                         <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
                             <i class="fas fa-info-circle me-1"></i>
                             {{ __('keywords.before_installment_hint') }}
