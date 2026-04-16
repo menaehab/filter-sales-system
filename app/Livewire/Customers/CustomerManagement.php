@@ -113,7 +113,7 @@ class CustomerManagement extends Component
     {
         $this->authorizeManageCustomers();
 
-        $request = new \App\Http\Requests\Customers\UpdateCustomerRequest;
+        $request = (new \App\Http\Requests\Customers\UpdateCustomerRequest)->forCustomer($this->editId);
         $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
         $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
         $validated = $this->validate($rules, $request->messages(), $attributes);
