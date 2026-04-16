@@ -7,6 +7,15 @@ use Illuminate\Validation\Rule;
 
 class UpdateCustomerRequest extends FormRequest
 {
+    protected ?int $currentCustomerId = null;
+
+    public function forCustomer(int|string|null $customerId): self
+    {
+        $this->currentCustomerId = $customerId !== null ? (int) $customerId : null;
+
+        return $this;
+    }
+
     public function authorize(): bool
     {
         return $this->user()?->can('manage_customers') ?? false;
@@ -14,7 +23,7 @@ class UpdateCustomerRequest extends FormRequest
 
     public function rules(): array
     {
-        $customerId = $this->route('customer')?->id;
+        $customerId = $this->currentCustomerId ?? $this->route('customer')?->id;
 
         return [
             'name' => ['required', 'string', 'max:255'],
