@@ -35,7 +35,10 @@ class FilterManagement extends Component
         $this->resetForm();
 
         if ($this->customerSlug) {
-            $this->customerSearch = $this->customers->firstWhere('slug', $this->customerSlug)?->name ?? '';
+            $customer = $this->customers->firstWhere('slug', $this->customerSlug);
+            $this->customerSearch = $customer
+                ? trim($customer->name . ' (' . ($customer->code ?? '—') . ')')
+                : '';
         }
     }
 
@@ -64,7 +67,7 @@ class FilterManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['filter_model', 'address', 'customer.name', 'customer.phones.number'];
+        return ['filter_model', 'address', 'customer.name', 'customer.code', 'customer.phones.number'];
     }
 
     protected function getWithRelations(): array
@@ -82,7 +85,10 @@ class FilterManagement extends Component
     public function updatingCustomerSlug(): void
     {
         $this->resetPage();
-        $this->customerSearch = $this->customers->firstWhere('slug', $this->customerSlug)?->name ?? '';
+        $customer = $this->customers->firstWhere('slug', $this->customerSlug);
+        $this->customerSearch = $customer
+            ? trim($customer->name . ' (' . ($customer->code ?? '—') . ')')
+            : '';
     }
 
     public function updatingCandleNeedsReplacement(): void

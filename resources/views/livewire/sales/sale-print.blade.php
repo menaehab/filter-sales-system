@@ -36,6 +36,8 @@
                 <p class="mb-1"><strong>{{ __('keywords.customer') }}:</strong> {{ $sale->customer?->name ?? '—' }}
                 </p>
                 @if ($sale->customer)
+                    <p class="mb-1"><strong>{{ __('keywords.code') }}:</strong> {{ $sale->customer->code ?? '—' }}
+                    </p>
                     @if ($sale->customer->phone_numbers !== [])
                         <p class="mb-1"><strong>{{ __('keywords.phone') }}:</strong>
                             {{ implode(' - ', $sale->customer->phone_numbers) }}
