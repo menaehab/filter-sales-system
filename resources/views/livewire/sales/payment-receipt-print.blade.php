@@ -32,28 +32,31 @@
             <div>
                 <p class="mb-2"><strong>{{ __('keywords.customer') }}:</strong>
                     {{ $payment->customer?->name ?? '—' }}</p>
-                @if ($payment->customer?->phone_numbers !== [])
-                    <p class="mb-2"><strong>{{ __('keywords.phone') }}:</strong>
-                        {{ implode(' - ', $payment->customer->phone_numbers) }}</p>
-                @endif
-                <p class="mb-2"><strong>{{ __('keywords.payment_method') }}:</strong>
-                    @switch($payment->payment_method)
-                        @case('cash')
-                            {{ __('keywords.cash') }}
-                        @break
+                @if ($payment->customer)
+                    <p class="mb-2"><strong>{{ __('keywords.code') }}:</strong>
+                        {{ $payment->customer->code ?? '—' }}</p>
+                    @if ($payment->customer?->phone_numbers !== [])
+                        <p class="mb-2"><strong>{{ __('keywords.phone') }}:</strong>
+                            {{ implode(' - ', $payment->customer->phone_numbers) }}</p>
+                    @endif
+                    <p class="mb-2"><strong>{{ __('keywords.payment_method') }}:</strong>
+                        @switch($payment->payment_method)
+                            @case('cash')
+                                {{ __('keywords.cash') }}
+                            @break
 
-                        @case('bank_transfer')
-                            {{ __('keywords.bank_transfer') }}
-                        @break
+                            @case('bank_transfer')
+                                {{ __('keywords.bank_transfer') }}
+                            @break
 
-                        @case('customer_credit')
-                            {{ __('keywords.customer_credit') }}
-                        @break
+                            @case('customer_credit')
+                                {{ __('keywords.customer_credit') }}
+                            @break
 
-                        @default
-                            {{ __('keywords.' . $payment->payment_method) }}
-                    @endswitch
-                </p>
+                            @default
+                                {{ __('keywords.' . $payment->payment_method) }}
+                        @endswitch
+                    </p>
             </div>
         </div>
 

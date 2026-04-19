@@ -14,11 +14,11 @@
 
     {{-- Customers table --}}
     <x-data-table :searchable="false" :paginated="false" :headers="[
-        ['key' => 'name', 'label' => __('keywords.name')],
         ['key' => 'code', 'label' => __('keywords.code')],
+        ['key' => 'name', 'label' => __('keywords.name')],
+        ['key' => 'address', 'label' => __('keywords.address')],
         ['key' => 'phone', 'label' => __('keywords.phone')],
         ['key' => 'national_number', 'label' => __('keywords.national_number')],
-        ['key' => 'address', 'label' => __('keywords.address')],
         ['key' => 'place', 'label' => __('keywords.place')],
         ['key' => 'balance', 'label' => __('keywords.balance')],
         ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
@@ -26,10 +26,14 @@
         @forelse ($this->customers as $customer)
             <tr class="hover:bg-gray-50 transition-colors">
                 <td class="whitespace-nowrap px-4 py-3">
+                    <span class="text-sm text-gray-500">{{ $customer->code ?? '—' }}</span>
+                </td>
+                <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm font-medium text-gray-900">{{ $customer->name }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
-                    <span class="text-sm text-gray-500">{{ $customer->code ?? '—' }}</span>
+                    <span
+                        class="text-sm text-gray-500 truncate max-w-50 inline-block">{{ $customer->address ?? '—' }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-500">
@@ -38,10 +42,6 @@
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-500">{{ $customer->national_number ?? '—' }}</span>
-                </td>
-                <td class="whitespace-nowrap px-4 py-3">
-                    <span
-                        class="text-sm text-gray-500 truncate max-w-50 inline-block">{{ $customer->address ?? '—' }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-500">{{ $customer->place?->name ?? '—' }}</span>
@@ -61,7 +61,7 @@
                 </td>
             </tr>
         @empty
-            <x-empty-state :title="__('keywords.no_customers_found')" :colspan="7" />
+            <x-empty-state :title="__('keywords.no_customers_found')" :colspan="8" />
         @endforelse
     </x-data-table>
 

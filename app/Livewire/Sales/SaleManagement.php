@@ -67,7 +67,7 @@ class SaleManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['dealer_name', 'user_name', 'number', 'customer.name'];
+        return ['dealer_name', 'user_name', 'number', 'customer.name', 'customer.code'];
     }
 
     protected function getWithRelations(): array

@@ -33,6 +33,7 @@
 
         <x-data-table :searchable="false" :paginated="false" :headers="[
             ['key' => 'number', 'label' => __('keywords.number')],
+            ['key' => 'customer_code', 'label' => __('keywords.code')],
             ['key' => 'customer', 'label' => __('keywords.customer')],
             ['key' => 'total', 'label' => __('keywords.total_price')],
             ['key' => 'paid', 'label' => __('keywords.paid_amount')],
@@ -46,6 +47,9 @@
                 <tr class="hover:bg-gray-50 transition-colors">
                     <td class="whitespace-nowrap px-4 py-3">
                         <span class="text-sm font-medium text-gray-900">{{ $sale->number }}</span>
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-3">
+                        <span class="text-sm text-gray-500">{{ $sale->customer?->code ?? '—' }}</span>
                     </td>
                     <td class="whitespace-nowrap px-4 py-3">
                         <span class="text-sm font-medium text-gray-900">{{ $sale->customer?->name ?? '—' }}</span>

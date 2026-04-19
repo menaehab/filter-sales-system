@@ -16,17 +16,17 @@
             search: @entangle('customerSearch'),
             selected: @entangle('customerSlug'),
             get filtered() {
-                const all = @js($this->customers->map(fn($c) => ['name' => $c->name, 'slug' => $c->slug, 'phone' => $c->phone_numbers !== [] ? implode(' - ', $c->phone_numbers) : '—'])->toArray());
+                const all = @js($this->customers->map(fn($c) => ['name' => $c->name, 'code' => $c->code ?? '—', 'slug' => $c->slug, 'phone' => $c->phone_numbers !== [] ? implode(' - ', $c->phone_numbers) : '—'])->toArray());
                 const query = this.search.toLowerCase().trim();
         
                 if (!query) {
                     return all.slice(0, 50);
                 }
         
-                return all.filter(c => c.name.toLowerCase().includes(query));
+                return all.filter(c => c.name.toLowerCase().includes(query) || c.code.toLowerCase().includes(query));
             },
             select(customer) {
-                this.search = customer.name;
+                this.search = `${customer.name} (${customer.code})`;
                 this.selected = customer.slug;
                 this.open = false;
             },
@@ -53,7 +53,8 @@
                         <button type="button" @click="select(customer)"
                             class="block w-full px-3 py-2 text-start text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700">
                             <div class="flex items-center justify-between">
-                                <span x-text="customer.name"></span>
+                                <span><span x-text="customer.name"></span> <span class="text-xs text-gray-500"
+                                        x-text="`(${customer.code})`"></span></span>
                                 <span class="text-xs text-gray-500" x-text="customer.phone"></span>
                             </div>
                         </button>
@@ -95,6 +96,7 @@
         ['key' => 'filter_model', 'label' => __('keywords.filter_model')],
         ['key' => 'address', 'label' => __('keywords.address')],
         ['key' => 'customer', 'label' => __('keywords.customer')],
+        ['key' => 'customer_code', 'label' => __('keywords.code')],
         ['key' => 'phone', 'label' => __('keywords.phone')],
         ['key' => 'is_installed', 'label' => __('keywords.installation_status')],
         ['key' => 'installed_at', 'label' => __('keywords.installed_at')],
@@ -110,6 +112,9 @@
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-900">{{ $filter->customer?->name }}</span>
+                </td>
+                <td class="whitespace-nowrap px-4 py-3">
+                    <span class="text-sm text-gray-500">{{ $filter->customer?->code ?? '—' }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span
@@ -148,7 +153,7 @@
                 </td>
             </tr>
         @empty
-            <x-empty-state :title="__('keywords.no_filters_found')" :colspan="7" />
+            <x-empty-state :title="__('keywords.no_filters_found')" :colspan="8" />
         @endforelse
     </x-data-table>
 
@@ -184,17 +189,17 @@
                         open: false,
                         search: @entangle('customerModalSearch'),
                         selected: @entangle('form.customer_id'),
-                        customers: @js($this->customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone_numbers !== [] ? implode(' - ', $c->phone_numbers) : '—'])->toArray()),
+                        customers: @js($this->customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'code' => $c->code ?? '—', 'phone' => $c->phone_numbers !== [] ? implode(' - ', $c->phone_numbers) : '—'])->toArray()),
                         get filtered() {
                             const query = (this.search || '').toString().toLowerCase().trim();
                             if (!query) {
                                 return this.customers.slice(0, 50);
                             }
-                            return this.customers.filter(c => c.name.toLowerCase().includes(query));
+                            return this.customers.filter(c => c.name.toLowerCase().includes(query) || c.code.toLowerCase().includes(query));
                         },
                         select(customer) {
                             this.selected = customer.id;
-                            this.search = customer.name;
+                            this.search = `${customer.name} (${customer.code})`;
                             this.open = false;
                         },
                     }" class="relative">
@@ -215,7 +220,8 @@
                                     <button type="button" @click="select(customer)"
                                         class="block w-full px-3 py-2 text-start text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700">
                                         <div class="flex items-center justify-between">
-                                            <span x-text="customer.name"></span>
+                                            <span><span x-text="customer.name"></span> <span class="text-xs text-gray-500"
+                                                    x-text="`(${customer.code})`"></span></span>
                                             <span class="text-xs text-gray-500" x-text="customer.phone"></span>
                                         </div>
                                     </button>
@@ -264,17 +270,17 @@
                         open: false,
                         search: @entangle('customerModalSearch'),
                         selected: @entangle('form.customer_id'),
-                        customers: @js($this->customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone_numbers !== [] ? implode(' - ', $c->phone_numbers) : '—'])->toArray()),
+                        customers: @js($this->customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'code' => $c->code ?? '—', 'phone' => $c->phone_numbers !== [] ? implode(' - ', $c->phone_numbers) : '—'])->toArray()),
                         get filtered() {
                             const query = (this.search || '').toString().toLowerCase().trim();
                             if (!query) {
                                 return this.customers.slice(0, 50);
                             }
-                            return this.customers.filter(c => c.name.toLowerCase().includes(query));
+                            return this.customers.filter(c => c.name.toLowerCase().includes(query) || c.code.toLowerCase().includes(query));
                         },
                         select(customer) {
                             this.selected = customer.id;
-                            this.search = customer.name;
+                            this.search = `${customer.name} (${customer.code})`;
                             this.open = false;
                         },
                     }" class="relative">
@@ -295,7 +301,8 @@
                                     <button type="button" @click="select(customer)"
                                         class="block w-full px-3 py-2 text-start text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700">
                                         <div class="flex items-center justify-between">
-                                            <span x-text="customer.name"></span>
+                                            <span><span x-text="customer.name"></span> <span class="text-xs text-gray-500"
+                                                    x-text="`(${customer.code})`"></span></span>
                                             <span class="text-xs text-gray-500" x-text="customer.phone"></span>
                                         </div>
                                     </button>
