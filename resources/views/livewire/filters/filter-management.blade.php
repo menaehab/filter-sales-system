@@ -2,6 +2,12 @@
     <x-page-header :title="__('keywords.filters')" :description="__('keywords.filters_management')">
         @can('manage_water_filters')
             <x-slot:actions>
+                @canany(['view_service_visits', 'manage_service_visits'])
+                    <x-button variant="secondary" href="{{ route('service-visits') }}">
+                        <i class="fas fa-screwdriver-wrench text-xs"></i>
+                        {{ __('keywords.service_visits') }}
+                    </x-button>
+                @endcanany
                 <x-button variant="primary" @click="$dispatch('open-modal-create-filter')">
                     <i class="fas fa-plus text-xs"></i>
                     {{ __('keywords.add_filter') }}
@@ -35,8 +41,8 @@
                 this.selected = '';
             }
         }" class="relative w-full sm:max-w-xs">
-            <input type="text" x-model="search" @focus="open = true" @click="open = true" @click.outside="open = false"
-                placeholder="{{ __('keywords.search_customer') }}"
+            <input type="text" x-model="search" @focus="open = true" @click="open = true"
+                @click.outside="open = false" placeholder="{{ __('keywords.search_customer') }}"
                 class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 ps-3 pe-8 text-sm text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
 
             <button x-show="selected" @click="clear()" type="button"
@@ -65,6 +71,14 @@
                 </div>
             </div>
         </div>
+
+        <select wire:model.live="placeId"
+            class="rounded-lg border border-gray-300 bg-white py-2 ps-3 pe-8 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+            <option value="">{{ __('keywords.select_place') }}</option>
+            @foreach ($this->placeOptions as $placeId => $placeName)
+                <option value="{{ $placeId }}">{{ $placeName }}</option>
+            @endforeach
+        </select>
     </x-search-toolbar>
 
     <div class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -138,6 +152,13 @@
                             <i class="fas fa-eye text-sm"></i>
                         </a>
                         @can('manage_water_filters')
+                            @can('manage_service_visits')
+                                <button type="button" wire:click="openCreateServiceVisit({{ $filter->id }})"
+                                    class="rounded-lg p-1.5 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                                    title="{{ __('keywords.create_service_visit') }}">
+                                    <i class="fas fa-screwdriver-wrench text-sm"></i>
+                                </button>
+                            @endcan
                             <button type="button" wire:click="openEdit({{ $filter->id }})"
                                 class="rounded-lg p-1.5 text-gray-400 hover:bg-sky-50 hover:text-sky-600 transition-colors"
                                 title="{{ __('keywords.edit') }}">
@@ -319,6 +340,40 @@
                 <x-button variant="secondary"
                     @click="$dispatch('close-modal-edit-filter')">{{ __('keywords.cancel') }}</x-button>
                 <x-button variant="primary" wire:click="updateFilter">{{ __('keywords.update') }}</x-button>
+            </x-slot:footer>
+        </x-modal>
+
+        {{-- Create Service Visit Modal --}}
+        <x-modal name="create-service-visit" title="{{ __('keywords.create_service_visit') }}" maxWidth="lg">
+            <x-slot:body>
+                <div class="space-y-5">
+                    @if (!empty($serviceVisitDueCandles))
+                        <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                            {{ __('keywords.due_candles_detected') }}:
+                            <span class="font-semibold">{{ implode(' - ', $serviceVisitDueCandles) }}</span>
+                        </div>
+                    @endif
+
+                    <x-input name="serviceVisitForm.maintenance_input" label="{{ __('keywords.maintenance_type') }}"
+                        placeholder="{{ __('keywords.enter_maintenance_type') }}"
+                        wire:model.blur="serviceVisitForm.maintenance_input" />
+
+                    <x-input name="serviceVisitForm.technician_name" label="{{ __('keywords.technician_name') }}"
+                        placeholder="{{ __('keywords.enter_technician_name') }}"
+                        wire:model.blur="serviceVisitForm.technician_name" />
+
+                    <x-input type="number" step="0.01" min="0" name="serviceVisitForm.cost"
+                        label="{{ __('keywords.maintenance_cost') }}" placeholder="0"
+                        wire:model.blur="serviceVisitForm.cost" />
+
+                    <x-textarea name="serviceVisitForm.notes" label="{{ __('keywords.notes') }}"
+                        placeholder="{{ __('keywords.enter_notes') }}" wire:model.blur="serviceVisitForm.notes" />
+                </div>
+            </x-slot:body>
+            <x-slot:footer>
+                <x-button variant="secondary"
+                    @click="$dispatch('close-modal-create-service-visit')">{{ __('keywords.cancel') }}</x-button>
+                <x-button variant="primary" wire:click="createServiceVisit">{{ __('keywords.save') }}</x-button>
             </x-slot:footer>
         </x-modal>
 

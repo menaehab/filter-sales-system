@@ -10,6 +10,8 @@ use App\Livewire\Traits\HasCrudQuery;
 use App\Livewire\Traits\HasForm;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\Customer;
+use App\Models\Place;
+use App\Models\ServiceVisit;
 use App\Models\WaterFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -24,20 +26,34 @@ class FilterManagement extends Component
 
     public $customerSlug = '';
 
+    public $placeId = '';
+
     public $customerSearch = '';
 
     public $customerModalSearch = '';
 
     public array $candleNeedsReplacement = [];
 
+    public ?int $serviceVisitFilterId = null;
+
+    public array $serviceVisitDueCandles = [];
+
+    public array $serviceVisitForm = [
+        'maintenance_input' => '',
+        'technician_name' => '',
+        'cost' => '',
+        'notes' => '',
+    ];
+
     public function mount(): void
     {
         $this->resetForm();
+        $this->resetServiceVisitForm();
 
         if ($this->customerSlug) {
             $customer = $this->customers->firstWhere('slug', $this->customerSlug);
             $this->customerSearch = $customer
-                ? trim($customer->name . ' (' . ($customer->code ?? '—') . ')')
+                ? trim($customer->name.' ('.($customer->code ?? '—').')')
                 : '';
         }
     }
@@ -79,7 +95,13 @@ class FilterManagement extends Component
     {
         return [
             'customerSlug' => ['as' => 'customer', 'except' => ''],
+            'placeId' => ['as' => 'place', 'except' => ''],
         ];
+    }
+
+    public function updatingPlaceId(): void
+    {
+        $this->resetPage();
     }
 
     public function updatingCustomerSlug(): void
@@ -87,7 +109,7 @@ class FilterManagement extends Component
         $this->resetPage();
         $customer = $this->customers->firstWhere('slug', $this->customerSlug);
         $this->customerSearch = $customer
-            ? trim($customer->name . ' (' . ($customer->code ?? '—') . ')')
+            ? trim($customer->name.' ('.($customer->code ?? '—').')')
             : '';
     }
 
@@ -100,6 +122,10 @@ class FilterManagement extends Component
     {
         if ($this->customerSlug) {
             $query->whereHas('customer', fn ($q) => $q->where('slug', $this->customerSlug));
+        }
+
+        if ($this->placeId) {
+            $query->whereHas('customer', fn ($q) => $q->where('place_id', $this->placeId));
         }
 
         $selectedCandles = $this->selectedCandleFilters();
@@ -200,6 +226,58 @@ class FilterManagement extends Component
         $this->resetPage();
     }
 
+    public function openCreateServiceVisit(int $filterId): void
+    {
+        $this->authorizeManageServiceVisits();
+
+        $filter = WaterFilter::query()->with('customer')->findOrFail($filterId);
+
+        $this->serviceVisitFilterId = $filter->id;
+        $this->serviceVisitDueCandles = $this->dueCandleLabels($filter);
+        $this->serviceVisitForm = [
+            'maintenance_input' => '',
+            'technician_name' => '',
+            'cost' => '',
+            'notes' => '',
+        ];
+
+        $this->dispatch('open-modal-create-service-visit');
+    }
+
+    public function createServiceVisit(): void
+    {
+        $this->authorizeManageServiceVisits();
+
+        $validated = $this->validate([
+            'serviceVisitForm.maintenance_input' => ['nullable', 'string', 'max:255'],
+            'serviceVisitForm.technician_name' => ['nullable', 'string', 'max:255'],
+            'serviceVisitForm.cost' => ['nullable', 'numeric', 'min:0'],
+            'serviceVisitForm.notes' => ['nullable', 'string', 'max:1000'],
+        ], [], [
+            'serviceVisitForm.maintenance_input' => __('keywords.maintenance_type'),
+            'serviceVisitForm.technician_name' => __('keywords.technician_name'),
+            'serviceVisitForm.cost' => __('keywords.maintenance_cost'),
+            'serviceVisitForm.notes' => __('keywords.notes'),
+        ]);
+
+        $filter = WaterFilter::query()->with('customer')->findOrFail($this->serviceVisitFilterId);
+        $form = $validated['serviceVisitForm'];
+
+        ServiceVisit::create([
+            'user_name' => $filter->customer?->name ?? __('keywords.not_specified_arabic'),
+            'maintenance_type' => $this->buildMaintenanceType($form['maintenance_input'], $this->serviceVisitDueCandles),
+            'technician_name' => blank($form['technician_name'] ?? null) ? null : trim((string) $form['technician_name']),
+            'cost' => filled($form['cost'] ?? null) ? $form['cost'] : null,
+            'notes' => blank($form['notes'] ?? null) ? null : $form['notes'],
+            'user_id' => auth()->id(),
+            'water_filter_id' => $filter->id,
+            'is_completed' => false,
+        ]);
+
+        $this->resetServiceVisitForm();
+        $this->dispatch('close-modal-create-service-visit');
+    }
+
     #[Computed]
     public function filters()
     {
@@ -210,6 +288,12 @@ class FilterManagement extends Component
     public function customers(): Collection
     {
         return Customer::orderBy('name')->get();
+    }
+
+    #[Computed]
+    public function placeOptions(): array
+    {
+        return Place::query()->orderBy('name')->pluck('name', 'id')->toArray();
     }
 
     #[Computed]
@@ -297,5 +381,60 @@ class FilterManagement extends Component
                     )
                     ->where('latest_reading.tds', '>=', 100);
             });
+    }
+
+    protected function resetServiceVisitForm(): void
+    {
+        $this->serviceVisitFilterId = null;
+        $this->serviceVisitDueCandles = [];
+        $this->serviceVisitForm = [
+            'maintenance_input' => '',
+            'technician_name' => '',
+            'cost' => '',
+            'notes' => '',
+        ];
+    }
+
+    protected function dueCandleLabels(WaterFilter $filter): array
+    {
+        $status = $filter->candle_status;
+
+        $labelMap = [
+            'candle_1' => '1',
+            'candle_2_3' => '2/3',
+            'candle_4' => '4',
+            'candle_5' => '5',
+            'candle_6' => '6',
+            'candle_7' => '7',
+        ];
+
+        return collect($labelMap)
+            ->filter(fn (string $label, string $key) => ($status[$key] ?? null) === 'danger')
+            ->values()
+            ->all();
+    }
+
+    protected function buildMaintenanceType(?string $input, array $dueCandleLabels): string
+    {
+        $maintenanceText = trim((string) ($input ?? ''));
+
+        if ($dueCandleLabels === []) {
+            return $maintenanceText === '' ? '—' : $maintenanceText;
+        }
+
+        $candlesText = collect($dueCandleLabels)
+            ->map(fn (string $label) => "ش {$label}")
+            ->implode(' - ');
+
+        if ($maintenanceText === '') {
+            return $candlesText;
+        }
+
+        return "{$candlesText} / {$maintenanceText}";
+    }
+
+    protected function authorizeManageServiceVisits(): void
+    {
+        abort_unless(auth()->user()?->can('manage_service_visits'), 403);
     }
 }

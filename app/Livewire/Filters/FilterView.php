@@ -25,6 +25,8 @@ class FilterView extends Component
 
     public WaterFilter $filter;
 
+    public string $activeTab = 'overview';
+
     public array $readingForm = [
         'technician_name' => '',
         'tds' => '',
@@ -142,6 +144,34 @@ class FilterView extends Component
     public function getCanManageCreatedAtProperty(): bool
     {
         return (bool) auth()->user()?->can('manage_created_at');
+    }
+
+    public function getServiceVisitsProperty()
+    {
+        return $this->filter->serviceVisits()
+            ->with('user')
+            ->latest('created_at')
+            ->get();
+    }
+
+    public function setActiveTab(string $tab): void
+    {
+        if (! in_array($tab, ['overview', 'service-visits'], true)) {
+            return;
+        }
+
+        $this->activeTab = $tab;
+    }
+
+    public function markServiceVisitCompleted(int $visitId): void
+    {
+        $this->authorize('manage_service_visits');
+
+        $visit = $this->filter->serviceVisits()->findOrFail($visitId);
+
+        if (! $visit->is_completed) {
+            $visit->update(['is_completed' => true]);
+        }
     }
 
     public function openAddReading(): void
@@ -436,6 +466,7 @@ class FilterView extends Component
             'readings' => $this->readings,
             'candles' => $this->candles,
             'maintenances' => $this->maintenances,
+            'serviceVisits' => $this->serviceVisits,
             'maintenanceProducts' => $this->maintenanceProducts,
             'canManageCreatedAt' => $this->canManageCreatedAt,
             'waterQualityOptions' => WaterQualityTypeEnum::cases(),
