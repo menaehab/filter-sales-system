@@ -44,6 +44,8 @@ class PermissionSeeder extends Seeder
             'edit_sale_returns',
             'view_water_filters',
             'manage_water_filters',
+            'view_service_visits',
+            'manage_service_visits',
             'view_damaged_products',
             'manage_damaged_products',
             'view_expenses',

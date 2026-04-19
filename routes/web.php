@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ServiceVisit;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -199,6 +200,26 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/filters/{filter:slug}', 'filters.filter-view')
         ->name('filters.view')
         ->middleware('permission:view_water_filters|manage_water_filters');
+
+    Route::livewire('/service-visits', 'filters.service-visit-management')
+        ->name('service-visits')
+        ->middleware('permission:view_service_visits|manage_service_visits');
+
+    Route::get('/service-visits/print/pending', function () {
+        $visits = ServiceVisit::query()
+            ->with(['waterFilter.customer.phones'])
+            ->where('is_completed', false)
+            ->latest('created_at')
+            ->get();
+
+        return view('livewire.filters.service-visits-print', compact('visits'));
+    })
+        ->name('service-visits.print.pending')
+        ->middleware('permission:view_service_visits|manage_service_visits');
+
+    Route::livewire('/service-visits/{serviceVisit}', 'filters.service-visit-show')
+        ->name('service-visits.show')
+        ->middleware('permission:view_service_visits|manage_service_visits');
 
     /*
     |--------------------------------------------------------------------------

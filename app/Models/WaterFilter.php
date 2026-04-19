@@ -275,4 +275,9 @@ class WaterFilter extends Model
     {
         return $this->hasMany(Maintenance::class);
     }
+
+    public function serviceVisits()
+    {
+        return $this->hasMany(ServiceVisit::class);
+    }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Customer;
+use App\Models\Place;
 use App\Models\WaterFilter;
 use Livewire\Livewire;
 
@@ -140,6 +141,40 @@ it('filters by customer', function () {
 
     $this->assertSame(1, $filters->total());
     $this->assertSame(['Model 1'], collect($filters->items())->pluck('filter_model')->all());
+});
+
+it('filters by customer place', function () {
+    $firstPlace = Place::create(['name' => 'North Region']);
+    $secondPlace = Place::create(['name' => 'South Region']);
+
+    $firstCustomer = Customer::factory()->create([
+        'name' => 'North Customer',
+        'place_id' => $firstPlace->id,
+    ]);
+    $secondCustomer = Customer::factory()->create([
+        'name' => 'South Customer',
+        'place_id' => $secondPlace->id,
+    ]);
+
+    WaterFilter::create([
+        'filter_model' => 'North Filter',
+        'address' => 'North Address',
+        'customer_id' => $firstCustomer->id,
+    ]);
+
+    WaterFilter::create([
+        'filter_model' => 'South Filter',
+        'address' => 'South Address',
+        'customer_id' => $secondCustomer->id,
+    ]);
+
+    $component = Livewire::test('filters.filter-management')
+        ->set('placeId', (string) $firstPlace->id);
+
+    $filters = $component->get('filters');
+
+    $this->assertSame(1, $filters->total());
+    $this->assertSame(['North Filter'], collect($filters->items())->pluck('filter_model')->all());
 });
 
 it('paginates filters using per page selection', function () {

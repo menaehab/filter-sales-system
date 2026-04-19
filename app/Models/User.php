@@ -95,4 +95,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Maintenance::class);
     }
+
+    public function serviceVisits()
+    {
+        return $this->hasMany(ServiceVisit::class);
+    }
 }

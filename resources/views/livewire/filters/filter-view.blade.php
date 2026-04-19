@@ -116,187 +116,297 @@
             </div>
         </div>
 
-        {{-- Readings Table --}}
         <div class="xl:col-span-2 space-y-6">
-            <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-                <div class="flex items-center justify-between border-b bg-white px-5 py-4">
-                    <h3 class="text-sm font-semibold text-gray-900">{{ __('keywords.water_readings') }}
-                        ({{ $filter->readings()->count() }})</h3>
-                    @can('manage_water_filters')
-                        <x-button variant="primary" size="sm" wire:click="openAddReading">
-                            <i class="fas fa-plus text-xs"></i>
-                            {{ __('keywords.add_reading') }}
-                        </x-button>
-                    @endcan
+            <div class="rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" wire:click="setActiveTab('overview')" @class([
+                        'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                        'bg-emerald-600 text-white' => $activeTab === 'overview',
+                        'text-gray-600 hover:bg-gray-100' => $activeTab !== 'overview',
+                    ])>
+                        {{ __('keywords.filter_overview') }}
+                    </button>
+                    <button type="button" wire:click="setActiveTab('service-visits')" @class([
+                        'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                        'bg-emerald-600 text-white' => $activeTab === 'service-visits',
+                        'text-gray-600 hover:bg-gray-100' => $activeTab !== 'service-visits',
+                    ])>
+                        {{ __('keywords.service_visits') }}
+                    </button>
+                </div>
+            </div>
+
+            @if ($activeTab === 'overview')
+                <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                    <div class="flex items-center justify-between border-b bg-white px-5 py-4">
+                        <h3 class="text-sm font-semibold text-gray-900">{{ __('keywords.water_readings') }}
+                            ({{ $filter->readings()->count() }})</h3>
+                        @can('manage_water_filters')
+                            <x-button variant="primary" size="sm" wire:click="openAddReading">
+                                <i class="fas fa-plus text-xs"></i>
+                                {{ __('keywords.add_reading') }}
+                            </x-button>
+                        @endcan
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        @if ($readings->isEmpty())
+                            <div class="px-4 py-8 text-center text-sm text-gray-500">
+                                {{ __('keywords.no_water_readings_found') }}</div>
+                        @else
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th
+                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.technician_name') }}</th>
+                                        <th
+                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.tds') }}</th>
+                                        <th
+                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.water_quality') }}</th>
+                                        <th
+                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.type') }}</th>
+                                        <th
+                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.date') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    @foreach ($readings as $reading)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                                {{ $reading->technician_name }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">{{ $reading->tds }}</td>
+                                            <td class="px-4 py-3 text-sm">
+                                                <span @class([
+                                                    'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium',
+                                                    'bg-emerald-100 text-emerald-700' => $reading->water_quality === 'good',
+                                                    'bg-amber-100 text-amber-700' => $reading->water_quality === 'fair',
+                                                    'bg-red-100 text-red-700' => $reading->water_quality === 'poor',
+                                                ])>
+                                                    {{ __('keywords.' . $reading->water_quality) }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-sm">
+                                                @if ($reading->before_installment)
+                                                    <span
+                                                        class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                                                        {{ __('keywords.before_installment') }}
+                                                    </span>
+                                                @else
+                                                    <span
+                                                        class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                                                        {{ __('keywords.after_installment') }}
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="px-4 py-3 text-sm text-gray-500">
+                                                {{ $reading->created_at->format('Y-m-d H:i') }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <div class="border-t border-gray-200 px-5 py-4">{{ $readings->links() }}</div>
+                        @endif
+                    </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    @if ($readings->isEmpty())
-                        <div class="px-4 py-8 text-center text-sm text-gray-500">
-                            {{ __('keywords.no_water_readings_found') }}</div>
+                <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                    <div class="border-b bg-white px-5 py-4">
+                        <h3 class="text-sm font-semibold text-gray-900">{{ __('keywords.maintenance_history') }}</h3>
+                    </div>
+
+                    @if ($maintenances->isEmpty())
+                        <div class="px-5 py-8 text-center text-sm text-gray-500">
+                            {{ __('keywords.no_maintenance_history') }}
+                        </div>
                     @else
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th
-                                        class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                        {{ __('keywords.technician_name') }}</th>
-                                    <th
-                                        class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                        {{ __('keywords.tds') }}</th>
-                                    <th
-                                        class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                        {{ __('keywords.water_quality') }}</th>
-                                    <th
-                                        class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                        {{ __('keywords.type') }}</th>
-                                    <th
-                                        class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                        {{ __('keywords.date') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @foreach ($readings as $reading)
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                                            {{ $reading->technician_name }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-700">{{ $reading->tds }}</td>
-                                        <td class="px-4 py-3 text-sm">
-                                            <span @class([
-                                                'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium',
-                                                'bg-emerald-100 text-emerald-700' => $reading->water_quality === 'good',
-                                                'bg-amber-100 text-amber-700' => $reading->water_quality === 'fair',
-                                                'bg-red-100 text-red-700' => $reading->water_quality === 'poor',
-                                            ])>
-                                                {{ __('keywords.' . $reading->water_quality) }}
+                        <div class="divide-y divide-gray-200">
+                            @foreach ($maintenances as $maintenance)
+                                @php
+                                    $changedCandles = $maintenance->candleChanges
+                                        ->pluck('candle_name')
+                                        ->unique()
+                                        ->values();
+                                    $latestReplacedAt = $maintenance->candleChanges->sortByDesc('replaced_at')->first()
+                                        ?->replaced_at;
+                                    $installedProducts = $maintenance->items
+                                        ->groupBy(
+                                            fn($item) => $item->saleItem?->product?->name ??
+                                                __('keywords.not_specified'),
+                                        )
+                                        ->map(fn($items) => (int) $items->sum('quantity'));
+                                @endphp
+
+                                <div class="p-5 space-y-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div class="text-sm text-gray-500">
+                                            {{ __('keywords.replaced_at') }}:
+                                            <span class="font-medium text-gray-900">
+                                                {{ $latestReplacedAt?->format('Y-m-d H:i') ?? __('keywords.not_specified_arabic') }}
                                             </span>
-                                        </td>
-                                        <td class="px-4 py-3 text-sm">
-                                            @if ($reading->before_installment)
-                                                <span
-                                                    class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                                                    {{ __('keywords.before_installment') }}
-                                                </span>
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ __('keywords.changed_by') }}:
+                                            <span class="font-medium text-gray-900">
+                                                {{ $maintenance->user?->name ?? __('keywords.not_specified_arabic') }}
+                                            </span>
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ __('keywords.technician_name') }}:
+                                            <span
+                                                class="font-medium text-gray-900">{{ $maintenance->technician_name }}</span>
+                                        </div>
+                                        <div
+                                            class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                                            {{ __('keywords.maintenance_cost') }}:
+                                            {{ number_format((float) $maintenance->cost, 2) }}
+                                            {{ __('keywords.currency') }}
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                                        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                            <p
+                                                class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                                {{ __('keywords.changed_candles') }}
+                                            </p>
+                                            @if ($changedCandles->isEmpty())
+                                                <p class="text-sm text-gray-500">{{ __('keywords.no_data_available') }}
+                                                </p>
                                             @else
-                                                <span
-                                                    class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                                                    {{ __('keywords.after_installment') }}
-                                                </span>
+                                                <div class="flex flex-wrap gap-2">
+                                                    @foreach ($changedCandles as $candleName)
+                                                        <span
+                                                            class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700">
+                                                            {{ $candleName }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
                                             @endif
-                                        </td>
-                                        <td class="px-4 py-3 text-sm text-gray-500">
-                                            {{ $reading->created_at->format('Y-m-d H:i') }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                        <div class="border-t border-gray-200 px-5 py-4">{{ $readings->links() }}</div>
+                                        </div>
+
+                                        <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                            <p
+                                                class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                                {{ __('keywords.maintenance_products') }}
+                                            </p>
+                                            @if ($installedProducts->isEmpty())
+                                                <p class="text-sm text-gray-500">
+                                                    {{ __('keywords.no_maintenance_products') }}</p>
+                                            @else
+                                                <div class="space-y-1.5">
+                                                    @foreach ($installedProducts as $productName => $quantity)
+                                                        <div class="flex items-center justify-between text-sm">
+                                                            <span
+                                                                class="font-medium text-gray-800">{{ $productName }}</span>
+                                                            <span class="text-gray-600">x{{ $quantity }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    @if ($maintenance->description)
+                                        <div
+                                            class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                                            <span class="font-medium">{{ __('keywords.description') }}:</span>
+                                            {{ $maintenance->description }}
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
                     @endif
                 </div>
-            </div>
+            @else
+                <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                    <div class="flex items-center justify-between border-b bg-white px-5 py-4">
+                        <h3 class="text-sm font-semibold text-gray-900">{{ __('keywords.service_visits') }}
+                            ({{ $serviceVisits->count() }})</h3>
+                        <x-button variant="secondary" size="sm" href="{{ route('service-visits') }}">
+                            <i class="fas fa-arrow-up-right-from-square text-xs"></i>
+                            {{ __('keywords.view_all_service_visits') }}
+                        </x-button>
+                    </div>
 
-            <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-                <div class="border-b bg-white px-5 py-4">
-                    <h3 class="text-sm font-semibold text-gray-900">{{ __('keywords.maintenance_history') }}</h3>
+                    @if ($serviceVisits->isEmpty())
+                        <div class="px-5 py-8 text-center text-sm text-gray-500">
+                            {{ __('keywords.no_service_visits_found') }}
+                        </div>
+                    @else
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th
+                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.maintenance_type') }}</th>
+                                        <th
+                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.technician_name') }}</th>
+                                        <th
+                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.maintenance_cost') }}</th>
+                                        <th
+                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.notes') }}</th>
+                                        <th
+                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.status') }}</th>
+                                        <th
+                                            class="px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    @foreach ($serviceVisits as $visit)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                                {{ $visit->maintenance_type ?: '—' }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">
+                                                {{ $visit->technician_name ?: '—' }}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">
+                                                {{ $visit->cost !== null ? number_format((float) $visit->cost, 2) . ' ' . __('keywords.currency') : '—' }}
+                                            </td>
+                                            <td class="px-4 py-3 text-sm text-gray-600">{{ $visit->notes ?: '—' }}
+                                            </td>
+                                            <td class="px-4 py-3 text-sm">
+                                                <x-badge :label="$visit->is_completed
+                                                    ? __('keywords.completed')
+                                                    : __('keywords.pending')" :color="$visit->is_completed ? 'green' : 'amber'" />
+                                            </td>
+                                            <td class="px-4 py-3 text-end text-sm">
+                                                <div class="flex items-center justify-end gap-2">
+                                                    <a href="{{ route('service-visits.show', $visit) }}"
+                                                        class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-sky-50 hover:text-sky-600"
+                                                        title="{{ __('keywords.view') }}">
+                                                        <i class="fas fa-eye text-sm"></i>
+                                                    </a>
+                                                    @can('manage_service_visits')
+                                                        @if (!$visit->is_completed)
+                                                            <button type="button"
+                                                                wire:click="markServiceVisitCompleted({{ $visit->id }})"
+                                                                class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-emerald-50 hover:text-emerald-600"
+                                                                title="{{ __('keywords.mark_visit_completed') }}">
+                                                                <i class="fas fa-check text-sm"></i>
+                                                            </button>
+                                                        @endif
+                                                    @endcan
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 </div>
-
-                @if ($maintenances->isEmpty())
-                    <div class="px-5 py-8 text-center text-sm text-gray-500">
-                        {{ __('keywords.no_maintenance_history') }}
-                    </div>
-                @else
-                    <div class="divide-y divide-gray-200">
-                        @foreach ($maintenances as $maintenance)
-                            @php
-                                $changedCandles = $maintenance->candleChanges->pluck('candle_name')->unique()->values();
-                                $latestReplacedAt = $maintenance->candleChanges->sortByDesc('replaced_at')->first()
-                                    ?->replaced_at;
-                                $installedProducts = $maintenance->items
-                                    ->groupBy(
-                                        fn($item) => $item->saleItem?->product?->name ?? __('keywords.not_specified'),
-                                    )
-                                    ->map(fn($items) => (int) $items->sum('quantity'));
-                            @endphp
-
-                            <div class="p-5 space-y-4">
-                                <div class="flex flex-wrap items-center justify-between gap-2">
-                                    <div class="text-sm text-gray-500">
-                                        {{ __('keywords.replaced_at') }}:
-                                        <span class="font-medium text-gray-900">
-                                            {{ $latestReplacedAt?->format('Y-m-d H:i') ?? __('keywords.not_specified_arabic') }}
-                                        </span>
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ __('keywords.changed_by') }}:
-                                        <span class="font-medium text-gray-900">
-                                            {{ $maintenance->user?->name ?? __('keywords.not_specified_arabic') }}
-                                        </span>
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ __('keywords.technician_name') }}:
-                                        <span
-                                            class="font-medium text-gray-900">{{ $maintenance->technician_name }}</span>
-                                    </div>
-                                    <div
-                                        class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-                                        {{ __('keywords.maintenance_cost') }}:
-                                        {{ number_format((float) $maintenance->cost, 2) }}
-                                        {{ __('keywords.currency') }}
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                            {{ __('keywords.changed_candles') }}
-                                        </p>
-                                        @if ($changedCandles->isEmpty())
-                                            <p class="text-sm text-gray-500">{{ __('keywords.no_data_available') }}</p>
-                                        @else
-                                            <div class="flex flex-wrap gap-2">
-                                                @foreach ($changedCandles as $candleName)
-                                                    <span
-                                                        class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700">
-                                                        {{ $candleName }}
-                                                    </span>
-                                                @endforeach
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                            {{ __('keywords.maintenance_products') }}
-                                        </p>
-                                        @if ($installedProducts->isEmpty())
-                                            <p class="text-sm text-gray-500">
-                                                {{ __('keywords.no_maintenance_products') }}</p>
-                                        @else
-                                            <div class="space-y-1.5">
-                                                @foreach ($installedProducts as $productName => $quantity)
-                                                    <div class="flex items-center justify-between text-sm">
-                                                        <span
-                                                            class="font-medium text-gray-800">{{ $productName }}</span>
-                                                        <span class="text-gray-600">x{{ $quantity }}</span>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                @if ($maintenance->description)
-                                    <div
-                                        class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                                        <span class="font-medium">{{ __('keywords.description') }}:</span>
-                                        {{ $maintenance->description }}
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
+            @endif
         </div>
     </div>
 
@@ -430,7 +540,8 @@
 
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
-                            <h4 class="text-sm font-semibold text-gray-900">{{ __('keywords.maintenance_products') }}</h4>
+                            <h4 class="text-sm font-semibold text-gray-900">{{ __('keywords.maintenance_products') }}
+                            </h4>
                             <span
                                 class="text-xs text-gray-500">{{ __('keywords.only_purchased_maintenance_products') }}</span>
                         </div>

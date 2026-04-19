@@ -3,7 +3,7 @@
         ?
         'translate-x-0' :
         (document.documentElement.dir === 'rtl' ? 'translate-x-full' : '-translate-x-full')"
-    class="fixed inset-y-0 start-0 z-50 flex w-64 flex-col bg-gray-900 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto">
+    class="fixed inset-y-0 inset-s-0 z-50 flex w-64 flex-col bg-gray-900 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto">
 
     {{-- Sidebar header --}}
     <div class="flex h-16 items-center gap-3 px-6">
@@ -37,7 +37,7 @@
                 main: {{ request()->routeIs('home') ? 'true' : 'false' }},
                 sales: {{ request()->routeIs('sales*') ? 'true' : 'false' }},
                 purchases: {{ request()->routeIs('purchases*') ? 'true' : 'false' }},
-                people: {{ request()->routeIs('customers*') || request()->routeIs('suppliers*') || request()->routeIs('filters*') ? 'true' : 'false' }},
+                people: {{ request()->routeIs('customers*') || request()->routeIs('suppliers*') || request()->routeIs('filters*') || request()->routeIs('service-visits*') ? 'true' : 'false' }},
                 inventory: {{ request()->routeIs('categories*') || request()->routeIs('products*') || request()->routeIs('damaged-products*') || request()->routeIs('expenses*') ? 'true' : 'false' }},
                 system: {{ request()->routeIs('dashboard') || request()->routeIs('activities*') || request()->routeIs('users*') || request()->routeIs('places*') ? 'true' : 'false' }},
             },
@@ -128,7 +128,7 @@
 
         {{-- People --}}
         @canany(['manage_customers', 'view_customers', 'manage_suppliers', 'view_suppliers', 'manage_water_filters',
-            'view_water_filters'])
+            'view_water_filters', 'manage_service_visits', 'view_service_visits'])
             <div class="space-y-1">
                 <button type="button" @click="toggleGroup('people')"
                     class="w-full flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 transition-colors">
@@ -150,6 +150,12 @@
                     @canany(['manage_water_filters', 'view_water_filters'])
                         <x-sidebar-link href="{{ route('filters') }}" icon="fas fa-filter" :active="request()->routeIs('filters*')">
                             {{ __('keywords.filters') }}
+                        </x-sidebar-link>
+                    @endcanany
+                    @canany(['manage_service_visits', 'view_service_visits'])
+                        <x-sidebar-link href="{{ route('service-visits') }}" icon="fas fa-screwdriver-wrench"
+                            :active="request()->routeIs('service-visits*')">
+                            {{ __('keywords.service_visits') }}
                         </x-sidebar-link>
                     @endcanany
                 </div>
