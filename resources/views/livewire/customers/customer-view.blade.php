@@ -33,6 +33,10 @@
                         class="font-medium text-gray-900">{{ $customer->place?->name ?? __('keywords.not_specified') }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">{{ __('keywords.address') }}</span>
+                    <span class="font-medium text-gray-900">{{ $customer->address }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.created_at') }}</span>
                     <span class="font-medium text-gray-900">{{ $customer->created_at?->format('Y-m-d H:i') }}</span>
                 </div>
