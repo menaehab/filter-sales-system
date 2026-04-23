@@ -1,4 +1,4 @@
-<div>
+<div x-on:confirmed-delete-customer-view-payment.window="$wire.deletePayment()">
     <x-page-header :title="$customer->name" :description="__('keywords.customer_details_description')">
         <x-slot:actions>
             <x-button variant="secondary" href="{{ route('customers') }}">
@@ -38,7 +38,7 @@
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.created_at') }}</span>
-                    <span class="font-medium text-gray-900">{{ $customer->created_at?->format('Y-m-d H:i') }}</span>
+                    <span class="font-medium text-gray-900">{{ $customer->created_at?->format('Y/m/d H:i') }}</span>
                 </div>
             </div>
 
@@ -130,12 +130,20 @@
                                             <td class="px-4 py-3 text-sm text-gray-600">{{ $sale->items->count() }}
                                             </td>
                                             <td class="px-4 py-3 text-sm text-gray-500">
-                                                {{ $sale->created_at->format('Y-m-d H:i') }}</td>
+                                                {{ $sale->created_at->format('Y/m/d H:i') }}</td>
                                             <td class="px-4 py-3 text-end text-sm">
-                                                <a href="{{ route('sales.show', $sale) }}"
-                                                    class="text-blue-600 hover:text-blue-900">
-                                                    {{ __('keywords.view') }}
-                                                </a>
+                                                <div class="flex items-center justify-end gap-3">
+                                                    <a href="{{ route('sales.show', $sale) }}"
+                                                        class="text-blue-600 hover:text-blue-900">
+                                                        {{ __('keywords.view') }}
+                                                    </a>
+                                                    @canany(['manage_sales', 'edit_sales'])
+                                                        <a href="{{ route('sales.edit', $sale) }}"
+                                                            class="text-emerald-600 hover:text-emerald-700">
+                                                            {{ __('keywords.edit') }}
+                                                        </a>
+                                                    @endcanany
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -173,6 +181,9 @@
                                         <th
                                             class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
                                             {{ __('keywords.date') }}</th>
+                                        <th
+                                            class="px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                            {{ __('keywords.action') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
@@ -192,7 +203,27 @@
                                                 {{ $payment->allocations->pluck('sale.number')->filter()->join(', ') ?: '—' }}
                                             </td>
                                             <td class="px-4 py-3 text-sm text-gray-500">
-                                                {{ $payment->created_at->format('Y-m-d H:i') }}</td>
+                                                {{ $payment->created_at->format('Y/m/d H:i') }}</td>
+                                            <td class="px-4 py-3 text-end text-sm">
+                                                <div class="flex items-center justify-end gap-3">
+                                                    <a href="{{ route('customer-payments.print', $payment) }}"
+                                                        class="text-blue-600 hover:text-blue-900">
+                                                        {{ __('keywords.view') }}
+                                                    </a>
+                                                    @can('manage_customer_payment_allocations')
+                                                        <button type="button"
+                                                            wire:click="openEditPayment({{ $payment->id }})"
+                                                            class="text-emerald-600 hover:text-emerald-700">
+                                                            {{ __('keywords.edit') }}
+                                                        </button>
+                                                        <button type="button"
+                                                            wire:click="setDeletePayment({{ $payment->id }})"
+                                                            class="text-red-600 hover:text-red-700">
+                                                            {{ __('keywords.delete') }}
+                                                        </button>
+                                                    @endcan
+                                                </div>
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -248,12 +279,20 @@
                                             </td>
                                             <td class="px-4 py-3 text-sm text-gray-600">{{ $return->user->name }}</td>
                                             <td class="px-4 py-3 text-sm text-gray-500">
-                                                {{ $return->created_at->format('Y-m-d H:i') }}</td>
+                                                {{ $return->created_at->format('Y/m/d H:i') }}</td>
                                             <td class="px-4 py-3 text-end text-sm">
-                                                <a href="{{ route('sale-returns.show', $return) }}"
-                                                    class="text-blue-600 hover:text-blue-900">
-                                                    {{ __('keywords.view') }}
-                                                </a>
+                                                <div class="flex items-center justify-end gap-3">
+                                                    <a href="{{ route('sale-returns.show', $return) }}"
+                                                        class="text-blue-600 hover:text-blue-900">
+                                                        {{ __('keywords.view') }}
+                                                    </a>
+                                                    @canany(['manage_sale_returns', 'edit_sale_returns'])
+                                                        <a href="{{ route('sale-returns.edit', $return) }}"
+                                                            class="text-emerald-600 hover:text-emerald-700">
+                                                            {{ __('keywords.edit') }}
+                                                        </a>
+                                                    @endcanany
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -297,7 +336,7 @@
                                                 {{ $filter->filter_model }}</td>
                                             <td class="px-4 py-3 text-sm text-gray-600">{{ $filter->address }}</td>
                                             <td class="px-4 py-3 text-sm text-gray-500">
-                                                {{ $filter->installed_at?->format('Y-m-d') ?? '—' }}</td>
+                                                {{ $filter->installed_at?->format('Y/m/d') ?? '—' }}</td>
                                             <td class="px-4 py-3 text-sm text-gray-600">
                                                 {{ $filter->readings()->count() }}</td>
                                             <td class="px-4 py-3 text-end text-sm">
@@ -317,4 +356,36 @@
             </div>
         </div>
     </div>
+
+    @can('manage_customer_payment_allocations')
+        <x-modal name="edit-customer-view-payment" title="{{ __('keywords.edit_customer_payment') }}" maxWidth="lg">
+            <x-slot:body>
+                <div class="space-y-5">
+                    <x-input type="number" name="form.amount" label="{{ __('keywords.amount') }}"
+                        placeholder="{{ __('keywords.enter_amount') }}" wire:model.blur="form.amount" step="0.01"
+                        min="0.01" required />
+
+                    <x-select name="form.payment_method" label="{{ __('keywords.payment_method') }}"
+                        wire:model.blur="form.payment_method" :options="$this->paymentMethodOptions" :placeholder="__('keywords.select_payment_method')" required />
+
+                    <x-textarea name="form.note" label="{{ __('keywords.note') }}"
+                        placeholder="{{ __('keywords.enter_note') }}" wire:model.blur="form.note" rows="3" />
+
+                    @if ($this->canManageCreatedAt)
+                        <x-input type="datetime-local" name="form.created_at" label="{{ __('keywords.created_at') }}"
+                            wire:model.blur="form.created_at" />
+                    @endif
+                </div>
+            </x-slot:body>
+            <x-slot:footer>
+                <x-button variant="secondary"
+                    @click="$dispatch('close-modal-edit-customer-view-payment')">{{ __('keywords.cancel') }}</x-button>
+                <x-button variant="primary" wire:click="updatePayment">{{ __('keywords.update') }}</x-button>
+            </x-slot:footer>
+        </x-modal>
+
+        <x-confirm-modal name="delete-customer-view-payment" title="{{ __('keywords.delete_customer_payment') }}"
+            message="{{ __('keywords.delete_customer_payment_confirmation') }}"
+            confirmText="{{ __('keywords.delete') }}" variant="danger" />
+    @endcan
 </div>

@@ -89,7 +89,7 @@
                     <span class="text-sm text-gray-900">{{ $damaged_product->user?->name }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
-                    <span class="text-sm text-gray-900">{{ $damaged_product->created_at?->format('Y-m-d') }}</span>
+                    <span class="text-sm text-gray-900">{{ $damaged_product->created_at?->format('Y/m/d') }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                     <x-table-actions editAction="openEdit({{ $damaged_product->id }})" :canEdit="auth()->user()->can('manage_damaged_products')"

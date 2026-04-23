@@ -31,7 +31,7 @@ class SaleReturnEdit extends Component
         $this->saleReturn = $saleReturn->load(['sale.items.product', 'items']);
         $this->reason = $saleReturn->reason ?? '';
         $this->cash_refund = (bool) $saleReturn->cash_refund;
-        $this->created_at = $saleReturn->created_at?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i');
+        $this->created_at = $saleReturn->created_at?->format('Y/m/d H:i') ?? now()->format('Y/m/d H:i');
 
         $returnItems = $saleReturn->items->keyBy('product_id');
 

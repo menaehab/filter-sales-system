@@ -53,7 +53,7 @@
                         {{ $return->user?->name ?? '—' }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                        {{ $return->created_at->format('Y-m-d') }}
+                        {{ $return->created_at->format('Y/m/d') }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                         <div class="flex items-center justify-end gap-1">

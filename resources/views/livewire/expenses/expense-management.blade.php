@@ -36,7 +36,7 @@
                     <span class="text-sm text-gray-900">{{ $expense->user?->name }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
-                    <span class="text-sm text-gray-900">{{ $expense->created_at?->format('Y-m-d') }}</span>
+                    <span class="text-sm text-gray-900">{{ $expense->created_at?->format('Y/m/d') }}</span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                     <x-table-actions editAction="openEdit({{ $expense->id }})" :canEdit="auth()->user()->can('manage_expenses')" :canDelete="auth()->user()->can('manage_expenses')"

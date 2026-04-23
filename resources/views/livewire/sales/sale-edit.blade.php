@@ -274,7 +274,7 @@
                                         {{ __('keywords.' . $allocation->customerPayment?->payment_method) ?? '—' }}
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-500">
-                                        {{ $allocation->created_at->format('Y-m-d H:i') }}
+                                        {{ $allocation->created_at->format('Y/m/d H:i') }}
                                     </td>
                                 </tr>
                             @endforeach

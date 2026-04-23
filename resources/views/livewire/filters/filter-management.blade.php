@@ -141,7 +141,7 @@
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-500">
-                        {{ $filter->is_installed ? $filter->installed_at?->format('Y-m-d') ?? '—' : '—' }}
+                        {{ $filter->is_installed ? $filter->installed_at?->format('Y/m/d') ?? '—' : '—' }}
                     </span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">

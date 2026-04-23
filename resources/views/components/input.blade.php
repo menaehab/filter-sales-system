@@ -32,11 +32,15 @@
         <input
             id="{{ $name }}"
             name="{{ $name }}"
-            type="{{ $type }}"
+            type="{{ in_array($type, ['date', 'datetime-local']) ? 'text' : $type }}"
             value="{{ old($name, $value) }}"
             placeholder="{{ $placeholder }}"
             {{ $required ? 'required' : '' }}
             {{ $disabled ? 'disabled' : '' }}
+            @if(in_array($type, ['date', 'datetime-local']))
+                x-data
+                x-init="flatpickr($el, { dateFormat: '{{ $type === 'date' ? 'Y/m/d' : 'Y/m/d H:i' }}', enableTime: {{ $type === 'datetime-local' ? 'true' : 'false' }} })"
+            @endif
             {{ $attributes->except('class')->merge([
                 'class' =>
                     'block w-full rounded-xl border bg-white text-sm shadow-sm ' .

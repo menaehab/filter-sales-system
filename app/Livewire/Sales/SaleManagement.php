@@ -160,7 +160,7 @@ class SaleManagement extends Component
 
         $this->payMethod = 'cash';
         $this->payNote = '';
-        $this->payCreatedAt = now()->format('Y-m-d\TH:i');
+        $this->payCreatedAt = now()->format('Y/m/d H:i');
         $this->dispatch('open-modal-pay-sale');
     }
 

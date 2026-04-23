@@ -37,7 +37,7 @@
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.created_at') }}</span>
-                    <span class="font-medium text-gray-900">{{ $saleReturn->created_at->format('Y-m-d H:i') }}</span>
+                    <span class="font-medium text-gray-900">{{ $saleReturn->created_at->format('Y/m/d H:i') }}</span>
                 </div>
 
                 <div class="border-t pt-3 space-y-2">

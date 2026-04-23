@@ -39,7 +39,7 @@
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.created_at') }}</span>
-                    <span class="font-medium text-gray-900">{{ $purchase->created_at->format('Y-m-d H:i') }}</span>
+                    <span class="font-medium text-gray-900">{{ $purchase->created_at->format('Y/m/d H:i') }}</span>
                 </div>
 
                 <div class="border-t pt-3 space-y-2">
@@ -99,7 +99,7 @@
                         <span class="text-gray-500">{{ __('keywords.next_installment') }}</span>
                         <span
                             class="font-medium {{ $purchase->next_installment_date && $purchase->next_installment_date->lte(now()) ? 'text-red-600' : 'text-gray-900' }}">
-                            {{ $purchase->next_installment_date?->format('Y-m-d') ?? '—' }}
+                            {{ $purchase->next_installment_date?->format('Y/m/d') ?? '—' }}
                         </span>
                     </div>
                 </div>
@@ -185,7 +185,7 @@
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         {{ $allocation->supplierPayment?->note ?? '—' }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-600">
-                                        {{ $allocation->created_at->format('Y-m-d H:i') }}</td>
+                                        {{ $allocation->created_at->format('Y/m/d H:i') }}</td>
                                 </tr>
                             @empty
                                 <tr>

@@ -16,7 +16,7 @@
         <div class="mb-6 border-b-2 border-black pb-4 text-center">
             <h1 class="mb-2 text-2xl font-bold">{{ config('app.name', 'Filter Sales System') }}</h1>
             <p class="text-sm">{{ __('keywords.pending_visits') }}</p>
-            <p class="mt-1 text-xs text-gray-600">{{ now()->format('Y-m-d H:i') }}</p>
+            <p class="mt-1 text-xs text-gray-600">{{ now()->format('Y/m/d H:i') }}</p>
         </div>
 
         @if ($visits->isEmpty())

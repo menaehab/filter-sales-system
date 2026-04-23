@@ -42,7 +42,7 @@
             @endif
             <div class="grid gap-2 px-5 py-4 sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500">{{ __('keywords.created_at') }}</dt>
-                <dd class="text-sm text-gray-900 sm:col-span-2">{{ $product->created_at?->format('Y-m-d h:i A') }}</dd>
+                <dd class="text-sm text-gray-900 sm:col-span-2">{{ $product->created_at?->format('Y/m/d h:i A') }}</dd>
             </div>
         </div>
 
@@ -61,7 +61,7 @@
                             <p class="text-sm font-medium text-gray-900">
                                 <x-badge :label="$this->getMovementTypeLabel($movement->movable_type)" :color="$this->getMovementTypeColor($movement->movable_type)" />
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">{{ $movement->created_at->format('Y-m-d H:i') }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $movement->created_at->format('Y/m/d H:i') }}</p>
                         </div>
                         <span
                             class="text-sm font-medium {{ $movement->quantity > 0 ? 'text-emerald-600' : 'text-rose-600' }}">

@@ -193,6 +193,7 @@ return [
     'supplier_payments' => 'مدفوعات الموردين',
     'supplier_payments_management' => 'عرض وإدارة مدفوعات الموردين.',
     'no_supplier_payments_found' => 'لم يتم العثور على مدفوعات موردين.',
+    'edit_supplier_payment' => 'تعديل مدفوعة المورد',
     'delete_supplier_payment' => 'حذف مدفوعة المورد',
     'delete_supplier_payment_confirmation' => 'هل أنت متأكد أنك تريد حذف هذه المدفوعة؟ سيتم حذف التوزيعات المرتبطة بها أيضاً.',
 
@@ -226,6 +227,7 @@ return [
     'customer_payments' => 'مدفوعات العملاء',
     'customer_payments_management' => 'عرض وإدارة مدفوعات العملاء.',
     'no_customer_payments_found' => 'لم يتم العثور على مدفوعات عملاء مسجلة.',
+    'edit_customer_payment' => 'تعديل مدفوعة العميل',
     'delete_customer_payment' => 'حذف مدفوعة العميل',
     'delete_customer_payment_confirmation' => 'هل أنت متأكد أنك تريد حذف هذه المدفوعة؟ سيتم حذف التوزيعات المرتبطة بها أيضاً.',
     'manage_purchase_returns' => 'إدارة مرتجع المشتريات',

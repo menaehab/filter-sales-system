@@ -40,7 +40,7 @@
         </div>
         <div class="grid gap-2 px-5 py-4 sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">{{ __('keywords.created_at') }}</dt>
-            <dd class="text-sm text-gray-900 sm:col-span-2">{{ $serviceVisit->created_at?->format('Y-m-d H:i') }}</dd>
+            <dd class="text-sm text-gray-900 sm:col-span-2">{{ $serviceVisit->created_at?->format('Y/m/d H:i') }}</dd>
         </div>
     </dl>
 
@@ -99,7 +99,7 @@
                 <div class="flex justify-between px-5 py-3">
                     <dt class="text-sm text-gray-500">{{ __('keywords.installed_at') }}</dt>
                     <dd class="text-sm font-medium text-gray-900">
-                        {{ $serviceVisit->waterFilter?->installed_at?->format('Y-m-d') ?? '—' }}
+                        {{ $serviceVisit->waterFilter?->installed_at?->format('Y/m/d') ?? '—' }}
                     </dd>
                 </div>
                 <div class="px-5 py-3">

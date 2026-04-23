@@ -31,7 +31,7 @@ class PurchaseReturnEdit extends Component
         $this->purchaseReturn = $purchaseReturn->load(['purchase.items.product', 'items']);
         $this->reason = $purchaseReturn->reason ?? '';
         $this->cash_refund = (bool) $purchaseReturn->cash_refund;
-        $this->created_at = $purchaseReturn->created_at?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i');
+        $this->created_at = $purchaseReturn->created_at?->format('Y/m/d H:i') ?? now()->format('Y/m/d H:i');
 
         $returnItems = $purchaseReturn->items->keyBy('product_id');
 

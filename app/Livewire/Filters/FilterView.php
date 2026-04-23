@@ -433,7 +433,7 @@ class FilterView extends Component
             'tds' => '',
             'water_quality' => '',
             'before_installment' => false,
-            'created_at' => now()->format('Y-m-d\TH:i'),
+            'created_at' => now()->format('Y/m/d H:i'),
         ];
     }
 
@@ -453,7 +453,7 @@ class FilterView extends Component
         $this->maintenanceForm = [
             'selected_candles' => $selectedCandles,
             'technician_name' => '',
-            'replaced_at' => now()->format('Y-m-d\TH:i'),
+            'replaced_at' => now()->format('Y/m/d H:i'),
             'cost' => '',
             'description' => '',
             'items' => [],

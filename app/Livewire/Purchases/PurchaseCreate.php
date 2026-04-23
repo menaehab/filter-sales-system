@@ -56,7 +56,7 @@ class PurchaseCreate extends Component
     public function mount(): void
     {
         $this->addItem();
-        $this->created_at = now()->format('Y-m-d\TH:i');
+        $this->created_at = now()->format('Y/m/d H:i');
     }
 
     public function getCanManageCreatedAtProperty(): bool

@@ -45,11 +45,11 @@
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.installed_at') }}</span>
                     <span
-                        class="font-medium text-gray-900">{{ $filter->is_installed ? $filter->installed_at?->format('Y-m-d') ?? '—' : __('keywords.not_installed') }}</span>
+                        class="font-medium text-gray-900">{{ $filter->is_installed ? $filter->installed_at?->format('Y/m/d') ?? '—' : __('keywords.not_installed') }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.created_at') }}</span>
-                    <span class="font-medium text-gray-900">{{ $filter->created_at?->format('Y-m-d H:i') }}</span>
+                    <span class="font-medium text-gray-900">{{ $filter->created_at?->format('Y/m/d H:i') }}</span>
                 </div>
             </div>
 
@@ -106,7 +106,7 @@
                                         {{ $candle['replaced_at']->diffForHumans() }}</div>
                                 @endif
                                 @if ($candle['next_date'])
-                                    <div>{{ __('keywords.next_date') }}: {{ $candle['next_date']->format('Y-m-d') }}
+                                    <div>{{ __('keywords.next_date') }}: {{ $candle['next_date']->format('Y/m/d') }}
                                     </div>
                                 @endif
                             </div>
@@ -204,7 +204,7 @@
                                                 @endif
                                             </td>
                                             <td class="px-4 py-3 text-sm text-gray-500">
-                                                {{ $reading->created_at->format('Y-m-d H:i') }}</td>
+                                                {{ $reading->created_at->format('Y/m/d H:i') }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -246,7 +246,7 @@
                                         <div class="text-sm text-gray-500">
                                             {{ __('keywords.replaced_at') }}:
                                             <span class="font-medium text-gray-900">
-                                                {{ $latestReplacedAt?->format('Y-m-d H:i') ?? __('keywords.not_specified_arabic') }}
+                                                {{ $latestReplacedAt?->format('Y/m/d H:i') ?? __('keywords.not_specified_arabic') }}
                                             </span>
                                         </div>
                                         <div class="text-sm text-gray-500">

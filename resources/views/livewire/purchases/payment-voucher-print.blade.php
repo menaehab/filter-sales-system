@@ -25,7 +25,7 @@
             <div>
                 <p class="mb-2"><strong>{{ __('keywords.voucher_number') }}:</strong> {{ $payment->id }}</p>
                 <p class="mb-2"><strong>{{ __('keywords.date') }}:</strong>
-                    {{ $payment->created_at->format('Y-m-d') }}</p>
+                    {{ $payment->created_at->format('Y/m/d') }}</p>
                 <p class="mb-2"><strong>{{ __('keywords.time') }}:</strong> {{ $payment->created_at->format('H:i') }}
                 </p>
             </div>
@@ -137,7 +137,7 @@
 
         {{-- Footer --}}
         <div class="mt-6 pt-4 border-t border-black text-center text-xs text-gray-600">
-            <p>{{ __('keywords.printed_on') }}: {{ now()->format('Y-m-d H:i') }}</p>
+            <p>{{ __('keywords.printed_on') }}: {{ now()->format('Y/m/d H:i') }}</p>
             <p class="mt-1">{{ __('keywords.printed_by') }}: {{ auth()->user()->name }}</p>
         </div>
     </div>
