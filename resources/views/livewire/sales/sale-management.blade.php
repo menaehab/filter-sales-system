@@ -81,7 +81,7 @@
                         @endif
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                        {{ $sale->created_at->format('Y-m-d') }}
+                        {{ $sale->created_at->format('Y/m/d') }}
                     </td>
                     <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
                         <div class="flex items-center justify-end gap-1">
@@ -142,7 +142,7 @@
                                     {{ __('keywords.next_installment') }}:
                                     <strong
                                         class="{{ $sale->next_installment_date && $sale->next_installment_date->lte(now()) ? 'text-red-600' : 'text-gray-800' }}">
-                                        {{ $sale->next_installment_date?->format('Y-m-d') ?? '—' }}
+                                        {{ $sale->next_installment_date?->format('Y/m/d') ?? '—' }}
                                     </strong>
                                 </span>
                                 <span>

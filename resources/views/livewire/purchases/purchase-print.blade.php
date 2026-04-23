@@ -25,7 +25,7 @@
             <div>
                 <p class="mb-1"><strong>{{ __('keywords.invoice_number') }}:</strong> {{ $purchase->number }}</p>
                 <p class="mb-1"><strong>{{ __('keywords.date') }}:</strong>
-                    {{ $purchase->created_at->format('Y-m-d') }}</p>
+                    {{ $purchase->created_at->format('Y/m/d') }}</p>
                 <p class="mb-1"><strong>{{ __('keywords.time') }}:</strong>
                     {{ $purchase->created_at->format('H:i') }}</p>
             </div>
@@ -113,7 +113,7 @@
 
         {{-- Footer --}}
         <div class="mt-8 pt-4 border-t border-black text-center text-xs text-gray-600">
-            <p>{{ __('keywords.printed_on') }}: {{ now()->format('Y-m-d H:i') }}</p>
+            <p>{{ __('keywords.printed_on') }}: {{ now()->format('Y/m/d H:i') }}</p>
             <p class="mt-1">{{ __('keywords.printed_by') }}: {{ auth()->user()->name }}</p>
         </div>
     </div>

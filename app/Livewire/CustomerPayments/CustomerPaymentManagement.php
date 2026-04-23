@@ -2,8 +2,11 @@
 
 namespace App\Livewire\CustomerPayments;
 
+use App\Actions\CustomerPayments\UpdateCustomerPaymentAction;
+use App\Enums\PaymentMethodEnum;
 use App\Livewire\Traits\HasCrudModals;
 use App\Livewire\Traits\HasCrudQuery;
+use App\Livewire\Traits\HasForm;
 use App\Livewire\Traits\WithSearchAndPagination;
 use App\Models\CustomerPayment;
 use Livewire\Attributes\Computed;
@@ -13,11 +16,26 @@ use Livewire\Component;
 #[Layout('layouts.app', ['title' => 'customer_payments'])]
 class CustomerPaymentManagement extends Component
 {
-    use HasCrudModals, HasCrudQuery, WithSearchAndPagination;
+    use HasCrudModals, HasCrudQuery, HasForm, WithSearchAndPagination;
 
     public ?string $dateFrom = null;
 
     public ?string $dateTo = null;
+
+    public function mount(): void
+    {
+        $this->resetForm();
+    }
+
+    protected function getDefaultForm(): array
+    {
+        return [
+            'amount' => null,
+            'payment_method' => PaymentMethodEnum::CASH->value,
+            'note' => '',
+            'created_at' => null,
+        ];
+    }
 
     protected function getModelClass(): string
     {
@@ -61,6 +79,53 @@ class CustomerPaymentManagement extends Component
         return $this->items;
     }
 
+    #[Computed]
+    public function paymentMethodOptions(): array
+    {
+        return collect(PaymentMethodEnum::customerMethods())
+            ->mapWithKeys(fn (PaymentMethodEnum $method) => [$method->value => $method->label()])
+            ->toArray();
+    }
+
+    public function openEdit(int $id): void
+    {
+        $this->authorizeManageCustomerPayments();
+
+        $payment = CustomerPayment::findOrFail($id);
+
+        $this->openEditModal($payment->id, 'open-modal-edit-customer-payment');
+
+        $this->form = [
+            'amount' => (string) $payment->amount,
+            'payment_method' => $payment->payment_method,
+            'note' => $payment->note ?? '',
+            'created_at' => $payment->created_at?->format('Y/m/d H:i'),
+        ];
+    }
+
+    public function updateCustomerPayment(UpdateCustomerPaymentAction $action): void
+    {
+        $this->authorizeManageCustomerPayments();
+
+        if (blank($this->form['created_at'] ?? null)) {
+            $this->form['created_at'] = null;
+        }
+
+        $request = new \App\Http\Requests\CustomerPayments\UpdateCustomerPaymentRequest;
+        $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
+        $validated = $this->validate($rules, $request->messages(), $attributes);
+
+        $payment = CustomerPayment::findOrFail($this->editId);
+        $action->execute($payment, $validated['form']);
+
+        $this->resetForm();
+        $this->editId = null;
+
+        $this->dispatch('close-modal-edit-customer-payment');
+        $this->resetPage();
+    }
+
     public function setDelete($id): void
     {
         $this->authorizeManageCustomerPayments();
@@ -76,6 +141,11 @@ class CustomerPaymentManagement extends Component
         $this->deleteId = null;
         $this->dispatch('close-modal-delete-customer-payment');
         $this->resetPage();
+    }
+
+    public function getCanManageCreatedAtProperty(): bool
+    {
+        return (bool) auth()->user()?->can('manage_created_at');
     }
 
     public function render()

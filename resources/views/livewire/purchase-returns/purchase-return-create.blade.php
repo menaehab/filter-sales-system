@@ -47,7 +47,7 @@
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.date') }}:</span>
                                         <span
-                                            class="font-medium text-gray-900">{{ $this->purchase->created_at->format('Y-m-d') }}</span>
+                                            class="font-medium text-gray-900">{{ $this->purchase->created_at->format('Y/m/d') }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ __('keywords.purchase_items') }}:</span>

@@ -65,7 +65,7 @@ class PurchaseEdit extends Component
         $this->payment_type = $purchase->isInstallment() ? 'installment' : 'cash';
         $this->down_payment = (string) $purchase->down_payment;
         $this->installment_months = (string) ($purchase->installment_months ?? '');
-        $this->created_at = $purchase->created_at?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i');
+        $this->created_at = $purchase->created_at?->format('Y/m/d H:i') ?? now()->format('Y/m/d H:i');
 
         $this->items = $purchase->items->map(fn ($item) => [
             'product_id' => (string) $item->product_id,

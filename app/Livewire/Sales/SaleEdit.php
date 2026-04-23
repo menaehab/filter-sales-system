@@ -56,7 +56,7 @@ class SaleEdit extends Component
         $this->discount = (string) ($sale->discount_value ?? '0');
         $this->with_vat = (bool) ($sale->with_vat ?? false);
         $this->dealer_name = $sale->dealer_name ?? '';
-        $this->created_at = $sale->created_at?->format('Y-m-d\TH:i') ?? now()->format('Y-m-d\TH:i');
+        $this->created_at = $sale->created_at?->format('Y/m/d H:i') ?? now()->format('Y/m/d H:i');
 
         $this->items = $sale->items->map(fn ($item) => [
             'product_id' => (string) $item->product_id,

@@ -121,7 +121,7 @@
 
                 {{-- Date --}}
                 <td class="whitespace-nowrap px-5 py-4">
-                    <span class="text-sm text-gray-500">{{ $activity->created_at->format('Y-m-d H:i') }}</span>
+                    <span class="text-sm text-gray-500">{{ $activity->created_at->format('Y/m/d H:i') }}</span>
                 </td>
 
                 {{-- Actions --}}

@@ -205,7 +205,7 @@ class FilterManagement extends Component
             'address' => $filter->address,
             'is_installed' => (bool) $filter->is_installed,
             'installed_at' => $filter->installed_at
-                ? \Illuminate\Support\Carbon::parse($filter->installed_at)->format('Y-m-d')
+                ? \Illuminate\Support\Carbon::parse($filter->installed_at)->format('Y/m/d')
                 : null,
             'customer_id' => $filter->customer_id,
         ];

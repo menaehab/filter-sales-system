@@ -38,7 +38,8 @@
                     {{ number_format($payment->amount, 2) }} {{ __('keywords.currency') }}
                 </td>
                 <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
-                    <x-table-actions :canDelete="auth()->user()->can('manage_customer_payment_allocations')" deleteAction="setDelete({{ $payment->id }})" />
+                    <x-table-actions editAction="openEdit({{ $payment->id }})" :canEdit="auth()->user()->can('manage_customer_payment_allocations')" :canDelete="auth()->user()->can('manage_customer_payment_allocations')"
+                        deleteAction="setDelete({{ $payment->id }})" />
                 </td>
             </tr>
         @empty
@@ -49,6 +50,32 @@
     <x-pagination-info :paginator="$this->customerPayments" />
 
     @can('manage_customer_payment_allocations')
+        <x-modal name="edit-customer-payment" title="{{ __('keywords.edit_customer_payment') }}" maxWidth="lg">
+            <x-slot:body>
+                <div class="space-y-5">
+                    <x-input type="number" name="form.amount" label="{{ __('keywords.amount') }}"
+                        placeholder="{{ __('keywords.enter_amount') }}" wire:model.blur="form.amount" step="0.01"
+                        min="0.01" required />
+
+                    <x-select name="form.payment_method" label="{{ __('keywords.payment_method') }}"
+                        wire:model.blur="form.payment_method" :options="$this->paymentMethodOptions" :placeholder="__('keywords.select_payment_method')" required />
+
+                    <x-textarea name="form.note" label="{{ __('keywords.note') }}"
+                        placeholder="{{ __('keywords.enter_note') }}" wire:model.blur="form.note" rows="3" />
+
+                    @if ($this->canManageCreatedAt)
+                        <x-input type="datetime-local" name="form.created_at" label="{{ __('keywords.created_at') }}"
+                            wire:model.blur="form.created_at" />
+                    @endif
+                </div>
+            </x-slot:body>
+            <x-slot:footer>
+                <x-button variant="secondary"
+                    @click="$dispatch('close-modal-edit-customer-payment')">{{ __('keywords.cancel') }}</x-button>
+                <x-button variant="primary" wire:click="updateCustomerPayment">{{ __('keywords.update') }}</x-button>
+            </x-slot:footer>
+        </x-modal>
+
         <x-confirm-modal name="delete-customer-payment" title="{{ __('keywords.delete_customer_payment') }}"
             message="{{ __('keywords.delete_customer_payment_confirmation') }}" confirmText="{{ __('keywords.delete') }}"
             variant="danger" />
