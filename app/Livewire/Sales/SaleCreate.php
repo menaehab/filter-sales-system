@@ -2,18 +2,19 @@
 
 namespace App\Livewire\Sales;
 
-use App\Actions\Places\CreatePlaceAction;
 use App\Actions\Customers\CreateCustomerAction;
+use App\Actions\Places\CreatePlaceAction;
 use App\Actions\Sales\CreateSaleAction;
 use App\Enums\WaterQualityTypeEnum;
-use App\Livewire\Traits\HasSaleForm;
 use App\Livewire\Traits\HasPhoneRepeater;
+use App\Livewire\Traits\HasSaleForm;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Place;
 use App\Models\Product;
 use App\Models\WaterFilter;
 use App\Support\SalePriceCalculator;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -158,6 +159,12 @@ class SaleCreate extends Component
             return;
         }
 
+        if (WaterFilter::where('customer_id', (int) $this->customer_id)->exists()) {
+            $this->addError('water_filter_id', __('keywords.selected_customer_already_has_filter'));
+
+            return;
+        }
+
         $this->newFilter = [
             'filter_model' => '',
             'address' => '',
@@ -177,7 +184,7 @@ class SaleCreate extends Component
         }
 
         $validated = $this->validate([
-            'customer_id' => ['required', 'exists:customers,id'],
+            'customer_id' => ['required', 'exists:customers,id', Rule::unique('water_filters', 'customer_id')],
             'newFilter.filter_model' => ['required', 'string', 'max:255'],
             'newFilter.address' => ['required', 'string', 'max:255'],
             'newFilter.is_installed' => ['required', 'boolean'],
@@ -518,6 +525,7 @@ class SaleCreate extends Component
         if ($this->includeWaterReading) {
             if ($this->createNewFilter) {
                 unset($rules['water_filter_id']);
+                $rules['customer_id'] = [...$rules['customer_id'], Rule::unique('water_filters', 'customer_id')];
                 $rules['newFilter.filter_model'] = ['required', 'string', 'max:255'];
                 $rules['newFilter.address'] = ['required', 'string', 'max:255'];
                 $rules['newFilter.is_installed'] = ['required', 'boolean'];

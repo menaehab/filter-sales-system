@@ -15,6 +15,7 @@ use App\Models\ServiceVisit;
 use App\Models\WaterFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -173,6 +174,7 @@ class FilterManagement extends Component
 
         $request = new \App\Http\Requests\WaterFilters\UpdateWaterFilterRequest;
         $rules = collect($request->rules())->mapWithKeys(fn ($rule, $key) => ["form.{$key}" => $rule])->toArray();
+        $rules['form.customer_id'] = ['required', 'exists:customers,id', Rule::unique('water_filters', 'customer_id')->ignore($this->editId)];
         $attributes = collect($request->attributes())->mapWithKeys(fn ($attr, $key) => ["form.{$key}" => $attr])->toArray();
         $validated = $this->validate($rules, $request->messages(), $attributes);
 

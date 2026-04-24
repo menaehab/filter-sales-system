@@ -5,6 +5,7 @@ namespace App\Http\Requests\Sales;
 use App\Enums\PaymentTypeEnum;
 use App\Enums\WaterQualityTypeEnum;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CreateSaleRequest extends FormRequest
 {
@@ -38,6 +39,7 @@ class CreateSaleRequest extends FormRequest
             if (! $this->boolean('createNewFilter')) {
                 $rules['water_filter_id'] = ['required', 'exists:water_filters,id'];
             } else {
+                $rules['customer_id'] = [...$rules['customer_id'], Rule::unique('water_filters', 'customer_id')];
                 $rules['newFilter.filter_model'] = ['required', 'string', 'max:255'];
                 $rules['newFilter.address'] = ['required', 'string', 'max:255'];
                 $rules['newFilter.is_installed'] = ['required', 'boolean'];

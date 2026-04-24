@@ -89,7 +89,7 @@
                     </button>
                     <button wire:click="setActiveTab('filters')"
                         class="px-6 py-4 text-sm font-medium transition-colors {{ $activeTab === 'filters' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600 hover:text-gray-900' }}">
-                        {{ __('keywords.filters') }} ({{ $customer->waterFilters()->count() }})
+                        {{ __('keywords.filters') }} ({{ $filter ? 1 : 0 }})
                     </button>
                 </div>
 
@@ -304,52 +304,60 @@
                 @endif
 
                 @if ($activeTab === 'filters')
-                    <div class="overflow-x-auto">
-                        @if ($filters->isEmpty())
-                            <div class="px-4 py-8 text-center text-sm text-gray-500">
-                                {{ __('keywords.no_filters_found') }}</div>
+                    <div class="p-5">
+                        @if (!$filter)
+                            <div
+                                class="rounded-lg border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500">
+                                {{ __('keywords.no_filters_found') }}
+                            </div>
                         @else
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th
-                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                            {{ __('keywords.filter_model') }}</th>
-                                        <th
-                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                            {{ __('keywords.address') }}</th>
-                                        <th
-                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                            {{ __('keywords.installed_at') }}</th>
-                                        <th
-                                            class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                            {{ __('keywords.readings_count') }}</th>
-                                        <th
-                                            class="px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                            {{ __('keywords.action') }}</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    @foreach ($filters as $filter)
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                                                {{ $filter->filter_model }}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-600">{{ $filter->address }}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-500">
-                                                {{ $filter->installed_at?->format('Y/m/d') ?? '—' }}</td>
-                                            <td class="px-4 py-3 text-sm text-gray-600">
-                                                {{ $filter->readings()->count() }}</td>
-                                            <td class="px-4 py-3 text-end text-sm">
-                                                <a href="{{ route('filters.view', $filter) }}"
-                                                    class="text-blue-600 hover:text-blue-900">
-                                                    {{ __('keywords.view') }}
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                            <div class="border-t border-gray-200 px-5 py-4">{{ $filters->links() }}</div>
+                            <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-5">
+                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                            {{ __('keywords.filter_model') }}
+                                        </p>
+                                        <h3 class="mt-1 text-lg font-semibold text-gray-900">
+                                            {{ $filter->filter_model }}</h3>
+                                    </div>
+
+                                    <a href="{{ route('filters.view', $filter) }}"
+                                        class="inline-flex items-center rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100">
+                                        {{ __('keywords.view') }}
+                                    </a>
+                                </div>
+
+                                <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                            {{ __('keywords.address') }}</p>
+                                        <p class="mt-1 text-sm text-gray-800">{{ $filter->address }}</p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                            {{ __('keywords.installed_at') }}</p>
+                                        <p class="mt-1 text-sm text-gray-800">
+                                            {{ $filter->installed_at?->format('Y/m/d') ?? '—' }}</p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                            {{ __('keywords.readings_count') }}</p>
+                                        <p class="mt-1 text-sm font-medium text-gray-900">
+                                            {{ $filter->readings_count }}</p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                            {{ __('keywords.installation_status') }}</p>
+                                        <p
+                                            class="mt-1 text-sm font-medium {{ $filter->is_installed ? 'text-emerald-700' : 'text-gray-600' }}">
+                                            {{ $filter->is_installed ? __('keywords.yes') : __('keywords.no') }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         @endif
                     </div>
                 @endif

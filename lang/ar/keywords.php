@@ -474,6 +474,7 @@ return [
     'no_filters_for_customer' => 'لا توجد فلاتر لهذا العميل، قم بإنشاء فلتر جديد',
     'readings_count' => 'عدد القراءات',
     'add_reading' => 'إضافة قراءة',
+    'selected_customer_already_has_filter' => 'هذا العميل لديه بالفعل فلتر، هل تريد استخدامه؟',
 
     // Candles
     'candles_status' => 'حالة الشموع',
