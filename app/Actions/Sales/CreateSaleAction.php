@@ -190,6 +190,12 @@ final class CreateSaleAction
         $filterId = $data['water_filter_id'] ?? null;
 
         if (! empty($data['createNewFilter']) && ! empty($data['newFilter'])) {
+            if (WaterFilter::where('customer_id', $customer->id)->exists()) {
+                throw ValidationException::withMessages([
+                    'customer_id' => __('validation.unique', ['attribute' => __('keywords.customer')]),
+                ]);
+            }
+
             $isInstalled = (bool) data_get($data, 'newFilter.is_installed', false);
 
             $newFilter = WaterFilter::create([

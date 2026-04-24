@@ -153,11 +153,12 @@ class CustomerView extends Component
             ->paginate($this->perPage);
     }
 
-    public function getFiltersProperty()
+    public function getFilterProperty()
     {
         return $this->customer->waterFilters()
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->perPage);
+            ->withCount('readings')
+            ->orderByDesc('created_at')
+            ->first();
     }
 
     public function render()
@@ -166,7 +167,7 @@ class CustomerView extends Component
             'sales' => $this->sales,
             'payments' => $this->payments,
             'returns' => $this->returns,
-            'filters' => $this->filters,
+            'filter' => $this->filter,
         ]);
     }
 }

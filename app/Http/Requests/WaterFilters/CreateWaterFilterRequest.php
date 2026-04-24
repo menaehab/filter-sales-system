@@ -3,6 +3,7 @@
 namespace App\Http\Requests\WaterFilters;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CreateWaterFilterRequest extends FormRequest
 {
@@ -18,7 +19,7 @@ class CreateWaterFilterRequest extends FormRequest
             'address' => ['required', 'string', 'max:255'],
             'is_installed' => ['required', 'boolean'],
             'installed_at' => ['nullable', 'date', 'required_if:is_installed,1'],
-            'customer_id' => ['required', 'exists:customers,id'],
+            'customer_id' => ['required', 'exists:customers,id', Rule::unique('water_filters', 'customer_id')],
         ];
     }
 
