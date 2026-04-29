@@ -242,8 +242,9 @@
                                 @endphp
 
                                 <div class="p-5 space-y-4">
-                                    <div class="flex flex-wrap items-center justify-between gap-2">
-                                        <div class="text-sm text-gray-500">
+                                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                                        <div class="flex flex-wrap items-center gap-4">
+                                            <div class="text-sm text-gray-500">
                                             {{ __('keywords.replaced_at') }}:
                                             <span class="font-medium text-gray-900">
                                                 {{ $latestReplacedAt?->format('Y/m/d H:i') ?? __('keywords.not_specified_arabic') }}
@@ -266,6 +267,19 @@
                                             {{ number_format((float) $maintenance->cost, 2) }}
                                             {{ __('keywords.currency') }}
                                         </div>
+                                        </div>
+                                        @can('manage_water_filters')
+                                            <div class="flex items-center gap-2">
+                                                <button wire:click="openEditMaintenanceModal({{ $maintenance->id }})"
+                                                    class="text-blue-600 hover:text-blue-900 mx-1">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button wire:click="openDeleteMaintenanceModal({{ $maintenance->id }})"
+                                                    class="text-red-600 hover:text-red-900 mx-1">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        @endcan
                                     </div>
 
                                     <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -590,6 +604,55 @@
                     <span wire:loading.remove wire:target="saveMaintenance">{{ __('keywords.save') }}</span>
                     <span wire:loading wire:target="saveMaintenance">{{ __('keywords.loading') }}</span>
                 </x-button>
+            </x-slot:footer>
+        </x-modal>
+
+        <x-modal name="edit-maintenance" title="{{ __('keywords.edit_maintenance') }}" maxWidth="md">
+            <x-slot:body>
+                <div class="space-y-4">
+                    <x-input name="maintenanceForm.technician_name" label="{{ __('keywords.technician_name') }}"
+                        placeholder="{{ __('keywords.enter_technician_name') }}"
+                        wire:model="maintenanceForm.technician_name" required />
+
+                    <x-input type="number" step="0.01" min="0" name="maintenanceForm.cost"
+                        label="{{ __('keywords.maintenance_cost') }}" placeholder="0"
+                        wire:model="maintenanceForm.cost" required />
+
+                    <x-textarea name="maintenanceForm.description" label="{{ __('keywords.description') }}"
+                        placeholder="{{ __('keywords.enter_description') }}"
+                        wire:model="maintenanceForm.description" rows="3" />
+
+                    @if ($canManageCreatedAt)
+                        <x-input type="datetime-local" name="maintenanceForm.replaced_at"
+                            label="{{ __('keywords.replaced_at') }}" wire:model="maintenanceForm.replaced_at" required />
+                    @endif
+                </div>
+            </x-slot:body>
+            <x-slot:footer>
+                <x-button variant="secondary"
+                    @click="$dispatch('close-modal-edit-maintenance')">{{ __('keywords.cancel') }}</x-button>
+                <x-button variant="primary" wire:click="submitEditMaintenance">
+                    <i class="fas fa-check me-1"></i>
+                    {{ __('keywords.save') }}
+                </x-button>
+            </x-slot:footer>
+        </x-modal>
+
+        <x-modal name="delete-maintenance" title="{{ __('keywords.delete_maintenance') }}" maxWidth="sm">
+            <x-slot:body>
+                <div class="text-center space-y-4">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">{{ __('keywords.delete_maintenance') }}</h3>
+                        <p class="text-sm text-gray-500 mt-2">{{ __('keywords.delete_maintenance_confirmation') }}</p>
+                    </div>
+                </div>
+            </x-slot:body>
+            <x-slot:footer class="flex justify-center gap-3">
+                <x-button variant="secondary" @click="$dispatch('close-modal-delete-maintenance')">{{ __('keywords.cancel') }}</x-button>
+                <x-button variant="danger" wire:click="submitDeleteMaintenance">{{ __('keywords.delete') }}</x-button>
             </x-slot:footer>
         </x-modal>
     @endcan

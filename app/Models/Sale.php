@@ -15,6 +15,7 @@ class Sale extends Model
 
     protected $casts = [
         'with_vat' => 'boolean',
+        'installment_start_date' => 'date',
     ];
 
     protected $fillable = [
@@ -27,6 +28,7 @@ class Sale extends Model
         'interest_rate',
         'installment_amount',
         'installment_months',
+        'installment_start_date',
         'with_vat',
         'customer_id',
         'user_id',
@@ -139,11 +141,11 @@ class Sale extends Model
 
     public function getNextInstallmentDateAttribute()
     {
-        if (! $this->isInstallment() || $this->isFullyPaid()) {
+        if (! $this->isInstallment() || $this->isFullyPaid() || ! $this->installment_start_date) {
             return null;
         }
 
-        return $this->created_at?->addMonth();
+        return \Carbon\Carbon::parse($this->installment_start_date)->addMonth();
     }
 
     public function isInstallment(): bool

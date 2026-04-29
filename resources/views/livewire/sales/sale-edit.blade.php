@@ -45,16 +45,21 @@
                     </div>
 
                     @if ($payment_type === 'installment')
-                        <x-input name="down_payment" label="{{ __('keywords.down_payment') }}" placeholder="0.00"
-                            wire:model.live="down_payment" type="number" step="0.01" required />
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <x-input name="down_payment" label="{{ __('keywords.down_payment') }}" placeholder="0.00"
+                                wire:model.live="down_payment" type="number" step="0.01" required />
 
-                        <x-input name="installment_months" label="{{ __('keywords.installment_months') }}"
-                            placeholder="{{ __('keywords.enter_months_count') }}" wire:model.live="installment_months"
-                            type="number" min="1" max="60" required />
+                            <x-input name="installment_months" label="{{ __('keywords.installment_months') }}"
+                                placeholder="{{ __('keywords.enter_months_count') }}" wire:model.live="installment_months"
+                                type="number" min="1" max="60" required />
 
-                        <x-input name="interest_rate" label="{{ __('keywords.interest_rate') }}" placeholder="0"
-                            wire:model.live="interest_rate" type="number" step="0.01" min="0" max="100"
-                            required />
+                            <x-input name="interest_rate" label="{{ __('keywords.interest_rate') }}" placeholder="0"
+                                wire:model.live="interest_rate" type="number" step="0.01" min="0" max="100"
+                                required />
+
+                            <x-input name="installment_start_date" label="{{ __('keywords.installment_start_date') }}"
+                                wire:model.live="installment_start_date" type="date" />
+                        </div>
                     @endif
 
                     <x-input name="discount" label="{{ __('keywords.discount') }}" placeholder="0.00"

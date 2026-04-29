@@ -64,6 +64,7 @@ final class UpdateSaleAction
                 'interest_rate' => $isInstallment ? (float) ($data['interest_rate'] ?? 0) : null,
                 'installment_amount' => $isInstallment ? $prices['installment_amount'] : null,
                 'installment_months' => $isInstallment ? (int) $data['installment_months'] : null,
+                'installment_start_date' => $isInstallment && !empty($data['installment_start_date']) ? $data['installment_start_date'] : null,
                 'with_vat' => (bool) ($data['with_vat'] ?? false),
                 'customer_id' => $customer->id,
                 'created_at' => $this->resolveCreatedAt($sale, data_get($data, 'created_at')),

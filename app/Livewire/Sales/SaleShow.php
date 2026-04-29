@@ -14,6 +14,10 @@ class SaleShow extends Component
 
     public ?int $paySaleId = null;
 
+    public ?int $editPaymentId = null;
+
+    public ?int $deletePaymentId = null;
+
     public string $payAmount = '';
 
     public string $payMethod = 'cash';
@@ -123,6 +127,79 @@ class SaleShow extends Component
         $this->payNote = '';
         $this->payCreatedAt = '';
         $this->printAfterPayment = false;
+        $this->editPaymentId = null;
+        $this->deletePaymentId = null;
+    }
+
+    public function openEditPaymentModal(int $paymentId): void
+    {
+        $this->authorizePaySales();
+
+        $payment = \App\Models\CustomerPayment::findOrFail($paymentId);
+
+        $this->editPaymentId = $payment->id;
+        $this->payAmount = (string) $payment->amount;
+        $this->payMethod = $payment->payment_method;
+        $this->payNote = $payment->note ?? '';
+        $this->payCreatedAt = $payment->created_at?->format('Y-m-d\TH:i') ?? '';
+
+        $this->dispatch('open-modal-edit-payment');
+    }
+
+    public function submitEditPayment(\App\Actions\CustomerPayments\UpdateCustomerPaymentAction $action): void
+    {
+        $this->authorizePaySales();
+
+        $payment = \App\Models\CustomerPayment::findOrFail($this->editPaymentId);
+
+        $request = new \App\Http\Requests\CustomerPayments\UpdateCustomerPaymentRequest;
+        
+        $formData = [
+            'amount' => $this->payAmount,
+            'payment_method' => $this->payMethod,
+            'note' => $this->payNote,
+            'created_at' => $this->payCreatedAt,
+        ];
+
+        $validator = \Illuminate\Support\Facades\Validator::make(
+            $formData,
+            $request->rules(),
+            $request->messages(),
+            $request->attributes()
+        );
+
+        $validated = $validator->validate();
+
+        $action->execute($payment, [
+            'amount' => $validated['amount'],
+            'payment_method' => $validated['payment_method'],
+            'note' => $this->payNote ?: null,
+            'created_at' => $validated['created_at'] ?? null,
+        ]);
+
+        $this->resetPayForm();
+        $this->sale = Sale::with(['customer', 'user', 'items.product', 'paymentAllocations.customerPayment'])->findOrFail($this->sale->id);
+        $this->dispatch('close-modal-edit-payment');
+    }
+
+    public function openDeletePaymentModal(int $paymentId): void
+    {
+        $this->authorizePaySales();
+        $this->deletePaymentId = $paymentId;
+        $this->dispatch('open-modal-delete-payment');
+    }
+
+    public function submitDeletePayment(): void
+    {
+        $this->authorizePaySales();
+
+        if ($this->deletePaymentId) {
+            \App\Models\CustomerPayment::find($this->deletePaymentId)?->delete();
+        }
+
+        $this->resetPayForm();
+        $this->sale = Sale::with(['customer', 'user', 'items.product', 'paymentAllocations.customerPayment'])->findOrFail($this->sale->id);
+        $this->dispatch('close-modal-delete-payment');
     }
 
     public function getCanManageCreatedAtProperty(): bool

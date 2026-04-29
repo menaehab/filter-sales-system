@@ -212,6 +212,11 @@
                                 <th
                                     class="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-gray-500">
                                     {{ __('keywords.date') }}</th>
+                                @canany(['manage_sales', 'pay_sales'])
+                                    <th
+                                        class="px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                        {{ __('keywords.actions') }}</th>
+                                @endcanany
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
@@ -227,6 +232,20 @@
                                         {{ $allocation->customerPayment?->note ?? '—' }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         {{ $allocation->created_at->format('Y/m/d H:i') }}</td>
+                                    @canany(['manage_sales', 'pay_sales'])
+                                        <td class="px-4 py-3 text-sm font-medium text-end whitespace-nowrap">
+                                            @if($allocation->customer_payment_id)
+                                                <button wire:click="openEditPaymentModal({{ $allocation->customer_payment_id }})"
+                                                    class="text-blue-600 hover:text-blue-900 mx-1">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button wire:click="openDeletePaymentModal({{ $allocation->customer_payment_id }})"
+                                                    class="text-red-600 hover:text-red-900 mx-1">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            @endif
+                                        </td>
+                                    @endcanany
                                 </tr>
                             @empty
                                 <tr>
@@ -307,6 +326,53 @@
                 <i class="fas fa-check me-1"></i>
                 {{ __('keywords.confirm_payment') }}
             </x-button>
+        </x-slot:footer>
+    </x-modal>
+
+    <x-modal name="edit-payment" title="{{ __('keywords.edit_customer_payment') }}" maxWidth="lg">
+        <x-slot:body>
+            <div class="space-y-5">
+                <x-input name="payAmount" label="{{ __('keywords.amount') }}"
+                    placeholder="{{ __('keywords.enter_amount') }}" wire:model="payAmount" type="number"
+                    step="0.01" required />
+
+                <x-select name="payMethod" label="{{ __('keywords.payment_method') }}" :options="['cash' => __('keywords.cash'), 'bank_transfer' => __('keywords.bank_transfer')]"
+                    wire:model="payMethod" :placeholder="__('keywords.select_payment_method')" />
+
+                <x-textarea name="payNote" label="{{ __('keywords.note') }}"
+                    placeholder="{{ __('keywords.enter_note') }}" wire:model="payNote" />
+
+                @if ($canManageCreatedAt)
+                    <x-input type="datetime-local" name="payCreatedAt" label="{{ __('keywords.created_at') }}"
+                        wire:model.live="payCreatedAt" />
+                @endif
+            </div>
+        </x-slot:body>
+        <x-slot:footer>
+            <x-button variant="secondary"
+                @click="$dispatch('close-modal-edit-payment')">{{ __('keywords.cancel') }}</x-button>
+            <x-button variant="primary" wire:click="submitEditPayment">
+                <i class="fas fa-check me-1"></i>
+                {{ __('keywords.update') }}
+            </x-button>
+        </x-slot:footer>
+    </x-modal>
+
+    <x-modal name="delete-payment" title="{{ __('keywords.delete_customer_payment') }}" maxWidth="sm">
+        <x-slot:body>
+            <div class="text-center space-y-4">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">{{ __('keywords.delete_customer_payment') }}</h3>
+                    <p class="text-sm text-gray-500 mt-2">{{ __('keywords.delete_customer_payment_confirmation') }}</p>
+                </div>
+            </div>
+        </x-slot:body>
+        <x-slot:footer class="flex justify-center gap-3">
+            <x-button variant="secondary" @click="$dispatch('close-modal-delete-payment')">{{ __('keywords.cancel') }}</x-button>
+            <x-button variant="danger" wire:click="submitDeletePayment">{{ __('keywords.delete') }}</x-button>
         </x-slot:footer>
     </x-modal>
 </div>

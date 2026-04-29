@@ -44,6 +44,10 @@ class FilterView extends Component
         'items' => [],
     ];
 
+    public ?int $editMaintenanceId = null;
+
+    public ?int $deleteMaintenanceId = null;
+
     public function mount(WaterFilter $filter): void
     {
         $this->filter = $filter->load('customer');
@@ -356,6 +360,94 @@ class FilterView extends Component
         $this->filter->refresh();
         $this->resetMaintenanceForm();
         $this->dispatch('close-modal-mark-candle');
+    }
+
+    public function openEditMaintenanceModal(int $maintenanceId): void
+    {
+        $this->authorize('manage_water_filters');
+        
+        $maintenance = Maintenance::findOrFail($maintenanceId);
+        
+        $this->editMaintenanceId = $maintenance->id;
+        $this->maintenanceForm['cost'] = $maintenance->cost;
+        $this->maintenanceForm['technician_name'] = $maintenance->technician_name;
+        $this->maintenanceForm['description'] = $maintenance->description ?? '';
+        $this->maintenanceForm['replaced_at'] = $maintenance->created_at->format('Y-m-d\TH:i');
+        
+        $this->dispatch('open-modal-edit-maintenance');
+    }
+
+    public function submitEditMaintenance(): void
+    {
+        $this->authorize('manage_water_filters');
+        
+        $validator = Validator::make(
+            ['maintenanceForm' => $this->maintenanceForm],
+            [
+                'maintenanceForm.technician_name' => ['required', 'string', 'max:255'],
+                'maintenanceForm.cost' => ['required', 'numeric', 'min:0'],
+                'maintenanceForm.description' => ['nullable', 'string', 'max:1000'],
+                'maintenanceForm.replaced_at' => ['required', 'date'],
+            ],
+            [],
+            [
+                'maintenanceForm.technician_name' => __('keywords.technician_name'),
+                'maintenanceForm.replaced_at' => __('keywords.replaced_at'),
+                'maintenanceForm.cost' => __('keywords.maintenance_cost'),
+                'maintenanceForm.description' => __('keywords.description'),
+            ]
+        );
+
+        if ($validator->fails()) {
+            $this->setErrorBag($validator->getMessageBag());
+            return;
+        }
+
+        $validated = $validator->validated()['maintenanceForm'];
+
+        $maintenance = Maintenance::findOrFail($this->editMaintenanceId);
+        
+        $maintenance->update([
+            'cost' => $validated['cost'],
+            'technician_name' => $validated['technician_name'],
+            'description' => blank($validated['description'] ?? null) ? null : $validated['description'],
+        ]);
+
+        if ($this->canManageCreatedAt) {
+            $replacedAt = Carbon::parse($validated['replaced_at']);
+            $maintenance->update(['created_at' => $replacedAt]);
+            
+            $maintenance->candleChanges()->update(['replaced_at' => $replacedAt]);
+        }
+
+        $this->filter->refresh();
+        $this->editMaintenanceId = null;
+        $this->resetMaintenanceForm();
+        $this->dispatch('close-modal-edit-maintenance');
+    }
+
+    public function openDeleteMaintenanceModal(int $maintenanceId): void
+    {
+        $this->authorize('manage_water_filters');
+        $this->deleteMaintenanceId = $maintenanceId;
+        $this->dispatch('open-modal-delete-maintenance');
+    }
+
+    public function submitDeleteMaintenance(): void
+    {
+        $this->authorize('manage_water_filters');
+
+        if ($this->deleteMaintenanceId) {
+            $maintenance = Maintenance::find($this->deleteMaintenanceId);
+            if ($maintenance) {
+                $maintenance->candleChanges()->delete();
+                $maintenance->delete();
+            }
+        }
+
+        $this->filter->refresh();
+        $this->deleteMaintenanceId = null;
+        $this->dispatch('close-modal-delete-maintenance');
     }
 
     protected function getMaintenanceProductsStock(): array

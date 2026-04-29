@@ -69,6 +69,7 @@ final class CreateSaleAction
                 'interest_rate' => $isInstallment ? (float) ($data['interest_rate'] ?? 0) : null,
                 'installment_amount' => $installmentAmount,
                 'installment_months' => $isInstallment ? (int) ($data['installment_months'] ?? 0) : null,
+                'installment_start_date' => $isInstallment && !empty($data['installment_start_date']) ? $data['installment_start_date'] : null,
                 'with_vat' => (bool) ($data['with_vat'] ?? false),
                 'user_id' => auth()->id(),
                 'customer_id' => $customer->id,
