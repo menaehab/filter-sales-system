@@ -29,6 +29,8 @@ class SaleEdit extends Component
 
     public string $interest_rate = '0';
 
+    public string $installment_start_date = '';
+
     public string $discount = '0';
 
     public bool $with_vat = false;
@@ -53,6 +55,7 @@ class SaleEdit extends Component
         $this->down_payment = (string) $sale->down_payment;
         $this->installment_months = (string) ($sale->installment_months ?? '');
         $this->interest_rate = (string) ($sale->interest_rate ?? '0');
+        $this->installment_start_date = $sale->installment_start_date?->format('Y-m-d') ?? '';
         $this->discount = (string) ($sale->discount_value ?? '0');
         $this->with_vat = (bool) ($sale->with_vat ?? false);
         $this->dealer_name = $sale->dealer_name ?? '';
@@ -92,6 +95,7 @@ class SaleEdit extends Component
             $this->down_payment = '0';
             $this->installment_months = '';
             $this->interest_rate = '0';
+            $this->installment_start_date = '';
         }
     }
 
@@ -233,6 +237,7 @@ class SaleEdit extends Component
             'down_payment' => 'required_if:payment_type,installment|numeric|min:0',
             'installment_months' => 'required_if:payment_type,installment|nullable|integer|min:1|max:60',
             'interest_rate' => 'required_if:payment_type,installment|nullable|numeric|min:0|max:100',
+            'installment_start_date' => 'nullable|date',
             'discount' => 'nullable|numeric|min:0',
             'with_vat' => 'boolean',
             'dealer_name' => 'nullable|string|max:255',
@@ -252,6 +257,7 @@ class SaleEdit extends Component
             'down_payment' => __('keywords.down_payment'),
             'installment_months' => __('keywords.installment_months'),
             'interest_rate' => __('keywords.interest_rate'),
+            'installment_start_date' => __('keywords.installment_start_date'),
             'discount' => __('keywords.discount'),
             'with_vat' => __('keywords.apply_vat'),
             'dealer_name' => __('keywords.dealer_name'),
@@ -290,6 +296,7 @@ class SaleEdit extends Component
             'down_payment' => $this->down_payment,
             'installment_months' => $this->installment_months,
             'interest_rate' => $this->interest_rate,
+            'installment_start_date' => $this->installment_start_date,
             'discount' => $this->discount,
             'with_vat' => $this->with_vat,
             'dealer_name' => $this->dealer_name,

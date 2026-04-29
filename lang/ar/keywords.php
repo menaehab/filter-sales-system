@@ -517,6 +517,9 @@ return [
     'maintenance_history' => 'سجل الصيانة',
     'no_maintenance_history' => 'لا يوجد سجل صيانة حتى الآن.',
     'maintenance_cost' => 'تكلفة الصيانة',
+    'edit_maintenance' => 'تعديل الصيانة',
+    'delete_maintenance' => 'حذف الصيانة',
+    'delete_maintenance_confirmation' => 'هل أنت متأكد من حذف سجل الصيانة؟ ستتم استعادة كميات المنتجات المستخدمة في هذه الصيانة.',
     'changed_candles' => 'الشموع التي تم تغييرها',
     'maintenance_products' => 'منتجات الصيانة المركبة',
     'no_maintenance_products' => 'لم يتم تركيب منتجات في هذه الصيانة.',
@@ -709,4 +712,5 @@ return [
     'discount_value' => 'قيمة الخصم',
     'view_only_customers_in_his_places' => 'عرض العملاء في أماكنه فقط',
     'code' => 'الكود',
+    'installment_start_date' => 'تاريخ بدء القسط',
 ];
