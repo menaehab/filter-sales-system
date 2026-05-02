@@ -145,7 +145,13 @@ class Sale extends Model
             return null;
         }
 
-        return \Carbon\Carbon::parse($this->installment_start_date)->addMonth();
+        // Count how many payment allocations have been made (monthly installments paid)
+        $paidCount = $this->relationLoaded('paymentAllocations')
+            ? $this->paymentAllocations->count()
+            : $this->paymentAllocations()->count();
+
+        // Each payment advances the due date by one month starting from installment_start_date
+        return \Carbon\Carbon::parse($this->installment_start_date)->addMonths($paidCount + 1);
     }
 
     public function isInstallment(): bool

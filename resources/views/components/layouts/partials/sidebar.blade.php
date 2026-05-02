@@ -35,7 +35,7 @@
             },
             openGroups: {
                 main: {{ request()->routeIs('home') ? 'true' : 'false' }},
-                sales: {{ request()->routeIs('sales*') ? 'true' : 'false' }},
+                sales: {{ request()->routeIs('sales*') || request()->routeIs('overdue-installments*') ? 'true' : 'false' }},
                 purchases: {{ request()->routeIs('purchases*') ? 'true' : 'false' }},
                 people: {{ request()->routeIs('customers*') || request()->routeIs('suppliers*') || request()->routeIs('filters*') || request()->routeIs('service-visits*') ? 'true' : 'false' }},
                 inventory: {{ request()->routeIs('categories*') || request()->routeIs('products*') || request()->routeIs('damaged-products*') || request()->routeIs('expenses*') ? 'true' : 'false' }},
@@ -63,9 +63,10 @@
         </div>
 
         {{-- Sales --}}
-        @canany(['manage_sales', 'view_sales', 'add_sales', 'edit_sales', 'pay_sales', 'manage_sale_returns',
-            'view_sale_returns', 'add_sale_returns', 'edit_sale_returns', 'manage_customer_payment_allocations',
-            'view_customer_payment_allocations'])
+        @canany(['manage_sales', 'view_sales', 'add_sales', 'edit_sales', 'pay_sales',
+            'view_sale_returns', 'add_sale_returns', 'edit_sale_returns', 'manage_sale_returns',
+            'manage_customer_payment_allocations', 'view_customer_payment_allocations',
+            'view_overdue_installments'])
             <div class="space-y-1">
                 <button type="button" @click="toggleGroup('sales')"
                     class="w-full flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 transition-colors">
@@ -75,10 +76,15 @@
                 </button>
                 <div x-show="openGroups.sales" x-collapse class="space-y-1">
                     @canany(['manage_sales', 'view_sales', 'add_sales', 'edit_sales', 'pay_sales'])
-                        <x-sidebar-link href="{{ route('sales') }}" icon="fas fa-cash-register" :active="request()->routeIs('sales*')">
+                        <x-sidebar-link href="{{ route('sales') }}" icon="fas fa-cash-register" :active="request()->routeIs('sales') || request()->routeIs('sales.show*') || request()->routeIs('sales.create*') || request()->routeIs('sales.edit*')">
                             {{ __('keywords.sales') }}
                         </x-sidebar-link>
                     @endcanany
+                    @can('view_overdue_installments')
+                        <x-sidebar-link href="{{ route('overdue-installments') }}" icon="fas fa-clock" :active="request()->routeIs('overdue-installments*')">
+                            {{ __('keywords.overdue_installments') }}
+                        </x-sidebar-link>
+                    @endcan
                     @canany(['manage_sale_returns', 'view_sale_returns', 'add_sale_returns', 'edit_sale_returns'])
                         <x-sidebar-link href="{{ route('sale-returns') }}" icon="fas fa-rotate-left" :active="request()->routeIs('sale-returns*')">
                             {{ __('keywords.sale_returns') }}
