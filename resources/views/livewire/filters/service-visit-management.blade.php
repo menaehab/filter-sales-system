@@ -1,10 +1,29 @@
 <div>
     <x-page-header :title="__('keywords.service_visits')" :description="__('keywords.service_visits_management')">
         <x-slot:actions>
-            <x-button variant="secondary" href="{{ route('service-visits.print.pending') }}" target="_blank">
-                <i class="fas fa-print text-xs"></i>
-                {{ __('keywords.print_pending_visits') }}
-            </x-button>
+            @if ($totalCount > 0)
+                <x-button variant="secondary" wire:click="toggleSelectAll" size="sm">
+                    <i class="fas fa-check-square text-xs"></i>
+                    {{ count($selectedVisits) > 0 && count($selectedVisits) === $totalCount ? __('keywords.clear_selection') : __('keywords.select_all') }}
+                </x-button>
+            @endif
+            @if ($selectedCount > 0)
+                <x-button variant="warning" wire:click="clearSelection" size="sm">
+                    <i class="fas fa-times text-xs"></i>
+                    {{ __('keywords.clear_selection') }} ({{ $selectedCount }})
+                </x-button>
+                <x-button variant="primary"
+                    href="{{ route('service-visits.print.selected', ['ids' => implode(',', $selectedVisits)]) }}"
+                    target="_blank">
+                    <i class="fas fa-print text-xs"></i>
+                    {{ __('keywords.print_selected') }} ({{ $selectedCount }})
+                </x-button>
+            @else
+                <x-button variant="secondary" href="{{ route('service-visits.print.pending') }}" target="_blank">
+                    <i class="fas fa-print text-xs"></i>
+                    {{ __('keywords.print_pending_visits') }}
+                </x-button>
+            @endif
         </x-slot:actions>
     </x-page-header>
 
@@ -17,6 +36,7 @@
     </x-search-toolbar>
 
     <x-data-table :searchable="false" :paginated="false" :headers="[
+        ['key' => 'select', 'label' => __('keywords.select_all')],
         ['key' => 'customer_code', 'label' => __('keywords.code')],
         ['key' => 'customer_name', 'label' => __('keywords.customer')],
         ['key' => 'phone', 'label' => __('keywords.phone')],
@@ -31,8 +51,20 @@
         @forelse ($visits as $visit)
             @php
                 $customer = $visit->waterFilter?->customer;
+                $checkboxId = 'service-visit-select-' . $visit->id;
             @endphp
-            <tr class="transition-colors hover:bg-gray-50">
+            <tr wire:key="service-visit-row-{{ $visit->id }}" class="transition-colors hover:bg-gray-50">
+                <td class="whitespace-nowrap px-4 py-3">
+                    <label for="{{ $checkboxId }}" class="inline-flex cursor-pointer items-center gap-2">
+                        <span
+                            class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-gray-100 px-1 text-[10px] font-semibold text-gray-600">
+                            {{ $visit->id }}
+                        </span>
+                        <input id="{{ $checkboxId }}" type="checkbox" value="{{ $visit->id }}"
+                            wire:model.live="selectedVisits" wire:key="{{ $checkboxId }}"
+                            class="rounded border-gray-300" />
+                    </label>
+                </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-700">{{ $customer?->code ?? '—' }}</span>
                 </td>

@@ -15,7 +15,7 @@ class CreateWaterFilterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'filter_model' => ['required', 'string', 'max:255'],
+            'filter_model' => ['required', 'string', 'max:255', Rule::unique('water_filters', 'filter_model')],
             'address' => ['required', 'string', 'max:255'],
             'is_installed' => ['required', 'boolean'],
             'installed_at' => ['nullable', 'date', 'required_if:is_installed,1'],

@@ -3,6 +3,7 @@
 use App\Models\ServiceVisit;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
 Route::middleware(['auth'])->group(function () {
 
@@ -223,6 +224,25 @@ Route::middleware(['auth'])->group(function () {
         return view('livewire.filters.service-visits-print', compact('visits'));
     })
         ->name('service-visits.print.pending')
+        ->middleware('permission:view_service_visits|manage_service_visits');
+
+    Route::get('/service-visits/print/selected', function (Request $request) {
+        $ids = explode(',', $request->query('ids', ''));
+        $ids = array_filter(array_map('intval', $ids));
+
+        if (empty($ids)) {
+            return redirect()->route('service-visits');
+        }
+
+        $visits = ServiceVisit::query()
+            ->with(['waterFilter.customer.phones'])
+            ->whereIn('id', $ids)
+            ->latest('created_at')
+            ->get();
+
+        return view('livewire.filters.service-visits-print', compact('visits'));
+    })
+        ->name('service-visits.print.selected')
         ->middleware('permission:view_service_visits|manage_service_visits');
 
     Route::livewire('/service-visits/{serviceVisit}', 'filters.service-visit-show')

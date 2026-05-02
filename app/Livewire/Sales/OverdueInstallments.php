@@ -21,6 +21,8 @@ class OverdueInstallments extends Component
     #[Locked]
     public ?int $paySaleId = null;
 
+    public array $selectedSales = [];
+
     public string $payAmount = '';
 
     public string $payMethod = 'cash';
@@ -34,7 +36,36 @@ class OverdueInstallments extends Component
     public function updatingSearch(): void
     {
         $this->paySaleId = null;
+        $this->selectedSales = [];
         $this->resetPage();
+    }
+
+    public function toggleSelectAll(): void
+    {
+        $visibleIds = $this->overdueSales->pluck('id')->map(fn ($id) => (string) $id)->toArray();
+
+        if ($visibleIds === [] || $this->selectedSales === $visibleIds) {
+            $this->selectedSales = [];
+
+            return;
+        }
+
+        $this->selectedSales = $visibleIds;
+    }
+
+    public function clearSelection(): void
+    {
+        $this->selectedSales = [];
+    }
+
+    public function getSelectedCountProperty(): int
+    {
+        return count($this->selectedSales);
+    }
+
+    public function getVisibleCountProperty(): int
+    {
+        return $this->overdueSales->count();
     }
 
     #[Computed]
@@ -179,6 +210,8 @@ class OverdueInstallments extends Component
         return view('livewire.sales.overdue-installments', [
             'overdueSales'     => $this->overdueSales,
             'canManageCreatedAt' => $this->canManageCreatedAt,
+            'selectedCount' => $this->selectedCount,
+            'visibleCount' => $this->visibleCount,
         ]);
     }
 }
