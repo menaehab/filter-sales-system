@@ -14,6 +14,7 @@ final class CreateProductAction
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'cost_price' => (float) ($data['cost_price'] ?? 0),
+            'sell_price' => (float) ($data['sell_price'] ?? 0),
             'quantity' => (int) ($data['quantity'] ?? 0),
             'min_quantity' => (int) ($data['min_quantity'] ?? 0),
             'category_id' => (int) $data['category_id'],

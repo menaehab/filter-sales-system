@@ -33,6 +33,8 @@ class SaleCreate extends Component
     public bool $printAfterSave = false;
 
     public string $created_at = '';
+    public string $installment_start_date = '';
+    public bool $useFilterInstalledDate = true;
 
     public array $newCustomer = [
         'name' => '',
@@ -151,6 +153,50 @@ class SaleCreate extends Component
         $this->createNewFilter = false;
     }
 
+    public function updatedWaterFilterId(): void
+    {
+        if (! $this->useFilterInstalledDate) {
+            return;
+        }
+
+        if (! $this->water_filter_id) {
+            return;
+        }
+
+        $filter = WaterFilter::find($this->water_filter_id);
+        if ($filter && $filter->installed_at) {
+            $this->installment_start_date = $filter->installed_at->format('Y-m-d');
+        }
+    }
+
+    public function updatedUseFilterInstalledDate(bool $value): void
+    {
+        if (! $value) {
+            return;
+        }
+
+        // If toggled on, try to set from selected filter or newFilter
+        if ($this->water_filter_id) {
+            $this->updatedWaterFilterId();
+            return;
+        }
+
+        if (! empty($this->newFilter['is_installed'] ?? false) && ! empty($this->newFilter['installed_at'])) {
+            $this->installment_start_date = $this->newFilter['installed_at'];
+        }
+    }
+
+    public function updatedNewFilterInstalledAt($value): void
+    {
+        if (! $this->useFilterInstalledDate) {
+            return;
+        }
+
+        if (! empty($value)) {
+            $this->installment_start_date = $value;
+        }
+    }
+
     public function openCreateFilterModal(): void
     {
         if (! $this->customer_id) {
@@ -258,7 +304,7 @@ class SaleCreate extends Component
             'product_name' => $product->name,
             'category_name' => $product->category?->name ?? __('keywords.not_specified'),
             'cost_price' => (string) $product->cost_price,
-            'sell_price' => (string) $product->cost_price,
+            'sell_price' => (string) $product->sell_price,
             'available_quantity' => $available,
             'quantity' => '1',
         ];

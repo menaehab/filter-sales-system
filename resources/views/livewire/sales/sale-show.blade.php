@@ -132,6 +132,11 @@
                         <span class="font-medium text-gray-900">{{ $sale->installment_months }}</span>
                     </div>
                     <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">{{ __('keywords.installment_start_date') }}</span>
+                        <span
+                            class="font-medium text-gray-900">{{ $sale->installment_start_date?->format('Y/m/d') ?? '—' }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
                         <span class="text-gray-500">{{ __('keywords.next_installment') }}</span>
                         <span
                             class="font-medium {{ $sale->next_installment_date && $sale->next_installment_date->lte(now()) ? 'text-red-600' : 'text-gray-900' }}">
@@ -234,12 +239,14 @@
                                         {{ $allocation->created_at->format('Y/m/d H:i') }}</td>
                                     @canany(['manage_sales', 'pay_sales'])
                                         <td class="px-4 py-3 text-sm font-medium text-end whitespace-nowrap">
-                                            @if($allocation->customer_payment_id)
-                                                <button wire:click="openEditPaymentModal({{ $allocation->customer_payment_id }})"
+                                            @if ($allocation->customer_payment_id)
+                                                <button
+                                                    wire:click="openEditPaymentModal({{ $allocation->customer_payment_id }})"
                                                     class="text-blue-600 hover:text-blue-900 mx-1">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button wire:click="openDeletePaymentModal({{ $allocation->customer_payment_id }})"
+                                                <button
+                                                    wire:click="openDeletePaymentModal({{ $allocation->customer_payment_id }})"
                                                     class="text-red-600 hover:text-red-900 mx-1">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -366,12 +373,14 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-medium text-gray-900">{{ __('keywords.delete_customer_payment') }}</h3>
-                    <p class="text-sm text-gray-500 mt-2">{{ __('keywords.delete_customer_payment_confirmation') }}</p>
+                    <p class="text-sm text-gray-500 mt-2">{{ __('keywords.delete_customer_payment_confirmation') }}
+                    </p>
                 </div>
             </div>
         </x-slot:body>
         <x-slot:footer class="flex justify-center gap-3">
-            <x-button variant="secondary" @click="$dispatch('close-modal-delete-payment')">{{ __('keywords.cancel') }}</x-button>
+            <x-button variant="secondary"
+                @click="$dispatch('close-modal-delete-payment')">{{ __('keywords.cancel') }}</x-button>
             <x-button variant="danger" wire:click="submitDeletePayment">{{ __('keywords.delete') }}</x-button>
         </x-slot:footer>
     </x-modal>

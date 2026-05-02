@@ -22,6 +22,7 @@ it('shows sale details including items and payment history', function () {
         'payment_type' => 'installment',
         'installment_amount' => 50,
         'installment_months' => 2,
+        'installment_start_date' => '2026-02-01',
         'user_id' => auth()->id(),
         'customer_id' => $customer->id,
     ]);
@@ -69,6 +70,7 @@ it('shows sale details including items and payment history', function () {
         ->assertSee('Carbon Filter')
         ->assertSee('bank_transfer')
         ->assertSee('First transfer')
+        ->assertSee('2026/02/01')
         ->assertSee('120.00', false)
         ->assertSee('45.00', false);
 });

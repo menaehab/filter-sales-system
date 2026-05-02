@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('water_filters', function (Blueprint $table) {
-            $table->unique('customer_id', 'water_filters_customer_id_unique');
+        Schema::table('products', function (Blueprint $table) {
+            $table->decimal('sell_price', 10, 2)->default(0)->after('cost_price');
         });
+
+        \DB::table('products')->update([
+            'sell_price' => \DB::raw('cost_price'),
+        ]);
     }
 
     /**
@@ -21,8 +25,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('water_filters', function (Blueprint $table) {
-            $table->dropUnique('water_filters_customer_id_unique');
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('sell_price');
         });
     }
 };

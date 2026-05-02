@@ -42,9 +42,9 @@
                             <span class="mt-1 text-sm font-semibold text-gray-900 group-hover:text-emerald-600">
                                 {{ $product->name }}
                             </span>
-                            <span class="mt-3 text-xs text-gray-500">{{ __('keywords.cost_price') }}</span>
+                            <span class="mt-3 text-xs text-gray-500">{{ __('keywords.sell_price') }}</span>
                             <span class="text-sm font-bold text-emerald-600">
-                                {{ number_format($product->cost_price, 2) }} {{ __('keywords.currency') }}
+                                {{ number_format($product->sell_price, 2) }} {{ __('keywords.currency') }}
                             </span>
                         </button>
                     @empty
@@ -293,8 +293,18 @@
                                     placeholder="0" wire:model.live="interest_rate" type="number" step="0.01"
                                     min="0" max="100" required />
 
-                                <x-input name="installment_start_date" label="{{ __('keywords.installment_start_date') }}"
-                                    wire:model.live="installment_start_date" type="date" />
+                                @if (!$useFilterInstalledDate)
+                                    <x-input name="installment_start_date"
+                                        label="{{ __('keywords.installment_start_date') }}"
+                                        wire:model.live="installment_start_date" type="date" />
+                                @endif
+                                <div class="flex items-center pt-2">
+                                    <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                                        <input type="checkbox" wire:model.live="useFilterInstalledDate"
+                                            class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                                        <span>{{ __('keywords.use_filter_installed_date') }}</span>
+                                    </label>
+                                </div>
                             </div>
                         @endif
 

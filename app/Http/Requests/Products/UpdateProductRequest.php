@@ -16,6 +16,7 @@ class UpdateProductRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'cost_price' => ['required', 'numeric', 'min:0'],
+            'sell_price' => ['required', 'numeric', 'min:0'],
             'quantity' => ['required', 'integer', 'min:0'],
             'min_quantity' => ['required', 'integer', 'min:0'],
             'description' => ['nullable', 'string'],
@@ -29,6 +30,7 @@ class UpdateProductRequest extends FormRequest
         return [
             'name' => __('keywords.name'),
             'cost_price' => __('keywords.cost_price'),
+            'sell_price' => __('keywords.sell_price'),
             'min_quantity' => __('keywords.min_quantity'),
             'category_id' => __('keywords.category'),
             'description' => __('keywords.description'),

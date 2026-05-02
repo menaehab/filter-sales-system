@@ -119,6 +119,7 @@ it('creates an installment sale with down payment and next installment date', fu
     $this->assertEquals(150.0, (float) $sale->installment_amount);
     $this->assertEquals(3, $sale->installment_months);
     $this->assertEquals('2026-04-11', $sale->next_installment_date?->toDateString());
+    $this->assertEquals('2026-03-11', $sale->installment_start_date?->toDateString());
 
     $this->assertDatabaseHas('customer_payments', [
         'customer_id' => $customer->id,
@@ -132,6 +133,67 @@ it('creates an installment sale with down payment and next installment date', fu
     ]);
 
     Carbon::setTestNow();
+});
+
+it('uses the filter installed date for installment sales when enabled', function () {
+    Carbon::setTestNow('2026-04-20 09:00:00');
+
+    $customer = Customer::factory()->create(['name' => 'Filter Date Customer']);
+    $filter = WaterFilter::create([
+        'filter_model' => 'Installed Filter',
+        'address' => 'Filter Address',
+        'installed_at' => '2026-02-14',
+        'is_installed' => true,
+        'customer_id' => $customer->id,
+    ]);
+    $product = Product::factory()->create([
+        'cost_price' => 40,
+        'quantity' => 8,
+    ]);
+
+    Livewire::test('sales.sale-create')
+        ->set('customer_id', $customer->id)
+        ->set('payment_type', 'installment')
+        ->set('down_payment', '0')
+        ->set('installment_months', '3')
+        ->set('interest_rate', '0')
+        ->set('water_filter_id', $filter->id)
+        ->set('cart', [[
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'category_name' => 'Filters',
+            'cost_price' => '40',
+            'sell_price' => '90',
+            'available_quantity' => 8,
+            'quantity' => '2',
+        ]])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $sale = Sale::sole();
+
+    expect($sale->installment_start_date?->toDateString())->toBe('2026-02-14');
+
+    Carbon::setTestNow();
+});
+
+it('hides the manual installment start date input while using the filter installed date', function () {
+    $customer = Customer::factory()->create();
+    $filter = WaterFilter::create([
+        'filter_model' => 'Hidden Input Filter',
+        'address' => 'Filter Address',
+        'installed_at' => '2026-03-01',
+        'is_installed' => true,
+        'customer_id' => $customer->id,
+    ]);
+
+    Livewire::test('sales.sale-create')
+        ->set('customer_id', $customer->id)
+        ->set('payment_type', 'installment')
+        ->set('water_filter_id', $filter->id)
+        ->assertDontSeeHtml('name="installment_start_date"')
+        ->set('useFilterInstalledDate', false)
+        ->assertSeeHtml('name="installment_start_date"');
 });
 
 it('allows setting created_at on sale create when user has manage_created_at permission', function () {

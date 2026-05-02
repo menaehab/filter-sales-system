@@ -31,6 +31,11 @@
                     {{ __('keywords.currency') }}</dd>
             </div>
             <div class="grid gap-2 px-5 py-4 sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500">{{ __('keywords.sell_price') }}</dt>
+                <dd class="text-sm text-gray-900 sm:col-span-2">{{ number_format($product->sell_price, 2) }}
+                    {{ __('keywords.currency') }}</dd>
+            </div>
+            <div class="grid gap-2 px-5 py-4 sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-500">{{ __('keywords.min_quantity') }}</dt>
                 <dd class="text-sm text-gray-900 sm:col-span-2">{{ $product->min_quantity }}</dd>
             </div>

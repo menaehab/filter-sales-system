@@ -7,7 +7,9 @@ use App\Models\Product;
 use App\Models\ProductMovement;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\WaterFilter;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -241,4 +243,90 @@ it('ignores created_at on sale edit when user lacks manage_created_at permission
     $sale->refresh();
 
     expect($sale->created_at->toDateTimeString())->toBe('2025-03-05 10:00:00');
+});
+
+it('uses the customer filter installed date when editing an installment sale', function () {
+    Carbon::setTestNow('2026-04-22 08:30:00');
+
+    $customer = Customer::factory()->create();
+    $filter = WaterFilter::create([
+        'filter_model' => 'Edit Filter',
+        'address' => 'Edit Address',
+        'installed_at' => '2026-02-14',
+        'is_installed' => true,
+        'customer_id' => $customer->id,
+    ]);
+    $product = Product::factory()->create([
+        'quantity' => 10,
+    ]);
+
+    $sale = Sale::create([
+        'dealer_name' => 'Dealer',
+        'user_name' => auth()->user()->name,
+        'total_price' => 100,
+        'payment_type' => 'cash',
+        'user_id' => auth()->id(),
+        'customer_id' => $customer->id,
+    ]);
+
+    SaleItem::create([
+        'sell_price' => 50,
+        'cost_price' => 40,
+        'quantity' => 2,
+        'sale_id' => $sale->id,
+        'product_id' => $product->id,
+    ]);
+
+    $product->decrement('quantity', 2);
+
+    Livewire::test('sales.sale-edit', ['sale' => $sale])
+        ->set('payment_type', 'installment')
+        ->set('down_payment', '20')
+        ->set('installment_months', '3')
+        ->set('interest_rate', '0')
+        ->set('useFilterInstalledDate', true)
+        ->set('items.0.quantity', '2')
+        ->call('update')
+        ->assertHasNoErrors();
+
+    $sale->refresh();
+
+    expect($sale->payment_type)->toBe('installment');
+    expect($sale->installment_start_date?->toDateString())->toBe('2026-02-14');
+
+    Carbon::setTestNow();
+});
+
+it('hides the manual installment start date input while using the filter installed date on edit', function () {
+    $customer = Customer::factory()->create();
+    $product = Product::factory()->create([
+        'quantity' => 10,
+    ]);
+
+    $sale = Sale::create([
+        'dealer_name' => 'Dealer',
+        'user_name' => auth()->user()->name,
+        'total_price' => 100,
+        'payment_type' => 'installment',
+        'installment_amount' => 30,
+        'installment_months' => 3,
+        'installment_start_date' => '2026-03-01',
+        'user_id' => auth()->id(),
+        'customer_id' => $customer->id,
+    ]);
+
+    SaleItem::create([
+        'sell_price' => 50,
+        'cost_price' => 40,
+        'quantity' => 2,
+        'sale_id' => $sale->id,
+        'product_id' => $product->id,
+    ]);
+
+    $product->decrement('quantity', 2);
+
+    Livewire::test('sales.sale-edit', ['sale' => $sale])
+        ->assertDontSeeHtml('name="installment_start_date"')
+        ->set('useFilterInstalledDate', false)
+        ->assertSeeHtml('name="installment_start_date"');
 });

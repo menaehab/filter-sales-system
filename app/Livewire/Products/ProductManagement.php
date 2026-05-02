@@ -49,6 +49,7 @@ class ProductManagement extends Component
         return [
             'name' => '',
             'cost_price' => null,
+            'sell_price' => null,
             'quantity' => null,
             'min_quantity' => null,
             'description' => '',
@@ -133,6 +134,7 @@ class ProductManagement extends Component
         $this->form = [
             'name' => $product->name,
             'cost_price' => $product->cost_price,
+            'sell_price' => $product->sell_price,
             'quantity' => $product->quantity,
             'min_quantity' => $product->min_quantity,
             'description' => $product->description,
