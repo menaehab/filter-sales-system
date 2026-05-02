@@ -17,7 +17,6 @@ trait WithSearchAndPagination
         return array_merge([
             'search' => ['except' => ''],
             'perPage' => ['except' => 10],
-            'page' => ['except' => 1],
         ], $this->additionalQueryString());
     }
 

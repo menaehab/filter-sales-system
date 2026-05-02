@@ -14,6 +14,7 @@ class ServiceVisitManagement extends Component
     use WithSearchAndPagination;
 
     public string $completionStatus = '';
+    public array $selectedVisits = [];
 
     protected function additionalQueryString(): array
     {
@@ -36,6 +37,33 @@ class ServiceVisitManagement extends Component
         if (! $visit->is_completed) {
             $visit->update(['is_completed' => true]);
         }
+    }
+
+    public function toggleSelectAll(): void
+    {
+        if (count($this->selectedVisits) === $this->visits->count()) {
+            $this->selectedVisits = [];
+        } else {
+            $this->selectedVisits = $this->visits->pluck('id')->map(fn ($id) => (string) $id)->toArray();
+        }
+    }
+
+    public function clearSelection(): void
+    {
+        $this->selectedVisits = [];
+    }
+
+    public function getSelectedVisitsForPrint()
+    {
+        if (empty($this->selectedVisits)) {
+            return collect([]);
+        }
+
+        return ServiceVisit::query()
+            ->with(['waterFilter.customer.phones'])
+            ->whereIn('id', array_map('intval', $this->selectedVisits))
+            ->latest('created_at')
+            ->get();
     }
 
     public function getVisitsProperty()
@@ -70,6 +98,8 @@ class ServiceVisitManagement extends Component
     {
         return view('livewire.filters.service-visit-management', [
             'visits' => $this->visits,
+            'selectedCount' => count($this->selectedVisits),
+            'totalCount' => $this->visits->count(),
         ]);
     }
 
