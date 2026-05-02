@@ -23,6 +23,7 @@ class UpdatePurchaseRequest extends FormRequest
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.cost_price' => ['required', 'numeric', 'min:0.01'],
+            'items.*.sell_price' => ['required', 'numeric', 'min:0.01'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
         ];
     }
@@ -38,6 +39,7 @@ class UpdatePurchaseRequest extends FormRequest
             'items' => __('keywords.purchase_items'),
             'items.*.product_id' => __('keywords.product'),
             'items.*.cost_price' => __('keywords.cost_price'),
+            'items.*.sell_price' => __('keywords.sell_price'),
             'items.*.quantity' => __('keywords.quantity'),
         ];
     }

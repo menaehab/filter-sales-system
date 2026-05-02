@@ -84,6 +84,7 @@ final class CreatePurchaseAction
 
             $product->update([
                 'cost_price' => (float) $item['cost_price'],
+                'sell_price' => (float) ($item['sell_price'] ?? $product->sell_price),
             ]);
 
             $product->increment('quantity', (int) $item['quantity']);

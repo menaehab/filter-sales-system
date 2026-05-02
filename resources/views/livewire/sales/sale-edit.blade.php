@@ -50,15 +50,26 @@
                                 wire:model.live="down_payment" type="number" step="0.01" required />
 
                             <x-input name="installment_months" label="{{ __('keywords.installment_months') }}"
-                                placeholder="{{ __('keywords.enter_months_count') }}" wire:model.live="installment_months"
-                                type="number" min="1" max="60" required />
-
-                            <x-input name="interest_rate" label="{{ __('keywords.interest_rate') }}" placeholder="0"
-                                wire:model.live="interest_rate" type="number" step="0.01" min="0" max="100"
+                                placeholder="{{ __('keywords.enter_months_count') }}"
+                                wire:model.live="installment_months" type="number" min="1" max="60"
                                 required />
 
-                            <x-input name="installment_start_date" label="{{ __('keywords.installment_start_date') }}"
-                                wire:model.live="installment_start_date" type="date" />
+                            <x-input name="interest_rate" label="{{ __('keywords.interest_rate') }}" placeholder="0"
+                                wire:model.live="interest_rate" type="number" step="0.01" min="0"
+                                max="100" required />
+
+                            @if (!$useFilterInstalledDate)
+                                <x-input name="installment_start_date"
+                                    label="{{ __('keywords.installment_start_date') }}"
+                                    wire:model.live="installment_start_date" type="date" />
+                            @endif
+                            <div class="flex items-center pt-2">
+                                <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                                    <input type="checkbox" wire:model.live="useFilterInstalledDate"
+                                        class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                                    <span>{{ __('keywords.use_filter_installed_date') }}</span>
+                                </label>
+                            </div>
                         </div>
                     @endif
 

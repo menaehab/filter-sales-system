@@ -74,6 +74,7 @@ class PurchaseCreate extends Component
             'product_id' => '',
             'product_name' => '',
             'cost_price' => '',
+            'sell_price' => '',
             'quantity' => '1',
         ];
     }
@@ -97,6 +98,7 @@ class PurchaseCreate extends Component
                 if ($product) {
                     $this->items[$index]['product_name'] = $product->name;
                     $this->items[$index]['cost_price'] = (string) $product->cost_price;
+                    $this->items[$index]['sell_price'] = (string) $product->sell_price;
                 }
             }
         }
@@ -139,6 +141,7 @@ class PurchaseCreate extends Component
             'name' => '',
             'description' => '',
             'cost_price' => '',
+            'sell_price' => '',
             'min_quantity' => '0',
             'category_id' => '',
             'for_maintenance' => false,
@@ -166,12 +169,14 @@ class PurchaseCreate extends Component
         $this->validate([
             'newProduct.name' => ['required', 'string', 'max:255'],
             'newProduct.cost_price' => ['required', 'numeric', 'min:0'],
+            'newProduct.sell_price' => ['required', 'numeric', 'min:0'],
             'newProduct.min_quantity' => ['required', 'integer', 'min:0'],
             'newProduct.description' => ['nullable', 'string'],
             'newProduct.category_id' => ['required', 'exists:categories,id'],
         ], [], [
             'newProduct.name' => __('keywords.name'),
             'newProduct.cost_price' => __('keywords.cost_price'),
+            'newProduct.sell_price' => __('keywords.sell_price'),
             'newProduct.min_quantity' => __('keywords.min_quantity'),
             'newProduct.description' => __('keywords.description'),
             'newProduct.category_id' => __('keywords.category'),
@@ -181,6 +186,7 @@ class PurchaseCreate extends Component
             'name' => $this->newProduct['name'],
             'description' => $this->newProduct['description'] ?: null,
             'cost_price' => (float) $this->newProduct['cost_price'],
+            'sell_price' => (float) $this->newProduct['sell_price'],
             'min_quantity' => (int) $this->newProduct['min_quantity'],
             'quantity' => 0,
             'category_id' => (int) $this->newProduct['category_id'],
@@ -191,6 +197,7 @@ class PurchaseCreate extends Component
             $this->items[$this->targetItemIndexForNewProduct]['product_id'] = (string) $product->id;
             $this->items[$this->targetItemIndexForNewProduct]['product_name'] = $product->name;
             $this->items[$this->targetItemIndexForNewProduct]['cost_price'] = (string) $product->cost_price;
+            $this->items[$this->targetItemIndexForNewProduct]['sell_price'] = (string) $product->sell_price;
             $this->items[$this->targetItemIndexForNewProduct]['for_maintenance'] = $product->for_maintenance;
         }
 

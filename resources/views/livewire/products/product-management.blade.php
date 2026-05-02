@@ -28,6 +28,8 @@
     <x-data-table :searchable="false" :paginated="false" :headers="[
         ['key' => 'name', 'label' => __('keywords.name')],
         ['key' => 'category', 'label' => __('keywords.category')],
+        ['key' => 'cost_price', 'label' => __('keywords.cost_price')],
+        ['key' => 'sell_price', 'label' => __('keywords.sell_price')],
         ['key' => 'quantity', 'label' => __('keywords.quantity')],
         ['key' => 'min_quantity', 'label' => __('keywords.min_quantity')],
         ['key' => 'for_maintenance', 'label' => __('keywords.for_maintenance')],
@@ -40,6 +42,12 @@
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <x-badge :label="$product->category->name" color="blue" />
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
+                    {{ number_format($product->cost_price, 2) }}
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
+                    {{ number_format($product->sell_price, 2) }}
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span @class([
@@ -77,6 +85,8 @@
                         placeholder="{{ __('keywords.enter_name') }}" wire:model.blur="form.name" required />
                     <x-input type="number" name="form.cost_price" label="{{ __('keywords.cost_price') }}"
                         placeholder="{{ __('keywords.enter_cost_price') }}" wire:model.blur="form.cost_price" required />
+                    <x-input type="number" name="form.sell_price" label="{{ __('keywords.sell_price') }}"
+                        placeholder="{{ __('keywords.enter_sell_price') }}" wire:model.blur="form.sell_price" required />
                     <x-input type="number" name="form.quantity" label="{{ __('keywords.quantity') }}"
                         placeholder="{{ __('keywords.enter_quantity') }}" wire:model.blur="form.quantity" required />
                     <x-input type="number" name="form.min_quantity" label="{{ __('keywords.min_quantity') }}"
@@ -111,6 +121,8 @@
                         placeholder="{{ __('keywords.enter_name') }}" wire:model.blur="form.name" required />
                     <x-input type="number" name="form.cost_price" label="{{ __('keywords.cost_price') }}"
                         placeholder="{{ __('keywords.enter_cost_price') }}" wire:model.blur="form.cost_price" required />
+                    <x-input type="number" name="form.sell_price" label="{{ __('keywords.sell_price') }}"
+                        placeholder="{{ __('keywords.enter_sell_price') }}" wire:model.blur="form.sell_price" required />
                     <x-input type="number" name="form.quantity" label="{{ __('keywords.quantity') }}"
                         placeholder="{{ __('keywords.enter_quantity') }}" wire:model.blur="form.quantity" required />
                     <x-input type="number" name="form.min_quantity" label="{{ __('keywords.min_quantity') }}"

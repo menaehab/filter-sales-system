@@ -109,6 +109,12 @@
                                 wire:model.live="items.{{ $index }}.cost_price" type="number" step="0.01"
                                 required />
                         </div>
+                        <div class="w-full sm:w-36">
+                            <x-input name="items.{{ $index }}.sell_price"
+                                label="{{ __('keywords.sell_price') }}" placeholder="0.00"
+                                wire:model.live="items.{{ $index }}.sell_price" type="number" step="0.01"
+                                required />
+                        </div>
                         <div class="w-full sm:w-28">
                             <x-input name="items.{{ $index }}.quantity" label="{{ __('keywords.quantity') }}"
                                 placeholder="1" wire:model.live="items.{{ $index }}.quantity" type="number"
@@ -240,6 +246,10 @@
 
                         <x-input name="newProduct.cost_price" label="{{ __('keywords.cost_price') }}"
                             placeholder="0.00" type="number" step="0.01" wire:model.blur="newProduct.cost_price"
+                            required />
+
+                        <x-input name="newProduct.sell_price" label="{{ __('keywords.sell_price') }}"
+                            placeholder="0.00" type="number" step="0.01" wire:model.blur="newProduct.sell_price"
                             required />
 
                         <x-input name="newProduct.min_quantity" label="{{ __('keywords.min_quantity') }}"

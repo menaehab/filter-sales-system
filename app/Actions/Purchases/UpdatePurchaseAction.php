@@ -101,7 +101,10 @@ final class UpdatePurchaseAction
                 'product_id' => $product->id,
             ]);
 
-            $product->update(['cost_price' => (float) $item['cost_price']]);
+            $product->update([
+                'cost_price' => (float) $item['cost_price'],
+                'sell_price' => (float) ($item['sell_price'] ?? $product->sell_price),
+            ]);
             $product->increment('quantity', $quantity);
 
             ProductMovement::create([

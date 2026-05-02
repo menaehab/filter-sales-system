@@ -713,4 +713,5 @@ return [
     'view_only_customers_in_his_places' => 'عرض العملاء في أماكنه فقط',
     'code' => 'الكود',
     'installment_start_date' => 'تاريخ بدء القسط',
+    'use_filter_installed_date' => 'استخدام تاريخ تركيب الفلتر لبدء القسط',
 ];

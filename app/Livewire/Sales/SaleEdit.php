@@ -30,6 +30,7 @@ class SaleEdit extends Component
     public string $interest_rate = '0';
 
     public string $installment_start_date = '';
+    public bool $useFilterInstalledDate = true;
 
     public string $discount = '0';
 
@@ -60,13 +61,14 @@ class SaleEdit extends Component
         $this->with_vat = (bool) ($sale->with_vat ?? false);
         $this->dealer_name = $sale->dealer_name ?? '';
         $this->created_at = $sale->created_at?->format('Y/m/d H:i') ?? now()->format('Y/m/d H:i');
+        $this->useFilterInstalledDate = true;
 
         $this->items = $sale->items->map(fn ($item) => [
             'product_id' => (string) $item->product_id,
             'product_name' => $item->product?->name ?? __('keywords.not_specified'),
             'sell_price' => (string) $item->sell_price,
             'cost_price' => (string) $item->cost_price,
-            'quantity' => (string) $item->quantity,
+            'quantity' => (float) $item->quantity,
         ])->toArray();
 
         if (empty($this->items)) {
@@ -129,7 +131,7 @@ class SaleEdit extends Component
                 $product = Product::find($productId);
                 if ($product) {
                     $this->items[$index]['product_name'] = $product->name;
-                    $this->items[$index]['sell_price'] = (string) $product->cost_price;
+                    $this->items[$index]['sell_price'] = (string) $product->sell_price;
                     $this->items[$index]['cost_price'] = (string) $product->cost_price;
                 }
             }
@@ -238,6 +240,7 @@ class SaleEdit extends Component
             'installment_months' => 'required_if:payment_type,installment|nullable|integer|min:1|max:60',
             'interest_rate' => 'required_if:payment_type,installment|nullable|numeric|min:0|max:100',
             'installment_start_date' => 'nullable|date',
+            'useFilterInstalledDate' => 'boolean',
             'discount' => 'nullable|numeric|min:0',
             'with_vat' => 'boolean',
             'dealer_name' => 'nullable|string|max:255',
@@ -258,6 +261,7 @@ class SaleEdit extends Component
             'installment_months' => __('keywords.installment_months'),
             'interest_rate' => __('keywords.interest_rate'),
             'installment_start_date' => __('keywords.installment_start_date'),
+            'useFilterInstalledDate' => __('keywords.use_filter_installed_date'),
             'discount' => __('keywords.discount'),
             'with_vat' => __('keywords.apply_vat'),
             'dealer_name' => __('keywords.dealer_name'),
@@ -297,6 +301,7 @@ class SaleEdit extends Component
             'installment_months' => $this->installment_months,
             'interest_rate' => $this->interest_rate,
             'installment_start_date' => $this->installment_start_date,
+            'useFilterInstalledDate' => $this->useFilterInstalledDate,
             'discount' => $this->discount,
             'with_vat' => $this->with_vat,
             'dealer_name' => $this->dealer_name,
@@ -308,6 +313,33 @@ class SaleEdit extends Component
     public function getCanManageCreatedAtProperty(): bool
     {
         return (bool) auth()->user()?->can('manage_created_at');
+    }
+
+    public function updatedUseFilterInstalledDate(bool $value): void
+    {
+        if (! $value) {
+            return;
+        }
+
+        if (! $this->customer_id) {
+            return;
+        }
+
+        $filter = \App\Models\WaterFilter::where('customer_id', $this->customer_id)->first();
+        if ($filter && $filter->installed_at) {
+            $this->installment_start_date = $filter->installed_at->format('Y-m-d');
+            return;
+        }
+
+        // fallback to created_at date
+        if (! empty($this->created_at)) {
+            try {
+                $dt = \Illuminate\Support\Carbon::parse($this->created_at);
+                $this->installment_start_date = $dt->format('Y-m-d');
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
     }
 
     // ==========================================

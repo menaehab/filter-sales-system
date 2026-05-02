@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use App\Enums\WaterQualityTypeEnum;
+use App\Observers\WaterFilterObserver;
 use App\Traits\HasLogActivity;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
+#[ObservedBy(WaterFilterObserver::class)]
 class WaterFilter extends Model
 {
     use HasLogActivity, HasSlug;

@@ -60,6 +60,40 @@ final class CreateSaleAction
         ) {
             $createdAt = $this->resolveCreatedAt(data_get($data, 'created_at'));
 
+            // Determine filter installed date if available
+            $filterInstalledAt = null;
+            if (! empty($data['createNewFilter']) && ! empty($data['newFilter'])) {
+                $isInstalled = (bool) data_get($data, 'newFilter.is_installed', false);
+                if ($isInstalled) {
+                    $filterInstalledAt = data_get($data, 'newFilter.installed_at');
+                }
+            } elseif (! empty($data['water_filter_id'])) {
+                $filter = WaterFilter::find($data['water_filter_id']);
+                $filterInstalledAt = $filter?->installed_at;
+            } else {
+                $existingFilter = WaterFilter::where('customer_id', $customer->id)->first();
+                $filterInstalledAt = $existingFilter?->installed_at;
+            }
+
+            // Compute installment start date according to flag and availability
+            $installmentStart = null;
+            if ($isInstallment) {
+                if (! empty($data['useFilterInstalledDate'])) {
+                    if (! empty($filterInstalledAt)) {
+                        $installmentStart = $filterInstalledAt instanceof \Illuminate\Support\Carbon
+                            ? $filterInstalledAt->format('Y-m-d')
+                            : (string) $filterInstalledAt;
+                    } else {
+                        // no filter installed -> fall back to created_at
+                        $installmentStart = $createdAt->format('Y-m-d');
+                    }
+                } else {
+                    $installmentStart = ! empty($data['installment_start_date'])
+                        ? $data['installment_start_date']
+                        : $createdAt->format('Y-m-d');
+                }
+            }
+
             $sale = Sale::create([
                 'dealer_name' => $data['dealer_name'] ?? null,
                 'user_name' => auth()->user()->name,
@@ -69,7 +103,7 @@ final class CreateSaleAction
                 'interest_rate' => $isInstallment ? (float) ($data['interest_rate'] ?? 0) : null,
                 'installment_amount' => $installmentAmount,
                 'installment_months' => $isInstallment ? (int) ($data['installment_months'] ?? 0) : null,
-                'installment_start_date' => $isInstallment && !empty($data['installment_start_date']) ? $data['installment_start_date'] : null,
+                'installment_start_date' => $installmentStart,
                 'with_vat' => (bool) ($data['with_vat'] ?? false),
                 'user_id' => auth()->id(),
                 'customer_id' => $customer->id,
@@ -81,6 +115,13 @@ final class CreateSaleAction
 
             if (! empty($data['includeWaterReading']) && $data['includeWaterReading']) {
                 $this->createWaterReading($data, $customer);
+            }
+
+            // If requested, propagate installed_at to previous installment sales for this customer
+            if ($isInstallment && ! empty($data['useFilterInstalledDate']) && ! empty($filterInstalledAt)) {
+                Sale::where('customer_id', $customer->id)
+                    ->where('payment_type', 'installment')
+                    ->update(['installment_start_date' => $filterInstalledAt instanceof \Illuminate\Support\Carbon ? $filterInstalledAt->format('Y-m-d') : (string) $filterInstalledAt]);
             }
 
             return $sale;

@@ -14,6 +14,7 @@ final class UpdateProductAction
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'cost_price' => (float) ($data['cost_price'] ?? $product->cost_price),
+            'sell_price' => (float) ($data['sell_price'] ?? $product->sell_price),
             'quantity' => (int) ($data['quantity'] ?? $product->quantity),
             'min_quantity' => (int) ($data['min_quantity'] ?? $product->min_quantity),
             'category_id' => (int) $data['category_id'],

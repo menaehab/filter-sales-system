@@ -192,7 +192,7 @@ trait HasSaleForm
         ];
     }
 
-    public function addProductToCart(int $productId, string $productName, string $categoryName, float $costPrice, int $availableQuantity): bool
+    public function addProductToCart(int $productId, string $productName, string $categoryName, float $costPrice, float $sellPrice, int $availableQuantity): bool
     {
         $existingIndex = collect($this->cart)->search(fn ($item) => (int) $item['product_id'] === $productId);
 
@@ -219,7 +219,7 @@ trait HasSaleForm
             'product_name' => $productName,
             'category_name' => $categoryName,
             'cost_price' => (string) $costPrice,
-            'sell_price' => (string) $costPrice,
+            'sell_price' => (string) $sellPrice,
             'available_quantity' => $availableQuantity,
             'quantity' => '1',
         ];
