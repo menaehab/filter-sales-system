@@ -714,4 +714,21 @@ return [
     'code' => 'الكود',
     'installment_start_date' => 'تاريخ بدء القسط',
     'use_filter_installed_date' => 'استخدام تاريخ تركيب الفلتر لبدء القسط',
+
+    // Overdue Installments
+    'overdue_installments' => 'الأقساط المتأخرة',
+    'overdue_installments_description' => 'عرض الأقساط التي تجاوزت موعد استحقاقها ولم يتم سدادها بعد.',
+    'overdue_count' => 'عدد الأقساط المتأخرة',
+    'total_overdue_installments' => 'إجمالي قيمة الأقساط المتأخرة',
+    'total_remaining_all' => 'إجمالي المتبقي على الكل',
+    'overdue_installment_amount' => 'قيمة القسط المتأخر',
+    'overdue_days' => 'متأخر :days يوم',
+    'overdue_since' => 'متأخر منذ',
+    'no_overdue_installments' => 'لا توجد أقساط متأخرة',
+    'no_overdue_installments_description' => 'جميع الأقساط في موعدها، لا توجد أقساط مستحقة حالياً.',
+    'search_by_customer_or_invoice' => 'بحث باسم العميل أو رقم الفاتورة...',
+    'view_customer' => 'عرض العميل',
+    'view_invoice' => 'عرض الفاتورة',
+    'showing_results_count' => 'يتم عرض :count نتيجة',
+    'view_overdue_installments' => 'عرض الأقساط المتأخرة',
 ];

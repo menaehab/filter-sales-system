@@ -38,6 +38,14 @@ Route::middleware(['auth'])->group(function () {
         ->name('sales.print')
         ->middleware('permission:view_sales|manage_sales|add_sales|edit_sales|pay_sales');
 
+    Route::livewire('/overdue-installments', 'sales.overdue-installments')
+        ->name('overdue-installments')
+        ->middleware('permission:view_overdue_installments');
+
+    Route::livewire('/overdue-installments/print', 'sales.overdue-installments-print')
+        ->name('overdue-installments.print')
+        ->middleware('permission:view_overdue_installments');
+
     Route::livewire('/customer-payments/{payment}/print', 'sales.payment-receipt-print')
         ->name('customer-payments.print')
         ->middleware('permission:view_customer_payment_allocations|manage_customer_payment_allocations|pay_sales|manage_sales');

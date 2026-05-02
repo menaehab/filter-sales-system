@@ -60,6 +60,7 @@ class PermissionSeeder extends Seeder
             'receive_supplier_installment_notifications',
             'receive_low_stock_notifications',
             'receive_filter_candle_notifications',
+            'view_overdue_installments',
         ];
 
         foreach ($permissions as $permission) {
