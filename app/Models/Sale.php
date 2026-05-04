@@ -150,8 +150,8 @@ class Sale extends Model
             ? $this->paymentAllocations->count()
             : $this->paymentAllocations()->count();
 
-        // Each payment advances the due date by one month starting from installment_start_date
-        return \Carbon\Carbon::parse($this->installment_start_date)->addMonths($paidCount + 1);
+        // Each payment advances the due date by one month starting from installment_start_date (which is the date of the first installment)
+        return \Carbon\Carbon::parse($this->installment_start_date)->addMonths($paidCount);
     }
 
     public function isInstallment(): bool

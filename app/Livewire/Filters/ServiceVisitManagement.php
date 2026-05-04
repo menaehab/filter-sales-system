@@ -14,16 +14,23 @@ class ServiceVisitManagement extends Component
     use WithSearchAndPagination;
 
     public string $completionStatus = '';
+    public ?int $placeId = null;
     public array $selectedVisits = [];
 
     protected function additionalQueryString(): array
     {
         return [
             'completionStatus' => ['as' => 'status', 'except' => ''],
+            'placeId' => ['as' => 'place', 'except' => ''],
         ];
     }
 
     public function updatingCompletionStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingPlaceId(): void
     {
         $this->resetPage();
     }
@@ -71,6 +78,11 @@ class ServiceVisitManagement extends Component
         return ServiceVisit::query()
             ->with(['waterFilter.customer.phones', 'technician'])
             ->completionStatus($this->completionStatus)
+            ->when($this->placeId, function (Builder $query) {
+                $query->whereHas('waterFilter.customer', function (Builder $q) {
+                    $q->where('place_id', $this->placeId);
+                });
+            })
             ->when(filled($this->search), function (Builder $query) {
                 $search = trim($this->search);
 
@@ -100,6 +112,7 @@ class ServiceVisitManagement extends Component
             'visits' => $this->visits,
             'selectedCount' => count($this->selectedVisits),
             'totalCount' => $this->visits->count(),
+            'places' => \App\Models\Place::all(),
         ]);
     }
 

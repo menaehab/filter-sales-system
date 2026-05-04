@@ -33,6 +33,9 @@
             'pending' => __('keywords.pending_visits'),
         ]"
             placeholder="{{ __('keywords.all_statuses') }}" class="min-w-50" />
+
+        <x-select name="placeId" wire:model.live="placeId" :options="$places->pluck('name', 'id')->toArray()"
+            placeholder="{{ __('keywords.select_place') }}" class="min-w-50" />
     </x-search-toolbar>
 
     <x-data-table :searchable="false" :paginated="false" :headers="[
