@@ -30,7 +30,7 @@ class Maintenance extends Model
 
     public function filter()
     {
-        return $this->belongsTo(WaterFilter::class);
+        return $this->belongsTo(WaterFilter::class, 'water_filter_id');
     }
 
     public function items()

@@ -51,17 +51,19 @@ class SyncInstallmentStartFromFilter extends Command
                 continue;
             }
 
-            $installedAt = $filter->installed_at instanceof Carbon ? $filter->installed_at->format('Y-m-d') : (string) $filter->installed_at;
+            $installmentStart = $filter->installed_at instanceof Carbon 
+                ? $filter->installed_at->copy()->addMonth()->format('Y-m-d') 
+                : Carbon::parse($filter->installed_at)->addMonth()->format('Y-m-d');
 
             if ($dryRun) {
-                $this->line("[DRY] Sale #{$sale->number} (id: {$sale->id}) -> would set installment_start_date = {$installedAt} (filter id: {$filter->id})");
+                $this->line("[DRY] Sale #{$sale->number} (id: {$sale->id}) -> would set installment_start_date = {$installmentStart} (filter id: {$filter->id})");
                 continue;
             }
 
-            $sale->installment_start_date = $installedAt;
+            $sale->installment_start_date = $installmentStart;
             $sale->save();
             $updated++;
-            $this->line("Updated sale #{$sale->number} (id: {$sale->id}) to {$installedAt}");
+            $this->line("Updated sale #{$sale->number} (id: {$sale->id}) to {$installmentStart}");
         }
 
         $this->info(($dryRun ? 'Dry run complete.' : "Updated {$updated} sale(s)."));

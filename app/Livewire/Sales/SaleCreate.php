@@ -165,7 +165,7 @@ class SaleCreate extends Component
 
         $filter = WaterFilter::find($this->water_filter_id);
         if ($filter && $filter->installed_at) {
-            $this->installment_start_date = $filter->installed_at->format('Y-m-d');
+            $this->installment_start_date = $filter->installed_at->copy()->addMonth()->format('Y-m-d');
         }
     }
 
@@ -182,7 +182,7 @@ class SaleCreate extends Component
         }
 
         if (! empty($this->newFilter['is_installed'] ?? false) && ! empty($this->newFilter['installed_at'])) {
-            $this->installment_start_date = $this->newFilter['installed_at'];
+            $this->installment_start_date = \Illuminate\Support\Carbon::parse($this->newFilter['installed_at'])->addMonth()->format('Y-m-d');
         }
     }
 
@@ -193,7 +193,7 @@ class SaleCreate extends Component
         }
 
         if (! empty($value)) {
-            $this->installment_start_date = $value;
+            $this->installment_start_date = \Illuminate\Support\Carbon::parse($value)->addMonth()->format('Y-m-d');
         }
     }
 

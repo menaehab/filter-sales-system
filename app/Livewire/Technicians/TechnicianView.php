@@ -15,6 +15,8 @@ class TechnicianView extends Component
     public Technician $technician;
 
     public string $activeTab = 'maintenances';
+    public ?string $dateFrom = null;
+    public ?string $dateTo = null;
 
     public function mount(Technician $technician): void
     {
@@ -29,7 +31,9 @@ class TechnicianView extends Component
     public function getMaintenancesProperty()
     {
         return $this->technician->maintenances()
-            ->with(['filter.customer'])
+            ->with(['filter.customer', 'candleChanges', 'items.saleItem.product'])
+            ->when($this->dateFrom, fn($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn($q) => $q->whereDate('created_at', '<=', $this->dateTo))
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
     }
@@ -38,6 +42,8 @@ class TechnicianView extends Component
     {
         return $this->technician->serviceVisits()
             ->with(['waterFilter.customer'])
+            ->when($this->dateFrom, fn($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn($q) => $q->whereDate('created_at', '<=', $this->dateTo))
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
     }
@@ -46,6 +52,8 @@ class TechnicianView extends Component
     {
         return $this->technician->waterReadings()
             ->with(['waterFilter.customer'])
+            ->when($this->dateFrom, fn($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn($q) => $q->whereDate('created_at', '<=', $this->dateTo))
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
     }

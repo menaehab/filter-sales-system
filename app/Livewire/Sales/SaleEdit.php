@@ -327,7 +327,7 @@ class SaleEdit extends Component
 
         $filter = \App\Models\WaterFilter::where('customer_id', $this->customer_id)->first();
         if ($filter && $filter->installed_at) {
-            $this->installment_start_date = $filter->installed_at->format('Y-m-d');
+            $this->installment_start_date = $filter->installed_at->copy()->addMonth()->format('Y-m-d');
             return;
         }
 
@@ -335,7 +335,7 @@ class SaleEdit extends Component
         if (! empty($this->created_at)) {
             try {
                 $dt = \Illuminate\Support\Carbon::parse($this->created_at);
-                $this->installment_start_date = $dt->format('Y-m-d');
+                $this->installment_start_date = $dt->addMonth()->format('Y-m-d');
             } catch (\Throwable $e) {
                 // ignore
             }

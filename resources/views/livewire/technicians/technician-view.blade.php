@@ -29,6 +29,22 @@
         />
     </div>
 
+    {{-- Filters --}}
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm flex flex-wrap gap-4 items-end">
+        <div class="space-y-1">
+            <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $activeTab === 'maintenances' ? __('keywords.replacement_date_from') : __('keywords.from_date') }}</label>
+            <x-input name="dateFrom" type="date" wire:model.live="dateFrom" class="w-full sm:w-48" />
+        </div>
+        <div class="space-y-1">
+            <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $activeTab === 'maintenances' ? __('keywords.replacement_date_to') : __('keywords.to_date') }}</label>
+            <x-input name="dateTo" type="date" wire:model.live="dateTo" class="w-full sm:w-48" />
+        </div>
+        <x-button variant="secondary" wire:click="$set('dateFrom', null); $set('dateTo', null);" size="sm" class="mb-1">
+            <i class="fas fa-undo text-xs"></i>
+            {{ __('keywords.reset') }}
+        </x-button>
+    </div>
+
     {{-- Tabs --}}
     <div class="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         <div class="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
@@ -49,27 +65,67 @@
             @if ($activeTab === 'maintenances')
                 <x-data-table :searchable="false" :paginated="false" :headers="[
                     ['key' => 'customer', 'label' => __('keywords.customer')],
-                    ['key' => 'date', 'label' => __('keywords.date')],
+                    ['key' => 'date', 'label' => __('keywords.replaced_at')],
+                    ['key' => 'details', 'label' => __('keywords.details')],
                     ['key' => 'cost', 'label' => __('keywords.maintenance_cost')],
-                    ['key' => 'description', 'label' => __('keywords.description')],
+                    ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
                 ]">
                     @forelse ($maintenances as $maintenance)
                         <tr wire:key="maintenance-{{ $maintenance->id }}" class="hover:bg-gray-50">
-                            <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
-                                {{ $maintenance->filter->customer->name ?? '—' }}
+                            <td class="px-4 py-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-gray-900">{{ $maintenance->filter?->customer?->name ?? '—' }}</span>
+                                    <span class="text-xs text-gray-500">{{ $maintenance->filter?->filter_model ?? '—' }}</span>
+                                </div>
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                                 {{ $maintenance->created_at->format('Y/m/d H:i') }}
                             </td>
+                            <td class="px-4 py-3 text-sm">
+                                <div class="space-y-1">
+                                    @if($maintenance->candleChanges->count() > 0)
+                                        <div class="flex flex-wrap gap-1">
+                                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-tighter">{{ __('keywords.candles') }}:</span>
+                                            @foreach($maintenance->candleChanges as $change)
+                                                <x-badge :label="$change->candle_name" color="blue" size="xs" />
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    @if($maintenance->items->count() > 0)
+                                        <div class="flex flex-wrap gap-1">
+                                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-tighter">{{ __('keywords.installed_items') }}:</span>
+                                            @foreach($maintenance->items as $mItem)
+                                                <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                                                    {{ $mItem->saleItem->product->name ?? '—' }} ({{ $mItem->quantity }})
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    @if($maintenance->description)
+                                        <p class="text-xs text-gray-500 italic">{{ $maintenance->description }}</p>
+                                    @endif
+                                </div>
+                            </td>
                             <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-emerald-600">
                                 {{ number_format($maintenance->cost, 2) }} {{ __('keywords.currency') }}
                             </td>
-                            <td class="px-4 py-3 text-sm text-gray-500">
-                                {{ $maintenance->description ?: '—' }}
+                            <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
+                                <div class="flex items-center justify-end gap-2">
+                                    @if($maintenance->filter?->customer)
+                                        <x-button variant="ghost" size="xs" href="{{ route('customers.view', $maintenance->filter->customer) }}" title="{{ __('keywords.view_customer') }}">
+                                            <i class="fas fa-user"></i>
+                                        </x-button>
+                                    @endif
+                                    @if($maintenance->filter)
+                                        <x-button variant="ghost" size="xs" href="{{ route('filters.view', $maintenance->filter) }}" title="{{ __('keywords.view_filter') }}">
+                                            <i class="fas fa-filter"></i>
+                                        </x-button>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
-                        <x-empty-state :title="__('keywords.no_data_found')" :colspan="4" />
+                        <x-empty-state :title="__('keywords.no_data_found')" :colspan="5" />
                     @endforelse
                 </x-data-table>
                 <x-pagination-info :paginator="$maintenances" />
@@ -80,11 +136,15 @@
                     ['key' => 'type', 'label' => __('keywords.maintenance_type')],
                     ['key' => 'cost', 'label' => __('keywords.cost')],
                     ['key' => 'status', 'label' => __('keywords.status')],
+                    ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
                 ]">
                     @forelse ($serviceVisits as $visit)
                         <tr wire:key="visit-{{ $visit->id }}" class="hover:bg-gray-50">
-                            <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
-                                {{ $visit->waterFilter->customer->name ?? '—' }}
+                            <td class="px-4 py-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-gray-900">{{ $visit->waterFilter?->customer?->name ?? '—' }}</span>
+                                    <span class="text-xs text-gray-500">{{ $visit->waterFilter?->filter_model ?? '—' }}</span>
+                                </div>
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                                 {{ $visit->created_at->format('Y/m/d H:i') }}
@@ -99,9 +159,23 @@
                                 <x-badge :label="$visit->is_completed ? __('keywords.completed') : __('keywords.pending')" 
                                     :color="$visit->is_completed ? 'green' : 'amber'" />
                             </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
+                                <div class="flex items-center justify-end gap-2">
+                                    @if($visit->waterFilter?->customer)
+                                        <x-button variant="ghost" size="xs" href="{{ route('customers.view', $visit->waterFilter->customer) }}" title="{{ __('keywords.view_customer') }}">
+                                            <i class="fas fa-user"></i>
+                                        </x-button>
+                                    @endif
+                                    @if($visit->waterFilter)
+                                        <x-button variant="ghost" size="xs" href="{{ route('filters.view', $visit->waterFilter) }}" title="{{ __('keywords.view_filter') }}">
+                                            <i class="fas fa-filter"></i>
+                                        </x-button>
+                                    @endif
+                                </div>
+                            </td>
                         </tr>
                     @empty
-                        <x-empty-state :title="__('keywords.no_data_found')" :colspan="5" />
+                        <x-empty-state :title="__('keywords.no_data_found')" :colspan="6" />
                     @endforelse
                 </x-data-table>
                 <x-pagination-info :paginator="$serviceVisits" />
@@ -112,11 +186,15 @@
                     ['key' => 'tds', 'label' => __('keywords.tds')],
                     ['key' => 'quality', 'label' => __('keywords.water_quality')],
                     ['key' => 'type', 'label' => __('keywords.type')],
+                    ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
                 ]">
                     @forelse ($waterReadings as $reading)
                         <tr wire:key="reading-{{ $reading->id }}" class="hover:bg-gray-50">
-                            <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
-                                {{ $reading->waterFilter->customer->name ?? '—' }}
+                            <td class="px-4 py-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-gray-900">{{ $reading->waterFilter?->customer?->name ?? '—' }}</span>
+                                    <span class="text-xs text-gray-500">{{ $reading->waterFilter?->filter_model ?? '—' }}</span>
+                                </div>
                             </td>
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                                 {{ $reading->created_at->format('Y/m/d H:i') }}
@@ -131,9 +209,23 @@
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                                 {{ $reading->before_installment ? __('keywords.before_installment') : __('keywords.after_installment') }}
                             </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-end text-sm">
+                                <div class="flex items-center justify-end gap-2">
+                                    @if($reading->waterFilter?->customer)
+                                        <x-button variant="ghost" size="xs" href="{{ route('customers.view', $reading->waterFilter->customer) }}" title="{{ __('keywords.view_customer') }}">
+                                            <i class="fas fa-user"></i>
+                                        </x-button>
+                                    @endif
+                                    @if($reading->waterFilter)
+                                        <x-button variant="ghost" size="xs" href="{{ route('filters.view', $reading->waterFilter) }}" title="{{ __('keywords.view_filter') }}">
+                                            <i class="fas fa-filter"></i>
+                                        </x-button>
+                                    @endif
+                                </div>
+                            </td>
                         </tr>
                     @empty
-                        <x-empty-state :title="__('keywords.no_data_found')" :colspan="5" />
+                        <x-empty-state :title="__('keywords.no_data_found')" :colspan="6" />
                     @endforelse
                 </x-data-table>
                 <x-pagination-info :paginator="$waterReadings" />
