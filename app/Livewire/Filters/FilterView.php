@@ -28,7 +28,7 @@ class FilterView extends Component
     public string $activeTab = 'overview';
 
     public array $readingForm = [
-        'technician_name' => '',
+        'technician_id' => '',
         'tds' => '',
         'water_quality' => '',
         'before_installment' => false,
@@ -37,7 +37,7 @@ class FilterView extends Component
 
     public array $maintenanceForm = [
         'selected_candles' => [],
-        'technician_name' => '',
+        'technician_id' => '',
         'replaced_at' => '',
         'cost' => '',
         'description' => '',
@@ -189,13 +189,13 @@ class FilterView extends Component
         $this->authorize('manage_water_filters');
 
         $this->validate([
-            'readingForm.technician_name' => 'required|string|max:255',
+            'readingForm.technician_id' => 'required|exists:technicians,id',
             'readingForm.tds' => 'required|numeric|min:0',
             'readingForm.water_quality' => 'required|in:'.implode(',', WaterQualityTypeEnum::values()),
             'readingForm.before_installment' => 'boolean',
             'readingForm.created_at' => 'nullable|date',
         ], [], [
-            'readingForm.technician_name' => __('keywords.technician_name'),
+            'readingForm.technician_id' => __('keywords.technician_name'),
             'readingForm.tds' => __('keywords.tds'),
             'readingForm.water_quality' => __('keywords.water_quality'),
             'readingForm.before_installment' => __('keywords.before_installment'),
@@ -212,8 +212,11 @@ class FilterView extends Component
             }
         }
 
+        $technician = \App\Models\Technician::find($this->readingForm['technician_id']);
+
         WaterReading::create([
-            'technician_name' => $this->readingForm['technician_name'],
+            'technician_id' => $this->readingForm['technician_id'],
+            'technician_name' => $technician?->name,
             'tds' => $this->readingForm['tds'],
             'water_quality' => $this->readingForm['water_quality'],
             'before_installment' => $this->readingForm['before_installment'],
@@ -254,7 +257,7 @@ class FilterView extends Component
             [
                 'maintenanceForm.selected_candles' => ['required', 'array', 'min:1'],
                 'maintenanceForm.selected_candles.*' => ['required', 'string', Rule::in($availableCandleKeys)],
-                'maintenanceForm.technician_name' => ['required', 'string', 'max:255'],
+                'maintenanceForm.technician_id' => ['required', 'exists:technicians,id'],
                 'maintenanceForm.replaced_at' => ['required', 'date'],
                 'maintenanceForm.cost' => ['required', 'numeric', 'min:0'],
                 'maintenanceForm.description' => ['nullable', 'string', 'max:1000'],
@@ -265,7 +268,7 @@ class FilterView extends Component
             [
                 'maintenanceForm.selected_candles' => __('keywords.changed_candles'),
                 'maintenanceForm.selected_candles.*' => __('keywords.candle'),
-                'maintenanceForm.technician_name' => __('keywords.technician_name'),
+                'maintenanceForm.technician_id' => __('keywords.technician_name'),
                 'maintenanceForm.replaced_at' => __('keywords.replaced_at'),
                 'maintenanceForm.cost' => __('keywords.maintenance_cost'),
                 'maintenanceForm.description' => __('keywords.description'),
@@ -314,10 +317,13 @@ class FilterView extends Component
             ? Carbon::parse($validated['replaced_at'])
             : now();
 
-        DB::transaction(function () use ($validated, $requestedItems, $productStock, $user, $replacedAt) {
+        $technician = \App\Models\Technician::find($validated['technician_id']);
+
+        DB::transaction(function () use ($validated, $requestedItems, $productStock, $user, $replacedAt, $technician) {
             $maintenance = Maintenance::create([
                 'cost' => $validated['cost'],
-                'technician_name' => $validated['technician_name'],
+                'technician_id' => $validated['technician_id'],
+                'technician_name' => $technician?->name,
                 'description' => blank($validated['description'] ?? null) ? null : $validated['description'],
                 'user_id' => $user->id,
                 'water_filter_id' => $this->filter->id,
@@ -370,7 +376,7 @@ class FilterView extends Component
         
         $this->editMaintenanceId = $maintenance->id;
         $this->maintenanceForm['cost'] = $maintenance->cost;
-        $this->maintenanceForm['technician_name'] = $maintenance->technician_name;
+        $this->maintenanceForm['technician_id'] = $maintenance->technician_id;
         $this->maintenanceForm['description'] = $maintenance->description ?? '';
         $this->maintenanceForm['replaced_at'] = $maintenance->created_at->format('Y-m-d\TH:i');
         
@@ -384,14 +390,14 @@ class FilterView extends Component
         $validator = Validator::make(
             ['maintenanceForm' => $this->maintenanceForm],
             [
-                'maintenanceForm.technician_name' => ['required', 'string', 'max:255'],
+                'maintenanceForm.technician_id' => ['required', 'exists:technicians,id'],
                 'maintenanceForm.cost' => ['required', 'numeric', 'min:0'],
                 'maintenanceForm.description' => ['nullable', 'string', 'max:1000'],
                 'maintenanceForm.replaced_at' => ['required', 'date'],
             ],
             [],
             [
-                'maintenanceForm.technician_name' => __('keywords.technician_name'),
+                'maintenanceForm.technician_id' => __('keywords.technician_name'),
                 'maintenanceForm.replaced_at' => __('keywords.replaced_at'),
                 'maintenanceForm.cost' => __('keywords.maintenance_cost'),
                 'maintenanceForm.description' => __('keywords.description'),
@@ -405,11 +411,14 @@ class FilterView extends Component
 
         $validated = $validator->validated()['maintenanceForm'];
 
+        $technician = \App\Models\Technician::find($validated['technician_id']);
+
         $maintenance = Maintenance::findOrFail($this->editMaintenanceId);
-        
+
         $maintenance->update([
             'cost' => $validated['cost'],
-            'technician_name' => $validated['technician_name'],
+            'technician_id' => $validated['technician_id'],
+            'technician_name' => $technician?->name,
             'description' => blank($validated['description'] ?? null) ? null : $validated['description'],
         ]);
 
@@ -521,7 +530,7 @@ class FilterView extends Component
     protected function resetReadingForm(): void
     {
         $this->readingForm = [
-            'technician_name' => '',
+            'technician_id' => '',
             'tds' => '',
             'water_quality' => '',
             'before_installment' => false,
@@ -544,12 +553,18 @@ class FilterView extends Component
     {
         $this->maintenanceForm = [
             'selected_candles' => $selectedCandles,
-            'technician_name' => '',
+            'technician_id' => '',
             'replaced_at' => now()->format('Y/m/d H:i'),
             'cost' => '',
             'description' => '',
             'items' => [],
         ];
+    }
+
+    #[\Livewire\Attributes\Computed]
+    public function technicians()
+    {
+        return \App\Models\Technician::orderBy('name')->get();
     }
 
     public function render()
@@ -560,6 +575,7 @@ class FilterView extends Component
             'maintenances' => $this->maintenances,
             'serviceVisits' => $this->serviceVisits,
             'maintenanceProducts' => $this->maintenanceProducts,
+            'technicians' => $this->technicians,
             'canManageCreatedAt' => $this->canManageCreatedAt,
             'waterQualityOptions' => WaterQualityTypeEnum::cases(),
         ]);

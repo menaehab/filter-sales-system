@@ -26,7 +26,7 @@
         </div>
         <div class="grid gap-2 px-5 py-4 sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">{{ __('keywords.technician_name') }}</dt>
-            <dd class="text-sm text-gray-900 sm:col-span-2">{{ $serviceVisit->technician_name ?: '—' }}</dd>
+            <dd class="text-sm text-gray-900 sm:col-span-2">{{ $serviceVisit->technician?->name ?? $serviceVisit->technician_name ?: '—' }}</dd>
         </div>
         <div class="grid gap-2 px-5 py-4 sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-500">{{ __('keywords.maintenance_cost') }}</dt>

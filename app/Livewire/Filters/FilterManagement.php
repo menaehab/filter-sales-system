@@ -41,7 +41,7 @@ class FilterManagement extends Component
 
     public array $serviceVisitForm = [
         'maintenance_input' => '',
-        'technician_name' => '',
+        'technician_id' => '',
         'cost' => '',
         'notes' => '',
     ];
@@ -253,12 +253,12 @@ class FilterManagement extends Component
 
         $validated = $this->validate([
             'serviceVisitForm.maintenance_input' => ['nullable', 'string', 'max:255'],
-            'serviceVisitForm.technician_name' => ['nullable', 'string', 'max:255'],
+            'serviceVisitForm.technician_id' => ['nullable', 'exists:technicians,id'],
             'serviceVisitForm.cost' => ['nullable', 'numeric', 'min:0'],
             'serviceVisitForm.notes' => ['nullable', 'string', 'max:1000'],
         ], [], [
             'serviceVisitForm.maintenance_input' => __('keywords.maintenance_type'),
-            'serviceVisitForm.technician_name' => __('keywords.technician_name'),
+            'serviceVisitForm.technician_id' => __('keywords.technician_name'),
             'serviceVisitForm.cost' => __('keywords.maintenance_cost'),
             'serviceVisitForm.notes' => __('keywords.notes'),
         ]);
@@ -266,10 +266,13 @@ class FilterManagement extends Component
         $filter = WaterFilter::query()->with('customer')->findOrFail($this->serviceVisitFilterId);
         $form = $validated['serviceVisitForm'];
 
+        $technician = \App\Models\Technician::find($form['technician_id'] ?? null);
+
         ServiceVisit::create([
             'user_name' => $filter->customer?->name ?? __('keywords.not_specified_arabic'),
             'maintenance_type' => $this->buildMaintenanceType($form['maintenance_input'], $this->serviceVisitDueCandles),
-            'technician_name' => blank($form['technician_name'] ?? null) ? null : trim((string) $form['technician_name']),
+            'technician_id' => blank($form['technician_id'] ?? null) ? null : $form['technician_id'],
+            'technician_name' => $technician?->name,
             'cost' => filled($form['cost'] ?? null) ? $form['cost'] : null,
             'notes' => blank($form['notes'] ?? null) ? null : $form['notes'],
             'user_id' => auth()->id(),
@@ -310,6 +313,12 @@ class FilterManagement extends Component
             'candle_6' => __('keywords.candle_6'),
             'candle_7' => __('keywords.candle_7'),
         ];
+    }
+
+    #[Computed]
+    public function technicians()
+    {
+        return \App\Models\Technician::orderBy('name')->get();
     }
 
     public function render()
@@ -392,7 +401,7 @@ class FilterManagement extends Component
         $this->serviceVisitDueCandles = [];
         $this->serviceVisitForm = [
             'maintenance_input' => '',
-            'technician_name' => '',
+            'technician_id' => '',
             'cost' => '',
             'notes' => '',
         ];

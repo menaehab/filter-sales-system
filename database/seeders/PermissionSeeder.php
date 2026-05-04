@@ -61,6 +61,8 @@ class PermissionSeeder extends Seeder
             'receive_low_stock_notifications',
             'receive_filter_candle_notifications',
             'view_overdue_installments',
+            'manage_technicians',
+            'view_technicians'
         ];
 
         foreach ($permissions as $permission) {

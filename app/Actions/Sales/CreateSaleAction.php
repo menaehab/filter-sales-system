@@ -256,8 +256,11 @@ final class CreateSaleAction
             return;
         }
 
+        $technician = \App\Models\Technician::find($waterReading['technician_id'] ?? null);
+
         WaterReading::create([
-            'technician_name' => $waterReading['technician_name'],
+            'technician_id' => $waterReading['technician_id'],
+            'technician_name' => $technician?->name,
             'tds' => $waterReading['tds'],
             'water_quality' => $waterReading['water_quality'],
             'before_installment' => (bool) ($waterReading['before_installment'] ?? false),
@@ -271,8 +274,11 @@ final class CreateSaleAction
             && ! empty($data['includeAfterInstallationReading'])
             && $this->hasCompleteReadingPayload($afterReading)
         ) {
+            $afterTechnician = \App\Models\Technician::find($afterReading['technician_id'] ?? null);
+
             WaterReading::create([
-                'technician_name' => $afterReading['technician_name'],
+                'technician_id' => $afterReading['technician_id'],
+                'technician_name' => $afterTechnician?->name,
                 'tds' => $afterReading['tds'],
                 'water_quality' => $afterReading['water_quality'],
                 'before_installment' => false,
@@ -283,7 +289,7 @@ final class CreateSaleAction
 
     private function hasCompleteReadingPayload(array $reading): bool
     {
-        return filled(data_get($reading, 'technician_name'))
+        return filled(data_get($reading, 'technician_id'))
             && filled(data_get($reading, 'tds'))
             && filled(data_get($reading, 'water_quality'));
     }

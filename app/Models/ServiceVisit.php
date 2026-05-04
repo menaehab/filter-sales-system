@@ -13,6 +13,7 @@ class ServiceVisit extends Model
         'user_name',
         'maintenance_type',
         'technician_name',
+        'technician_id',
         'cost',
         'notes',
         'user_id',
@@ -33,6 +34,11 @@ class ServiceVisit extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function technician()
+    {
+        return $this->belongsTo(Technician::class);
     }
 
     public function scopeCompletionStatus($query, string $status)

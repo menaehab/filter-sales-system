@@ -13,7 +13,7 @@ class ServiceVisitShow extends Component
 
     public function mount(ServiceVisit $serviceVisit): void
     {
-        $this->serviceVisit = $serviceVisit->load(['waterFilter.customer.phones', 'user']);
+        $this->serviceVisit = $serviceVisit->load(['waterFilter.customer.phones', 'user', 'technician']);
     }
 
     public function markCompleted(): void

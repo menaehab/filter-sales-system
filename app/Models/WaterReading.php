@@ -11,6 +11,7 @@ class WaterReading extends Model
 
     protected $fillable = [
         'technician_name',
+        'technician_id',
         'tds',
         'water_quality',
         'before_installment',
@@ -41,5 +42,10 @@ class WaterReading extends Model
     public function waterFilter()
     {
         return $this->belongsTo(WaterFilter::class);
+    }
+
+    public function technician()
+    {
+        return $this->belongsTo(Technician::class);
     }
 }

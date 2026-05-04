@@ -37,7 +37,7 @@
                 main: {{ request()->routeIs('home') ? 'true' : 'false' }},
                 sales: {{ request()->routeIs('sales*') || request()->routeIs('overdue-installments*') ? 'true' : 'false' }},
                 purchases: {{ request()->routeIs('purchases*') ? 'true' : 'false' }},
-                people: {{ request()->routeIs('customers*') || request()->routeIs('suppliers*') || request()->routeIs('filters*') || request()->routeIs('service-visits*') ? 'true' : 'false' }},
+                people: {{ request()->routeIs('customers*') || request()->routeIs('suppliers*') || request()->routeIs('filters*') || request()->routeIs('service-visits*') || request()->routeIs('technicians*') ? 'true' : 'false' }},
                 inventory: {{ request()->routeIs('categories*') || request()->routeIs('products*') || request()->routeIs('damaged-products*') || request()->routeIs('expenses*') ? 'true' : 'false' }},
                 system: {{ request()->routeIs('dashboard') || request()->routeIs('activities*') || request()->routeIs('users*') || request()->routeIs('places*') ? 'true' : 'false' }},
             },
@@ -63,10 +63,9 @@
         </div>
 
         {{-- Sales --}}
-        @canany(['manage_sales', 'view_sales', 'add_sales', 'edit_sales', 'pay_sales',
-            'view_sale_returns', 'add_sale_returns', 'edit_sale_returns', 'manage_sale_returns',
-            'manage_customer_payment_allocations', 'view_customer_payment_allocations',
-            'view_overdue_installments'])
+        @canany(['manage_sales', 'view_sales', 'add_sales', 'edit_sales', 'pay_sales', 'view_sale_returns',
+            'add_sale_returns', 'edit_sale_returns', 'manage_sale_returns', 'manage_customer_payment_allocations',
+            'view_customer_payment_allocations', 'view_overdue_installments'])
             <div class="space-y-1">
                 <button type="button" @click="toggleGroup('sales')"
                     class="w-full flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 transition-colors">
@@ -76,7 +75,10 @@
                 </button>
                 <div x-show="openGroups.sales" x-collapse class="space-y-1">
                     @canany(['manage_sales', 'view_sales', 'add_sales', 'edit_sales', 'pay_sales'])
-                        <x-sidebar-link href="{{ route('sales') }}" icon="fas fa-cash-register" :active="request()->routeIs('sales') || request()->routeIs('sales.show*') || request()->routeIs('sales.create*') || request()->routeIs('sales.edit*')">
+                        <x-sidebar-link href="{{ route('sales') }}" icon="fas fa-cash-register" :active="request()->routeIs('sales') ||
+                            request()->routeIs('sales.show*') ||
+                            request()->routeIs('sales.create*') ||
+                            request()->routeIs('sales.edit*')">
                             {{ __('keywords.sales') }}
                         </x-sidebar-link>
                     @endcanany
@@ -134,7 +136,7 @@
 
         {{-- People --}}
         @canany(['manage_customers', 'view_customers', 'manage_suppliers', 'view_suppliers', 'manage_water_filters',
-            'view_water_filters', 'manage_service_visits', 'view_service_visits'])
+            'view_water_filters', 'manage_service_visits', 'view_service_visits', 'manage_technicians', 'view_technicians'])
             <div class="space-y-1">
                 <button type="button" @click="toggleGroup('people')"
                     class="w-full flex items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 transition-colors">
@@ -162,6 +164,11 @@
                         <x-sidebar-link href="{{ route('service-visits') }}" icon="fas fa-screwdriver-wrench"
                             :active="request()->routeIs('service-visits*')">
                             {{ __('keywords.service_visits') }}
+                        </x-sidebar-link>
+                    @endcanany
+                    @canany(['manage_technicians', 'view_technicians'])
+                        <x-sidebar-link href="{{ route('technicians') }}" icon="fas fa-user-gear" :active="request()->routeIs('technicians*')">
+                            {{ __('keywords.technicians') }}
                         </x-sidebar-link>
                     @endcanany
                 </div>

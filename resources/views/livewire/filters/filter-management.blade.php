@@ -358,9 +358,18 @@
                         placeholder="{{ __('keywords.enter_maintenance_type') }}"
                         wire:model.blur="serviceVisitForm.maintenance_input" />
 
-                    <x-input name="serviceVisitForm.technician_name" label="{{ __('keywords.technician_name') }}"
-                        placeholder="{{ __('keywords.enter_technician_name') }}"
-                        wire:model.blur="serviceVisitForm.technician_name" />
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                            {{ __('keywords.technician_name') }}
+                        </label>
+                        <select wire:model.blur="serviceVisitForm.technician_id"
+                            class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <option value="">{{ __('keywords.select_technician') }}</option>
+                            @foreach ($this->technicians as $tech)
+                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
                     <x-input type="number" step="0.01" min="0" name="serviceVisitForm.cost"
                         label="{{ __('keywords.maintenance_cost') }}" placeholder="0"
