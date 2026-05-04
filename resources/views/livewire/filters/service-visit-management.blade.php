@@ -88,7 +88,7 @@
                     </span>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
-                    <span class="text-sm text-gray-700">{{ $visit->technician_name ?: '—' }}</span>
+                    <span class="text-sm text-gray-700">{{ $visit->technician?->name ?? $visit->technician_name ?: '—' }}</span>
                 </td>
                 <td class="max-w-60 px-4 py-3">
                     <span class="line-clamp-2 text-sm text-gray-600">{{ $visit->notes ?: '—' }}</span>

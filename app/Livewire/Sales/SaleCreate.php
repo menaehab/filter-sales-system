@@ -81,14 +81,14 @@ class SaleCreate extends Component
                 'installed_at' => null,
             ];
             $this->waterReading = [
-                'technician_name' => '',
+                'technician_id' => '',
                 'tds' => '',
                 'water_quality' => '',
                 'before_installment' => false,
             ];
             $this->includeAfterInstallationReading = false;
             $this->afterWaterReading = [
-                'technician_name' => '',
+                'technician_id' => '',
                 'tds' => '',
                 'water_quality' => '',
             ];
@@ -128,7 +128,7 @@ class SaleCreate extends Component
         if (! $value) {
             $this->includeAfterInstallationReading = false;
             $this->afterWaterReading = [
-                'technician_name' => '',
+                'technician_id' => '',
                 'tds' => '',
                 'water_quality' => '',
             ];
@@ -139,7 +139,7 @@ class SaleCreate extends Component
     {
         if (! $value) {
             $this->afterWaterReading = [
-                'technician_name' => '',
+                'technician_id' => '',
                 'tds' => '',
                 'water_quality' => '',
             ];
@@ -583,7 +583,7 @@ class SaleCreate extends Component
 
             if (($this->waterReading['before_installment'] ?? false) && $this->includeAfterInstallationReading) {
                 $waterQualityValues = implode(',', array_column(WaterQualityTypeEnum::cases(), 'value'));
-                $rules['afterWaterReading.technician_name'] = ['required', 'string', 'max:255'];
+                $rules['afterWaterReading.technician_id'] = ['required', 'exists:technicians,id'];
                 $rules['afterWaterReading.tds'] = ['required', 'numeric', 'min:0'];
                 $rules['afterWaterReading.water_quality'] = ['required', 'in:'.$waterQualityValues];
             }
@@ -595,7 +595,7 @@ class SaleCreate extends Component
             'newFilter.is_installed' => __('keywords.is_installed'),
             'newFilter.installed_at' => __('keywords.installed_at'),
             'includeAfterInstallationReading' => __('keywords.add_after_installment_reading'),
-            'afterWaterReading.technician_name' => __('keywords.technician_name'),
+            'afterWaterReading.technician_id' => __('keywords.technician_name'),
             'afterWaterReading.tds' => __('keywords.tds'),
             'afterWaterReading.water_quality' => __('keywords.water_quality'),
         ]);
@@ -676,6 +676,12 @@ class SaleCreate extends Component
         }
 
         return $query->limit(100)->pluck('name', 'id')->all();
+    }
+
+    #[Computed]
+    public function technicians()
+    {
+        return \App\Models\Technician::orderBy('name')->get();
     }
 
     #[Computed]

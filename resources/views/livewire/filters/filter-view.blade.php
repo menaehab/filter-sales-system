@@ -178,7 +178,7 @@
                                     @foreach ($readings as $reading)
                                         <tr class="hover:bg-gray-50">
                                             <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                                                {{ $reading->technician_name }}</td>
+                                                {{ $reading->technician?->name ?? $reading->technician_name }}</td>
                                             <td class="px-4 py-3 text-sm text-gray-700">{{ $reading->tds }}</td>
                                             <td class="px-4 py-3 text-sm">
                                                 <span @class([
@@ -259,7 +259,7 @@
                                         <div class="text-sm text-gray-500">
                                             {{ __('keywords.technician_name') }}:
                                             <span
-                                                class="font-medium text-gray-900">{{ $maintenance->technician_name }}</span>
+                                                class="font-medium text-gray-900">{{ $maintenance->technician?->name ?? $maintenance->technician_name }}</span>
                                         </div>
                                         <div
                                             class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
@@ -429,9 +429,21 @@
         <x-modal name="add-reading" title="{{ __('keywords.add_reading') }}" maxWidth="lg">
             <x-slot:body>
                 <div class="space-y-5">
-                    <x-input name="readingForm.technician_name" label="{{ __('keywords.technician_name') }}"
-                        placeholder="{{ __('keywords.enter_technician_name') }}"
-                        wire:model.blur="readingForm.technician_name" required />
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                            {{ __('keywords.technician_name') }} <span class="text-red-500">*</span>
+                        </label>
+                        <select wire:model.blur="readingForm.technician_id" required
+                            class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <option value="">{{ __('keywords.select_technician') }}</option>
+                            @foreach ($technicians as $tech)
+                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('readingForm.technician_id')
+                            <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
 
                     <x-input type="number" step="0.01" name="readingForm.tds" label="{{ __('keywords.tds') }}"
                         placeholder="0" wire:model.blur="readingForm.tds" required />
@@ -520,9 +532,18 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <x-input name="maintenanceForm.technician_name" label="{{ __('keywords.technician_name') }}"
-                            placeholder="{{ __('keywords.enter_technician_name') }}"
-                            wire:model.blur="maintenanceForm.technician_name" required />
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                                {{ __('keywords.technician_name') }} <span class="text-red-500">*</span>
+                            </label>
+                            <select wire:model.blur="maintenanceForm.technician_id" required
+                                class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                <option value="">{{ __('keywords.select_technician') }}</option>
+                                @foreach ($technicians as $tech)
+                                    <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
 
                         <x-input type="datetime-local" name="maintenanceForm.replaced_at"
                             label="{{ __('keywords.replaced_at') }}" wire:model.blur="maintenanceForm.replaced_at"
@@ -535,7 +556,7 @@
                         </div>
                     @endunless
 
-                    @error('maintenanceForm.technician_name')
+                    @error('maintenanceForm.technician_id')
                         <p class="text-xs text-red-600">{{ $message }}</p>
                     @enderror
                     @error('maintenanceForm.replaced_at')
@@ -610,9 +631,18 @@
         <x-modal name="edit-maintenance" title="{{ __('keywords.edit_maintenance') }}" maxWidth="md">
             <x-slot:body>
                 <div class="space-y-4">
-                    <x-input name="maintenanceForm.technician_name" label="{{ __('keywords.technician_name') }}"
-                        placeholder="{{ __('keywords.enter_technician_name') }}"
-                        wire:model="maintenanceForm.technician_name" required />
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                            {{ __('keywords.technician_name') }} <span class="text-red-500">*</span>
+                        </label>
+                        <select wire:model="maintenanceForm.technician_id" required
+                            class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <option value="">{{ __('keywords.select_technician') }}</option>
+                            @foreach ($technicians as $tech)
+                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
                     <x-input type="number" step="0.01" min="0" name="maintenanceForm.cost"
                         label="{{ __('keywords.maintenance_cost') }}" placeholder="0"

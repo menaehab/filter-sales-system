@@ -405,9 +405,21 @@
                         </div>
 
                         <div class="grid grid-cols-1 gap-4 border-t border-emerald-200 pt-3 sm:grid-cols-2">
-                            <x-input name="waterReading.technician_name" label="{{ __('keywords.technician_name') }}"
-                                placeholder="{{ __('keywords.technician_name') }}"
-                                wire:model.live="waterReading.technician_name" />
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                                    {{ __('keywords.technician_name') }}
+                                </label>
+                                <select wire:model.live="waterReading.technician_id"
+                                    class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                    <option value="">{{ __('keywords.select_technician') }}</option>
+                                    @foreach ($this->technicians as $tech)
+                                        <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('waterReading.technician_id')
+                                    <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
 
                             <x-input name="waterReading.tds" label="{{ __('keywords.tds') }}" placeholder="0"
                                 wire:model.live="waterReading.tds" type="number" step="0.01" min="0" />
@@ -449,10 +461,21 @@
 
                                     @if ($includeAfterInstallationReading)
                                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                            <x-input name="afterWaterReading.technician_name"
-                                                label="{{ __('keywords.technician_name') }}"
-                                                placeholder="{{ __('keywords.technician_name') }}"
-                                                wire:model.live="afterWaterReading.technician_name" required />
+                                            <div>
+                                                <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                                                    {{ __('keywords.technician_name') }} <span class="text-red-500">*</span>
+                                                </label>
+                                                <select wire:model.live="afterWaterReading.technician_id"
+                                                    class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                                    <option value="">{{ __('keywords.select_technician') }}</option>
+                                                    @foreach ($this->technicians as $tech)
+                                                        <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('afterWaterReading.technician_id')
+                                                    <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
 
                                             <x-input name="afterWaterReading.tds" label="{{ __('keywords.tds') }}"
                                                 placeholder="0" wire:model.live="afterWaterReading.tds"

@@ -69,7 +69,7 @@ class ServiceVisitManagement extends Component
     public function getVisitsProperty()
     {
         return ServiceVisit::query()
-            ->with(['waterFilter.customer.phones'])
+            ->with(['waterFilter.customer.phones', 'technician'])
             ->completionStatus($this->completionStatus)
             ->when(filled($this->search), function (Builder $query) {
                 $search = trim($this->search);

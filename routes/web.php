@@ -260,6 +260,19 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Technicians
+    |--------------------------------------------------------------------------
+    */
+    Route::livewire('/technicians', 'technicians.technician-management')
+        ->name('technicians')
+        ->middleware('permission:manage_technicians|view_technicians');
+
+    Route::livewire('/technicians/{technician}', 'technicians.technician-view')
+        ->name('technicians.view')
+        ->middleware('permission:manage_technicians|view_technicians');
+
+    /*
+    |--------------------------------------------------------------------------
     | Expenses
     |--------------------------------------------------------------------------
     */

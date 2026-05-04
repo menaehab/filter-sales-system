@@ -12,6 +12,7 @@ class Maintenance extends Model
     protected $fillable = [
         'cost',
         'technician_name',
+        'technician_id',
         'description',
         'user_id',
         'water_filter_id',
@@ -40,5 +41,10 @@ class Maintenance extends Model
     public function candleChanges()
     {
         return $this->hasMany(WaterFilterCandleChange::class);
+    }
+
+    public function technician()
+    {
+        return $this->belongsTo(Technician::class);
     }
 }

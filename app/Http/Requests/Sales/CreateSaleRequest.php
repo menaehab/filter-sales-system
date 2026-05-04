@@ -57,7 +57,7 @@ class CreateSaleRequest extends FormRequest
                 || $this->boolean('includeAfterInstallationReading');
 
             if ($hasWaterReadingInput) {
-                $rules['waterReading.technician_name'] = ['required', 'string', 'max:255'];
+                $rules['waterReading.technician_id'] = ['required', 'exists:technicians,id'];
                 $rules['waterReading.tds'] = ['required', 'numeric', 'min:0'];
                 $rules['waterReading.water_quality'] = ['required', 'in:'.$waterQualityValues];
             }
@@ -70,7 +70,7 @@ class CreateSaleRequest extends FormRequest
                 && (bool) data_get($waterReading, 'before_installment', false)
                 && $this->boolean('includeAfterInstallationReading')
             ) {
-                $rules['afterWaterReading.technician_name'] = ['required', 'string', 'max:255'];
+                $rules['afterWaterReading.technician_id'] = ['required', 'exists:technicians,id'];
                 $rules['afterWaterReading.tds'] = ['required', 'numeric', 'min:0'];
                 $rules['afterWaterReading.water_quality'] = ['required', 'in:'.$waterQualityValues];
             }
@@ -100,13 +100,11 @@ class CreateSaleRequest extends FormRequest
             'newFilter.filter_model' => __('keywords.filter_model'),
             'newFilter.address' => __('keywords.filter_address'),
             'newFilter.is_installed' => __('keywords.is_installed'),
-            'newFilter.installed_at' => __('keywords.installed_at'),
-            'waterReading.technician_name' => __('keywords.technician_name'),
+            'waterReading.technician_id' => __('keywords.technician_name'),
             'waterReading.tds' => __('keywords.tds_reading'),
             'waterReading.water_quality' => __('keywords.water_quality'),
             'waterReading.before_installment' => __('keywords.before_installment'),
-            'includeAfterInstallationReading' => __('keywords.add_after_installment_reading'),
-            'afterWaterReading.technician_name' => __('keywords.technician_name'),
+            'afterWaterReading.technician_id' => __('keywords.technician_name'),
             'afterWaterReading.tds' => __('keywords.tds_reading'),
             'afterWaterReading.water_quality' => __('keywords.water_quality'),
         ];
