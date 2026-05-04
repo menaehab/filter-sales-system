@@ -695,6 +695,7 @@ return [
     'with_vat' => 'مع الضريبة',
     'select_technician' => 'اختر الفني',
     'tds_reading' => 'قراءة TDS',
+    'technicians_management' => 'إدارة الفنيين',
     'price' => 'السعر',
     'total' => 'الإجمالي',
     'places' => 'الأماكن',
