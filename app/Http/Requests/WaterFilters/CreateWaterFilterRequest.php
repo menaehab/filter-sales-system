@@ -19,6 +19,7 @@ class CreateWaterFilterRequest extends FormRequest
             'address' => ['required', 'string', 'max:255'],
             'is_installed' => ['required', 'boolean'],
             'installed_at' => ['nullable', 'date', 'required_if:is_installed,1'],
+            'technician_id' => ['nullable', 'exists:technicians,id'],
             'customer_id' => ['required', 'exists:customers,id', Rule::unique('water_filters', 'customer_id')],
         ];
     }
@@ -30,6 +31,7 @@ class CreateWaterFilterRequest extends FormRequest
             'address' => __('keywords.address'),
             'is_installed' => __('keywords.is_installed'),
             'installed_at' => __('keywords.installed_at'),
+            'technician_id' => __('keywords.technician_name'),
             'customer_id' => __('keywords.customer'),
         ];
     }

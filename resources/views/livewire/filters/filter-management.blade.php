@@ -204,6 +204,22 @@
                     @if ($form['is_installed'] ?? false)
                         <x-input type="date" name="form.installed_at" label="{{ __('keywords.installed_at') }}"
                             wire:model.blur="form.installed_at" required />
+
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                                {{ __('keywords.technician_name') }}
+                            </label>
+                            <select wire:model.live="form.technician_id"
+                                class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                <option value="">{{ __('keywords.select_technician') }}</option>
+                                @foreach ($this->technicians as $tech)
+                                    <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('form.technician_id')
+                                <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
                     @endif
 
                     <div x-data="{
@@ -285,6 +301,22 @@
                     @if ($form['is_installed'] ?? false)
                         <x-input type="date" name="form.installed_at" label="{{ __('keywords.installed_at') }}"
                             wire:model.blur="form.installed_at" required />
+
+                        <div>
+                            <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                                {{ __('keywords.technician_name') }}
+                            </label>
+                            <select wire:model.live="form.technician_id"
+                                class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                <option value="">{{ __('keywords.select_technician') }}</option>
+                                @foreach ($this->technicians as $tech)
+                                    <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('form.technician_id')
+                                <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
                     @endif
 
                     <div x-data="{

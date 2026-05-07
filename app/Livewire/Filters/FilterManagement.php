@@ -66,6 +66,7 @@ class FilterManagement extends Component
             'address' => '',
             'is_installed' => false,
             'installed_at' => null,
+            'technician_id' => '',
             'customer_id' => null,
         ];
     }
@@ -74,6 +75,7 @@ class FilterManagement extends Component
     {
         if (! ((bool) $value)) {
             $this->form['installed_at'] = null;
+            $this->form['technician_id'] = '';
         }
     }
 
@@ -210,6 +212,7 @@ class FilterManagement extends Component
             'installed_at' => $filter->installed_at
                 ? \Illuminate\Support\Carbon::parse($filter->installed_at)->format('Y/m/d')
                 : null,
+            'technician_id' => $filter->technician_id,
             'customer_id' => $filter->customer_id,
         ];
 

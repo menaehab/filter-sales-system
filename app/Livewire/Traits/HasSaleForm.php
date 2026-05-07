@@ -40,6 +40,7 @@ trait HasSaleForm
         'address' => '',
         'is_installed' => false,
         'installed_at' => null,
+        'technician_id' => '',
     ];
 
     public array $waterReading = [
@@ -85,6 +86,7 @@ trait HasSaleForm
                 $rules['newFilter.address'] = 'required|string|max:255';
                 $rules['newFilter.is_installed'] = 'required|boolean';
                 $rules['newFilter.installed_at'] = 'nullable|date|required_if:newFilter.is_installed,1';
+                $rules['newFilter.technician_id'] = 'nullable|exists:technicians,id';
             } else {
                 $rules['water_filter_id'] = 'required|exists:water_filters,id';
             }
@@ -135,6 +137,7 @@ trait HasSaleForm
             'newFilter.address' => __('keywords.address'),
             'newFilter.is_installed' => __('keywords.is_installed'),
             'newFilter.installed_at' => __('keywords.installed_at'),
+            'newFilter.technician_id' => __('keywords.technician_name'),
             'waterReading.technician_name' => __('keywords.technician_name'),
             'waterReading.tds' => __('keywords.tds'),
             'waterReading.water_quality' => __('keywords.water_quality'),
@@ -177,6 +180,7 @@ trait HasSaleForm
             'address' => '',
             'is_installed' => false,
             'installed_at' => null,
+            'technician_id' => '',
         ];
         $this->waterReading = [
             'technician_name' => '',

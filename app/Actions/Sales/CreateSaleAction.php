@@ -239,12 +239,15 @@ final class CreateSaleAction
             }
 
             $isInstalled = (bool) data_get($data, 'newFilter.is_installed', false);
+            $filterTechnician = \App\Models\Technician::find(data_get($data, 'newFilter.technician_id'));
 
             $newFilter = WaterFilter::create([
                 'filter_model' => $data['newFilter']['filter_model'],
                 'address' => $data['newFilter']['address'],
                 'is_installed' => $isInstalled,
                 'installed_at' => $isInstalled ? data_get($data, 'newFilter.installed_at') : null,
+                'technician_id' => $isInstalled ? data_get($data, 'newFilter.technician_id') : null,
+                'technician_name' => $isInstalled ? $filterTechnician?->name : null,
                 'customer_id' => $customer->id,
             ]);
             $filterId = $newFilter->id;
