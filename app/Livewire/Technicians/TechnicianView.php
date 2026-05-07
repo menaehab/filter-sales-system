@@ -58,12 +58,23 @@ class TechnicianView extends Component
             ->paginate($this->perPage);
     }
 
+    public function getInstalledFiltersProperty()
+    {
+        return $this->technician->installedWaterFilters()
+            ->with(['customer'])
+            ->when($this->dateFrom, fn($q) => $q->whereDate('installed_at', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn($q) => $q->whereDate('installed_at', '<=', $this->dateTo))
+            ->orderBy('installed_at', 'desc')
+            ->paginate($this->perPage);
+    }
+
     public function render()
     {
         return view('livewire.technicians.technician-view', [
             'maintenances' => $this->maintenances,
             'serviceVisits' => $this->serviceVisits,
             'waterReadings' => $this->waterReadings,
+            'installedFilters' => $this->installedFilters,
         ]);
     }
 }

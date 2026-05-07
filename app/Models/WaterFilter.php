@@ -30,6 +30,8 @@ class WaterFilter extends Model
         'candle_7_replaced_at',
         'customer_id',
         'is_installed',
+        'technician_id',
+        'technician_name',
     ];
 
     protected $casts = [
@@ -58,6 +60,11 @@ class WaterFilter extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function technician()
+    {
+        return $this->belongsTo(Technician::class);
     }
 
     public function readings()

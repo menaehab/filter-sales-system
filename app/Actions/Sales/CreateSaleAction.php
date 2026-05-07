@@ -258,14 +258,23 @@ final class CreateSaleAction
 
         $technician = \App\Models\Technician::find($waterReading['technician_id'] ?? null);
 
+        $isBeforeInstallment = (bool) ($waterReading['before_installment'] ?? false);
+
         WaterReading::create([
             'technician_id' => $waterReading['technician_id'],
             'technician_name' => $technician?->name,
             'tds' => $waterReading['tds'],
             'water_quality' => $waterReading['water_quality'],
-            'before_installment' => (bool) ($waterReading['before_installment'] ?? false),
+            'before_installment' => $isBeforeInstallment,
             'water_filter_id' => $filterId,
         ]);
+
+        if ($isBeforeInstallment) {
+            WaterFilter::where('id', $filterId)->update([
+                'technician_id' => $waterReading['technician_id'],
+                'technician_name' => $technician?->name,
+            ]);
+        }
 
         $afterReading = (array) data_get($data, 'afterWaterReading', []);
 

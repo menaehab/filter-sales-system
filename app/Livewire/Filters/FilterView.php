@@ -223,7 +223,12 @@ class FilterView extends Component
             'water_filter_id' => $this->filter->id,
             'created_at' => $this->resolveReadingCreatedAt(),
         ]);
-
+        if ($this->readingForm['before_installment']) {
+            $this->filter->update([
+                'technician_id' => $technician?->id,
+                'technician_name' => $technician?->name,
+            ]);
+        }
         $this->filter->refresh();
         $this->resetReadingForm();
         $this->dispatch('close-modal-add-reading');
@@ -371,22 +376,22 @@ class FilterView extends Component
     public function openEditMaintenanceModal(int $maintenanceId): void
     {
         $this->authorize('manage_water_filters');
-        
+
         $maintenance = Maintenance::findOrFail($maintenanceId);
-        
+
         $this->editMaintenanceId = $maintenance->id;
         $this->maintenanceForm['cost'] = $maintenance->cost;
         $this->maintenanceForm['technician_id'] = $maintenance->technician_id;
         $this->maintenanceForm['description'] = $maintenance->description ?? '';
         $this->maintenanceForm['replaced_at'] = $maintenance->created_at->format('Y-m-d\TH:i');
-        
+
         $this->dispatch('open-modal-edit-maintenance');
     }
 
     public function submitEditMaintenance(): void
     {
         $this->authorize('manage_water_filters');
-        
+
         $validator = Validator::make(
             ['maintenanceForm' => $this->maintenanceForm],
             [
@@ -425,7 +430,7 @@ class FilterView extends Component
         if ($this->canManageCreatedAt) {
             $replacedAt = Carbon::parse($validated['replaced_at']);
             $maintenance->update(['created_at' => $replacedAt]);
-            
+
             $maintenance->candleChanges()->update(['replaced_at' => $replacedAt]);
         }
 
