@@ -22,4 +22,9 @@ class Technician extends Model
     {
         return $this->hasMany(ServiceVisit::class);
     }
+
+    public function installedWaterFilters(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WaterFilter::class, 'technician_id');
+    }
 }
