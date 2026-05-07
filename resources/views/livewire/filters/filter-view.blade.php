@@ -48,6 +48,12 @@
                         class="font-medium text-gray-900">{{ $filter->is_installed ? $filter->installed_at?->format('Y/m/d') ?? '—' : __('keywords.not_installed') }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">{{ __('keywords.technician_name') }}</span>
+                    <span class="font-medium text-gray-900">
+                        {{ $filter->is_installed ? ($filter->technician?->name ?? $filter->technician_name ?? '—') : __('keywords.not_installed') }}
+                    </span>
+                </div>
+                <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.created_at') }}</span>
                     <span class="font-medium text-gray-900">{{ $filter->created_at?->format('Y/m/d H:i') }}</span>
                 </div>

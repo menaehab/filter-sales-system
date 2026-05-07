@@ -46,6 +46,7 @@ class CreateSaleRequest extends FormRequest
                 $rules['newFilter.address'] = ['required', 'string', 'max:255'];
                 $rules['newFilter.is_installed'] = ['required', 'boolean'];
                 $rules['newFilter.installed_at'] = ['nullable', 'date', 'required_if:newFilter.is_installed,1'];
+                $rules['newFilter.technician_id'] = ['nullable', 'exists:technicians,id'];
             }
 
             $waterQualityValues = implode(',', array_column(WaterQualityTypeEnum::cases(), 'value'));
@@ -100,6 +101,8 @@ class CreateSaleRequest extends FormRequest
             'newFilter.filter_model' => __('keywords.filter_model'),
             'newFilter.address' => __('keywords.filter_address'),
             'newFilter.is_installed' => __('keywords.is_installed'),
+            'newFilter.installed_at' => __('keywords.installed_at'),
+            'newFilter.technician_id' => __('keywords.technician_name'),
             'waterReading.technician_id' => __('keywords.technician_name'),
             'waterReading.tds' => __('keywords.tds_reading'),
             'waterReading.water_quality' => __('keywords.water_quality'),

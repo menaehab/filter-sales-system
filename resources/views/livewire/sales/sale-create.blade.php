@@ -463,13 +463,16 @@
                                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                             <div>
                                                 <label class="mb-1.5 block text-sm font-medium text-gray-700">
-                                                    {{ __('keywords.technician_name') }} <span class="text-red-500">*</span>
+                                                    {{ __('keywords.technician_name') }} <span
+                                                        class="text-red-500">*</span>
                                                 </label>
                                                 <select wire:model.live="afterWaterReading.technician_id"
                                                     class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                                                    <option value="">{{ __('keywords.select_technician') }}</option>
+                                                    <option value="">{{ __('keywords.select_technician') }}
+                                                    </option>
                                                     @foreach ($this->technicians as $tech)
-                                                        <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                                        <option value="{{ $tech->id }}">{{ $tech->name }}
+                                                        </option>
                                                     @endforeach
                                                 </select>
                                                 @error('afterWaterReading.technician_id')
@@ -630,6 +633,22 @@
                 @if ($newFilter['is_installed'] ?? false)
                     <x-input type="date" name="newFilter.installed_at" label="{{ __('keywords.installed_at') }}"
                         wire:model.blur="newFilter.installed_at" required />
+
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                            {{ __('keywords.technician_name') }}
+                        </label>
+                        <select wire:model.live="newFilter.technician_id"
+                            class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <option value="">{{ __('keywords.select_technician') }}</option>
+                            @foreach ($this->technicians as $tech)
+                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('newFilter.technician_id')
+                            <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
                 @endif
             </div>
         </x-slot:body>
