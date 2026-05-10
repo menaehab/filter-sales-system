@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'filter_by_place' => 'فلترة حسب المنطقة',
+    'delete_service_visit_confirmation' => 'هل أنت متأكد أنك تريد حذف هذه الزيارة؟',
+    'select_options' => 'اختر الخيارات',
+    'clear_all' => 'مسح الكل',
+    'done' => 'تم',
+    'no_results_found' => 'لم يتم العثور على نتائج',
     'email' => 'البريد الإلكتروني',
     'password' => 'كلمة المرور',
     'remember_me' => 'تذكرني',

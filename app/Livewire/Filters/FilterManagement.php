@@ -27,7 +27,7 @@ class FilterManagement extends Component
 
     public $customerSlug = '';
 
-    public $placeId = '';
+    public array $selectedPlaces = [];
 
     public $customerSearch = '';
 
@@ -124,11 +124,15 @@ class FilterManagement extends Component
     protected function applyAdditionalFilters(Builder $query): void
     {
         if ($this->customerSlug) {
-            $query->whereHas('customer', fn ($q) => $q->where('slug', $this->customerSlug));
+            $query->whereHas('customer', function ($q) {
+                $q->where('slug', $this->customerSlug);
+            });
         }
 
-        if ($this->placeId) {
-            $query->whereHas('customer', fn ($q) => $q->where('place_id', $this->placeId));
+        if (filled($this->selectedPlaces)) {
+            $query->whereHas('customer', function ($q) {
+                $q->whereIn('place_id', $this->selectedPlaces);
+            });
         }
 
         $selectedCandles = $this->selectedCandleFilters();

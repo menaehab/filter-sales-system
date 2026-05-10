@@ -11,8 +11,13 @@ class CustomerPaymentAllocation extends Model
 
     protected $fillable = [
         'amount',
+        'is_down_payment',
         'customer_payment_id',
         'sale_id',
+    ];
+
+    protected $casts = [
+        'is_down_payment' => 'boolean',
     ];
 
     public function customerPayment()

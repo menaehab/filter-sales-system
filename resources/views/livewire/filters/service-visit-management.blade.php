@@ -34,8 +34,9 @@
         ]"
             placeholder="{{ __('keywords.all_statuses') }}" class="min-w-50" />
 
-        <x-select name="placeId" wire:model.live="placeId" :options="$places->pluck('name', 'id')->toArray()"
-            placeholder="{{ __('keywords.select_place') }}" class="min-w-50" />
+        <div class="w-full sm:w-64">
+            <x-multi-select name="selectedPlaces" :placeholder="__('keywords.filter_by_place')" :options="$places->pluck('name', 'id')->toArray()" wire:model.live="selectedPlaces" />
+        </div>
     </x-search-toolbar>
 
     <x-data-table :searchable="false" :paginated="false" :headers="[
@@ -114,6 +115,11 @@
                                     <i class="fas fa-check text-sm"></i>
                                 </button>
                             @endif
+                            <button type="button" wire:confirm="{{ __('keywords.delete_service_visit_confirmation') }}" wire:click="deleteVisit({{ $visit->id }})"
+                                class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                                title="{{ __('keywords.delete') }}">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
                         @endcan
                     </div>
                 </td>

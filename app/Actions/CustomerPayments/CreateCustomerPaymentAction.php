@@ -31,6 +31,7 @@ final class CreateCustomerPaymentAction
         return DB::transaction(function () use ($sale, $data, $allocations, $totalAllocated) {
             $payment = CustomerPayment::create([
                 'amount' => $totalAllocated,
+                'is_down_payment' => (bool) ($data['is_down_payment'] ?? false),
                 'payment_method' => $data['payment_method'] ?? 'cash',
                 'note' => $data['note'] ?? null,
                 'customer_id' => $sale->customer_id,
@@ -41,6 +42,7 @@ final class CreateCustomerPaymentAction
             foreach ($allocations as $allocation) {
                 CustomerPaymentAllocation::create([
                     'amount' => $allocation['amount'],
+                    'is_down_payment' => $payment->is_down_payment,
                     'customer_payment_id' => $payment->id,
                     'sale_id' => $allocation['sale_id'],
                 ]);

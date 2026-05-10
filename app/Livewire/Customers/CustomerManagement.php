@@ -26,6 +26,8 @@ class CustomerManagement extends Component
         'name' => '',
     ];
 
+    public array $selectedPlaces = [];
+
     public function mount(): void
     {
         $this->resetForm();
@@ -168,6 +170,10 @@ class CustomerManagement extends Component
 
     protected function applyAdditionalFilters(\Illuminate\Database\Eloquent\Builder $query): void
     {
+        if (filled($this->selectedPlaces)) {
+            $query->whereIn('place_id', $this->selectedPlaces);
+        }
+
         $query->byUserPlaces()->orderBy('code', 'asc');
     }
 

@@ -10,7 +10,11 @@
         @endcan
     </x-page-header>
 
-    <x-search-toolbar />
+    <x-search-toolbar>
+        <div class="w-full sm:w-64">
+            <x-multi-select name="selectedPlaces" :placeholder="__('keywords.filter_by_place')" :options="$this->placeOptions" wire:model.live="selectedPlaces" />
+        </div>
+    </x-search-toolbar>
 
     {{-- Customers table --}}
     <x-data-table :searchable="false" :paginated="false" :headers="[

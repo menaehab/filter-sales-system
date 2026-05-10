@@ -81,16 +81,16 @@ final class CreateSaleAction
                 if (! empty($data['useFilterInstalledDate'])) {
                     if (! empty($filterInstalledAt)) {
                         $installmentStart = $filterInstalledAt instanceof \Illuminate\Support\Carbon
-                            ? $filterInstalledAt->format('Y-m-d')
-                            : (string) $filterInstalledAt;
+                            ? $filterInstalledAt->copy()->addMonth()->format('Y-m-d')
+                            : \Illuminate\Support\Carbon::parse($filterInstalledAt)->addMonth()->format('Y-m-d');
                     } else {
-                        // no filter installed -> fall back to created_at
-                        $installmentStart = $createdAt->format('Y-m-d');
+                        // no filter installed -> fall back to created_at + 1 month
+                        $installmentStart = $createdAt->copy()->addMonth()->format('Y-m-d');
                     }
                 } else {
                     $installmentStart = ! empty($data['installment_start_date'])
                         ? $data['installment_start_date']
-                        : $createdAt->format('Y-m-d');
+                        : $createdAt->copy()->addMonth()->format('Y-m-d');
                 }
             }
 
@@ -186,6 +186,7 @@ final class CreateSaleAction
         if ($downPayment > 0) {
             $payment = CustomerPayment::create([
                 'amount' => $downPayment,
+                'is_down_payment' => true,
                 'payment_method' => 'cash',
                 'note' => $isInstallment ? __('keywords.down_payment') : __('keywords.cash_payment'),
                 'customer_id' => $customer->id,
@@ -195,6 +196,7 @@ final class CreateSaleAction
 
             CustomerPaymentAllocation::create([
                 'amount' => $downPayment,
+                'is_down_payment' => true,
                 'customer_payment_id' => $payment->id,
                 'sale_id' => $sale->id,
             ]);

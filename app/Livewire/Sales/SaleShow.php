@@ -33,7 +33,7 @@ class SaleShow extends Component
     public function mount(Sale $sale): void
     {
         $this->sale = $sale->load([
-            'customer',
+            'customer.waterFilters',
             'user',
             'items.product',
             'paymentAllocations.customerPayment',

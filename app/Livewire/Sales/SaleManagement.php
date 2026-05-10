@@ -29,6 +29,8 @@ class SaleManagement extends Component
 
     public ?string $dateTo = null;
 
+    public array $selectedPlaces = [];
+
     // Payment modal state - only primitive types
     #[Locked]
     public ?int $paySaleId = null;
@@ -79,6 +81,12 @@ class SaleManagement extends Component
     {
         if (filled($this->filterPaymentType)) {
             $query->where('payment_type', $this->filterPaymentType);
+        }
+
+        if (filled($this->selectedPlaces)) {
+            $query->whereHas('customer', function ($q) {
+                $q->whereIn('place_id', $this->selectedPlaces);
+            });
         }
 
         $this->applyStatusFilter($query);
@@ -272,6 +280,7 @@ class SaleManagement extends Component
     {
         return view('livewire.sales.sale-management', [
             'canManageCreatedAt' => $this->canManageCreatedAt,
+            'placeOptions' => \App\Models\Place::orderBy('name')->pluck('name', 'id')->toArray(),
         ]);
     }
 }

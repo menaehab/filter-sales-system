@@ -43,7 +43,11 @@
     @endif
 
     {{-- Search Toolbar --}}
-    <x-search-toolbar :searchPlaceholder="__('keywords.search_by_customer_or_invoice')" searchModel="search" perPageModel="perPage" :perPageOptions="[10, 25, 50, 100]" />
+    <x-search-toolbar :searchPlaceholder="__('keywords.search_by_customer_or_invoice')" searchModel="search" perPageModel="perPage" :perPageOptions="[10, 25, 50, 100]">
+        <div class="w-full sm:w-64">
+            <x-multi-select name="selectedPlaces" :placeholder="__('keywords.filter_by_place')" :options="$placeOptions" wire:model.live="selectedPlaces" />
+        </div>
+    </x-search-toolbar>
 
     {{-- Data Table --}}
     <x-data-table :searchable="false" :paginated="false" :headers="[

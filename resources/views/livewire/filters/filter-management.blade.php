@@ -72,13 +72,9 @@
             </div>
         </div>
 
-        <select wire:model.live="placeId"
-            class="rounded-lg border border-gray-300 bg-white py-2 ps-3 pe-8 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-            <option value="">{{ __('keywords.select_place') }}</option>
-            @foreach ($this->placeOptions as $placeId => $placeName)
-                <option value="{{ $placeId }}">{{ $placeName }}</option>
-            @endforeach
-        </select>
+        <div class="w-full sm:w-64">
+            <x-multi-select name="selectedPlaces" :placeholder="__('keywords.filter_by_place')" :options="$this->placeOptions" wire:model.live="selectedPlaces" />
+        </div>
     </x-search-toolbar>
 
     <div class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">

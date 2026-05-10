@@ -12,11 +12,16 @@ class CustomerPayment extends Model
 
     protected $fillable = [
         'amount',
+        'is_down_payment',
         'payment_method',
         'note',
         'customer_id',
         'user_id',
         'created_at',
+    ];
+
+    protected $casts = [
+        'is_down_payment' => 'boolean',
     ];
 
     public function customer()
