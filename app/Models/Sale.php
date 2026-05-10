@@ -131,12 +131,8 @@ class Sale extends Model
     public function getDownPaymentAttribute(): float
     {
         return (float) $this->paymentAllocations()
-            ->whereHas('customerPayment', function ($query) {
-                $query->where('payment_method', '!=', 'customer_credit');
-            })
-            ->orderBy('created_at', 'asc')
-            ->first()
-            ?->amount ?? 0;
+            ->where('is_down_payment', true)
+            ->sum('amount');
     }
 
     public function getNextInstallmentDateAttribute()
@@ -146,11 +142,12 @@ class Sale extends Model
         }
 
         // Count how many payment allocations have been made (monthly installments paid)
+        // Skip down payments as they are not part of installments
         $paidCount = $this->relationLoaded('paymentAllocations')
-            ? $this->paymentAllocations->count()
-            : $this->paymentAllocations()->count();
+            ? $this->paymentAllocations->where('is_down_payment', false)->count()
+            : $this->paymentAllocations()->where('is_down_payment', false)->count();
 
-        // Each payment advances the due date by one month starting from installment_start_date (which is the date of the first installment)
+        // Each payment advances the due date by one month starting from installment_start_date
         return \Carbon\Carbon::parse($this->installment_start_date)->addMonths($paidCount);
     }
 
@@ -166,7 +163,7 @@ class Sale extends Model
 
     public function getPaidInstallmentsCountAttribute(): int
     {
-        return $this->paymentAllocations()->count();
+        return $this->paymentAllocations()->where('is_down_payment', false)->count();
     }
 
     public function getRouteKeyName()

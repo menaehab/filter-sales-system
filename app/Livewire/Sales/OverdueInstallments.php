@@ -33,10 +33,13 @@ class OverdueInstallments extends Component
 
     public bool $printAfterPayment = false;
 
+    public array $selectedPlaces = [];
+
     public function updatingSearch(): void
     {
         $this->paySaleId = null;
         $this->selectedSales = [];
+        $this->selectedPlaces = [];
         $this->resetPage();
     }
 
@@ -76,6 +79,11 @@ class OverdueInstallments extends Component
             ->where('installment_months', '>', 0)
             ->whereNotNull('installment_start_date')
             ->with(['customer.place', 'customer.phones', 'items.product', 'paymentAllocations'])
+            ->when(filled($this->selectedPlaces), function ($query) {
+                $query->whereHas('customer', function ($cq) {
+                    $cq->whereIn('place_id', $this->selectedPlaces);
+                });
+            })
             ->when(filled($this->search), function ($query) {
                 $query->where(function ($q) {
                     $q->where('number', 'like', '%' . $this->search . '%')
@@ -212,6 +220,7 @@ class OverdueInstallments extends Component
             'canManageCreatedAt' => $this->canManageCreatedAt,
             'selectedCount' => $this->selectedCount,
             'visibleCount' => $this->visibleCount,
+            'placeOptions' => \App\Models\Place::orderBy('name')->pluck('name', 'id')->toArray(),
         ]);
     }
 }

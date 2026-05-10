@@ -14,6 +14,7 @@
         ['key' => 'customer', 'label' => __('keywords.customer')],
         ['key' => 'user', 'label' => __('keywords.user')],
         ['key' => 'purchase', 'label' => __('keywords.sale')],
+        ['key' => 'is_down_payment', 'label' => __('keywords.down_payment')],
         ['key' => 'method', 'label' => __('keywords.payment_method')],
         ['key' => 'amount', 'label' => __('keywords.amount')],
         ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
@@ -29,6 +30,17 @@
                 <td class="px-4 py-3">
                     <span
                         class="text-sm font-medium text-gray-900">{{ $payment->allocations->pluck('sale.number')->filter()->join(', ') ?: '—' }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    @if ($payment->is_down_payment)
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {{ __('keywords.down_payment') }}
+                        </span>
+                    @else
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            {{ __('keywords.installment') }}
+                        </span>
+                    @endif
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span
@@ -59,6 +71,11 @@
 
                     <x-select name="form.payment_method" label="{{ __('keywords.payment_method') }}"
                         wire:model.blur="form.payment_method" :options="$this->paymentMethodOptions" :placeholder="__('keywords.select_payment_method')" required />
+
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="is_down_payment" wire:model.blur="form.is_down_payment" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        <label for="is_down_payment" class="text-sm text-gray-700">{{ __('keywords.down_payment') }}</label>
+                    </div>
 
                     <x-textarea name="form.note" label="{{ __('keywords.note') }}"
                         placeholder="{{ __('keywords.enter_note') }}" wire:model.blur="form.note" rows="3" />

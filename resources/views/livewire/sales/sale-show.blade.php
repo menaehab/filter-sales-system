@@ -131,10 +131,22 @@
                         <span class="text-gray-500">{{ __('keywords.installment_months') }}</span>
                         <span class="font-medium text-gray-900">{{ $sale->installment_months }}</span>
                     </div>
+
+                    @php
+                        $filter = $sale->customer->waterFilters->first();
+                    @endphp
+
+                    @if ($filter && $filter->installed_at)
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">{{ __('keywords.installed_at') }}</span>
+                            <span class="font-medium text-gray-900">{{ $filter->installed_at->format('Y/m/d') }}</span>
+                        </div>
+                    @endif
+
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">{{ __('keywords.installment_start_date') }}</span>
                         <span
-                            class="font-medium text-gray-900">{{ $sale->installment_start_date?->format('Y/m/d') ?? '—' }}</span>
+                            class="font-medium text-blue-600 font-bold">{{ $sale->installment_start_date?->format('Y/m/d') ?? '—' }}</span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">{{ __('keywords.next_installment') }}</span>

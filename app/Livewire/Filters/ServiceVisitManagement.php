@@ -14,14 +14,13 @@ class ServiceVisitManagement extends Component
     use WithSearchAndPagination;
 
     public string $completionStatus = '';
-    public ?int $placeId = null;
+    public array $selectedPlaces = [];
     public array $selectedVisits = [];
 
     protected function additionalQueryString(): array
     {
         return [
             'completionStatus' => ['as' => 'status', 'except' => ''],
-            'placeId' => ['as' => 'place', 'except' => ''],
         ];
     }
 
@@ -30,9 +29,15 @@ class ServiceVisitManagement extends Component
         $this->resetPage();
     }
 
-    public function updatingPlaceId(): void
+    public function updatingSelectedPlaces(): void
     {
         $this->resetPage();
+    }
+
+    public function deleteVisit(int $visitId): void
+    {
+        $this->authorizeManageVisits();
+        ServiceVisit::query()->findOrFail($visitId)->delete();
     }
 
     public function markCompleted(int $visitId): void
@@ -45,6 +50,19 @@ class ServiceVisitManagement extends Component
             $visit->update(['is_completed' => true]);
         }
     }
+
+    public function markUncompleted(int $visitId): void
+    {
+        $this->authorizeManageVisits();
+
+        $visit = ServiceVisit::query()->findOrFail($visitId);
+
+        if ($visit->is_completed) {
+            $visit->update(['is_completed' => false]);
+        }
+    }
+
+
 
     public function toggleSelectAll(): void
     {
@@ -78,9 +96,9 @@ class ServiceVisitManagement extends Component
         return ServiceVisit::query()
             ->with(['waterFilter.customer.phones', 'technician'])
             ->completionStatus($this->completionStatus)
-            ->when($this->placeId, function (Builder $query) {
+            ->when(filled($this->selectedPlaces), function (Builder $query) {
                 $query->whereHas('waterFilter.customer', function (Builder $q) {
-                    $q->where('place_id', $this->placeId);
+                    $q->whereIn('place_id', $this->selectedPlaces);
                 });
             })
             ->when(filled($this->search), function (Builder $query) {

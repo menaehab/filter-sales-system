@@ -32,6 +32,7 @@ final class UpdateCustomerPaymentAction
 
             $payload = [
                 'amount' => $newTotal,
+                'is_down_payment' => (bool) ($data['is_down_payment'] ?? false),
                 'payment_method' => $data['payment_method'],
                 'note' => filled($data['note'] ?? null) ? $data['note'] : null,
             ];
@@ -70,7 +71,10 @@ final class UpdateCustomerPaymentAction
                 $remaining -= $amount;
             }
 
-            $allocation->update(['amount' => $amount]);
+            $allocation->update([
+                'amount' => $amount,
+                'is_down_payment' => $payment->is_down_payment,
+            ]);
         }
     }
 

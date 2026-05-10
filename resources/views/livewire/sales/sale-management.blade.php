@@ -25,6 +25,9 @@
                 <option value="partial">{{ __('keywords.partially_paid') }}</option>
                 <option value="unpaid">{{ __('keywords.unpaid') }}</option>
             </select>
+            <div class="w-full sm:w-64">
+                <x-multi-select name="selectedPlaces" :placeholder="__('keywords.filter_by_place')" :options="$placeOptions" wire:model.live="selectedPlaces" />
+            </div>
             <x-input type="date" name="dateFrom" wire:model.live="dateFrom" class="w-full sm:w-auto"
                 placeholder="{{ __('keywords.from_date') }}" />
             <x-input type="date" name="dateTo" wire:model.live="dateTo" class="w-full sm:w-auto"

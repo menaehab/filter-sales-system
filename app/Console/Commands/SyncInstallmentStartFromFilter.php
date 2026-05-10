@@ -23,7 +23,10 @@ class SyncInstallmentStartFromFilter extends Command
             ->where('payment_type', 'installment')
             ->where(function ($q) {
                 $q->whereNull('installment_start_date')
-                    ->orWhereRaw('DATE(installment_start_date) = DATE(created_at)');
+                    ->orWhereRaw('DATE(installment_start_date) = DATE(created_at)')
+                    ->orWhereHas('customer.waterFilters', function ($fq) {
+                        $fq->whereRaw('DATE(sales.installment_start_date) = DATE(water_filters.installed_at)');
+                    });
             })
             ->with('customer')
             ->get();
@@ -37,7 +40,7 @@ class SyncInstallmentStartFromFilter extends Command
 
         foreach ($sales as $sale) {
             $customerId = $sale->customer_id;
-            if (! $customerId) {
+            if (!$customerId) {
                 continue;
             }
 
@@ -46,13 +49,13 @@ class SyncInstallmentStartFromFilter extends Command
                 ->orderBy('installed_at', 'asc')
                 ->first();
 
-            if (! $filter) {
+            if (!$filter) {
                 // no filter installed for this customer; skip
                 continue;
             }
 
-            $installmentStart = $filter->installed_at instanceof Carbon 
-                ? $filter->installed_at->copy()->addMonth()->format('Y-m-d') 
+            $installmentStart = $filter->installed_at instanceof Carbon
+                ? $filter->installed_at->copy()->addMonth()->format('Y-m-d')
                 : Carbon::parse($filter->installed_at)->addMonth()->format('Y-m-d');
 
             if ($dryRun) {

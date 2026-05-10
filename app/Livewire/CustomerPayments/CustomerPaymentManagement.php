@@ -30,10 +30,11 @@ class CustomerPaymentManagement extends Component
     protected function getDefaultForm(): array
     {
         return [
-            'amount' => null,
-            'payment_method' => PaymentMethodEnum::CASH->value,
+            'amount' => '',
+            'is_down_payment' => false,
+            'payment_method' => '',
             'note' => '',
-            'created_at' => null,
+            'created_at' => now()->format('Y-m-d\TH:i'),
         ];
     }
 
@@ -96,10 +97,11 @@ class CustomerPaymentManagement extends Component
         $this->openEditModal($payment->id, 'open-modal-edit-customer-payment');
 
         $this->form = [
-            'amount' => (string) $payment->amount,
+            'amount' => $payment->amount,
+            'is_down_payment' => $payment->is_down_payment,
             'payment_method' => $payment->payment_method,
-            'note' => $payment->note ?? '',
-            'created_at' => $payment->created_at?->format('Y/m/d H:i'),
+            'note' => $payment->note,
+            'created_at' => $payment->created_at->format('Y-m-d\TH:i'),
         ];
     }
 
