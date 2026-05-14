@@ -33,7 +33,9 @@ class SaleCreate extends Component
     public bool $printAfterSave = false;
 
     public string $created_at = '';
+
     public string $installment_start_date = '';
+
     public bool $useFilterInstalledDate = true;
 
     public array $newCustomer = [
@@ -181,11 +183,18 @@ class SaleCreate extends Component
         // If toggled on, try to set from selected filter or newFilter
         if ($this->water_filter_id) {
             $this->updatedWaterFilterId();
+
             return;
         }
 
         if (! empty($this->newFilter['is_installed'] ?? false) && ! empty($this->newFilter['installed_at'])) {
-            $this->installment_start_date = \Illuminate\Support\Carbon::parse($this->newFilter['installed_at'])->addMonth()->format('Y-m-d');
+            $dateStr = (string) $this->newFilter['installed_at'];
+            if (str_contains($dateStr, '/')) {
+                $date = \Illuminate\Support\Carbon::createFromFormat('Y/m/d H:i', $dateStr);
+            } else {
+                $date = \Illuminate\Support\Carbon::parse($dateStr);
+            }
+            $this->installment_start_date = $date->addMonth()->format('Y-m-d');
         }
     }
 
@@ -196,7 +205,13 @@ class SaleCreate extends Component
         }
 
         if (! empty($value)) {
-            $this->installment_start_date = \Illuminate\Support\Carbon::parse($value)->addMonth()->format('Y-m-d');
+            $dateStr = (string) $value;
+            if (str_contains($dateStr, '/')) {
+                $date = \Illuminate\Support\Carbon::createFromFormat('Y/m/d H:i', $dateStr);
+            } else {
+                $date = \Illuminate\Support\Carbon::parse($dateStr);
+            }
+            $this->installment_start_date = $date->addMonth()->format('Y-m-d');
         }
     }
 

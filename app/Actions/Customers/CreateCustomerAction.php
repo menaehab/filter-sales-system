@@ -12,7 +12,7 @@ final class CreateCustomerAction
     {
         $customer = Customer::create([
             'name' => $data['name'],
-            'code' => $data['code'],
+            'code' => $data['code'] ?: null,
             'national_number' => $data['national_number'] ?? null,
             'address' => $data['address'] ?? null,
             'place_id' => $data['place_id'],

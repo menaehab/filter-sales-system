@@ -37,7 +37,13 @@ final class UpdateSupplierPaymentAction
             ];
 
             if (auth()->user()?->can('manage_created_at') && filled($data['created_at'] ?? null)) {
-                $payload['created_at'] = Carbon::parse((string) $data['created_at']);
+                $dateStr = (string) $data['created_at'];
+                // Handle both 'Y/m/d H:i' and 'YYYY-MM-DDTHH:mm' formats
+                if (str_contains($dateStr, '/')) {
+                    $payload['created_at'] = Carbon::createFromFormat('Y/m/d H:i', $dateStr);
+                } else {
+                    $payload['created_at'] = Carbon::parse($dateStr);
+                }
             }
 
             $payment->update($payload);
