@@ -32,6 +32,7 @@ class WaterFilter extends Model
         'is_installed',
         'technician_id',
         'technician_name',
+        'faucet_type',
     ];
 
     protected $casts = [
@@ -43,6 +44,7 @@ class WaterFilter extends Model
         'candle_5_replaced_at' => 'date',
         'candle_6_replaced_at' => 'date',
         'candle_7_replaced_at' => 'date',
+        'faucet_type' => \App\Enums\WaterFilterFaucetTypeEnum::class,
     ];
 
     public function getSlugOptions(): SlugOptions

@@ -25,6 +25,7 @@ class UpdateWaterFilterRequest extends FormRequest
             'installed_at' => ['nullable', 'date', 'required_if:is_installed,1'],
             'technician_id' => ['nullable', 'exists:technicians,id'],
             'customer_id' => ['required', 'exists:customers,id', Rule::unique('water_filters', 'customer_id')->ignore($filterId)],
+            'faucet_type' => ['nullable', 'string', Rule::in(array_keys(\App\Enums\WaterFilterFaucetTypeEnum::options()))],
         ];
     }
 
@@ -37,6 +38,7 @@ class UpdateWaterFilterRequest extends FormRequest
             'installed_at' => __('keywords.installed_at'),
             'technician_id' => __('keywords.technician_name'),
             'customer_id' => __('keywords.customer'),
+            'faucet_type' => __('keywords.faucet_type'),
         ];
     }
 }

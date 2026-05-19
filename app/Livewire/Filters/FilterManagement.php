@@ -29,6 +29,10 @@ class FilterManagement extends Component
 
     public array $selectedPlaces = [];
 
+    public $placeId = '';
+
+    public string $selectedFaucetType = '';
+
     public $customerSearch = '';
 
     public $customerModalSearch = '';
@@ -68,6 +72,7 @@ class FilterManagement extends Component
             'installed_at' => null,
             'technician_id' => '',
             'customer_id' => null,
+            'faucet_type' => '',
         ];
     }
 
@@ -99,6 +104,7 @@ class FilterManagement extends Component
         return [
             'customerSlug' => ['as' => 'customer', 'except' => ''],
             'placeId' => ['as' => 'place', 'except' => ''],
+            'selectedFaucetType' => ['as' => 'faucet_type', 'except' => ''],
         ];
     }
 
@@ -121,6 +127,11 @@ class FilterManagement extends Component
         $this->resetPage();
     }
 
+    public function updatingSelectedFaucetType(): void
+    {
+        $this->resetPage();
+    }
+
     protected function applyAdditionalFilters(Builder $query): void
     {
         if ($this->customerSlug) {
@@ -129,9 +140,19 @@ class FilterManagement extends Component
             });
         }
 
+        if (filled($this->selectedFaucetType)) {
+            $query->where('faucet_type', $this->selectedFaucetType);
+        }
+
         if (filled($this->selectedPlaces)) {
             $query->whereHas('customer', function ($q) {
                 $q->whereIn('place_id', $this->selectedPlaces);
+            });
+        }
+
+        if ($this->placeId) {
+            $query->whereHas('customer', function ($q) {
+                $q->where('place_id', $this->placeId);
             });
         }
 
@@ -218,6 +239,7 @@ class FilterManagement extends Component
                 : null,
             'technician_id' => $filter->technician_id,
             'customer_id' => $filter->customer_id,
+            'faucet_type' => $filter->faucet_type?->value ?? '',
         ];
 
         $this->customerModalSearch = $filter->customer?->name ?? '';

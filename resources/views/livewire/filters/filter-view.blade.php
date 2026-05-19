@@ -20,6 +20,10 @@
                     <span class="font-medium text-gray-900">{{ $filter->filter_model }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">{{ __('keywords.faucet_type') }}</span>
+                    <span class="font-medium text-gray-900">{{ $filter->faucet_type?->label() ?? '—' }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
                     <span class="text-gray-500">{{ __('keywords.address') }}</span>
                     <span class="font-medium text-gray-900">{{ $filter->address }}</span>
                 </div>

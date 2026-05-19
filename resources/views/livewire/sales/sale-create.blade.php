@@ -621,6 +621,22 @@
                 <x-input name="newFilter.address" label="{{ __('keywords.filter_address') }}"
                     placeholder="{{ __('keywords.enter_address') }}" wire:model.blur="newFilter.address" required />
 
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                        {{ __('keywords.faucet_type') }}
+                    </label>
+                    <select wire:model.blur="newFilter.faucet_type"
+                        class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        <option value="">{{ __('keywords.select_faucet_type') }}</option>
+                        @foreach (\App\Enums\WaterFilterFaucetTypeEnum::options() as $val => $lbl)
+                            <option value="{{ $val }}">{{ $lbl }}</option>
+                        @endforeach
+                    </select>
+                    @error('newFilter.faucet_type')
+                        <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
                     <input type="checkbox" wire:model.live="newFilter.is_installed"
                         class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">

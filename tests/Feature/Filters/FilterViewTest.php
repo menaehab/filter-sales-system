@@ -15,6 +15,7 @@ use Livewire\Livewire;
 
 beforeEach(function () {
     actAsAdmin($this);
+    $this->technician = \App\Models\Technician::create(['name' => 'Ahmed Technician']);
 });
 
 it('displays the filter view', function () {
@@ -39,7 +40,7 @@ it('creates a water reading', function () {
     ]);
 
     Livewire::test('filters.filter-view', ['filter' => $filter])
-        ->set('readingForm.technician_name', 'Ahmed Technician')
+        ->set('readingForm.technician_id', $this->technician->id)
         ->set('readingForm.tds', 150)
         ->set('readingForm.water_quality', WaterQualityTypeEnum::GOOD->value)
         ->call('createReading')
@@ -47,7 +48,7 @@ it('creates a water reading', function () {
         ->assertDispatched('close-modal-add-reading');
 
     $this->assertDatabaseHas('water_readings', [
-        'technician_name' => 'Ahmed Technician',
+        'technician_id' => $this->technician->id,
         'tds' => '150.00',
         'water_quality' => WaterQualityTypeEnum::GOOD->value,
         'water_filter_id' => $filter->id,
@@ -64,7 +65,7 @@ it('allows setting reading created_at when user has manage_created_at permission
 
     Livewire::test('filters.filter-view', ['filter' => $filter])
         ->assertSeeHtml('name="readingForm.created_at"')
-        ->set('readingForm.technician_name', 'Created At Tech')
+        ->set('readingForm.technician_id', $this->technician->id)
         ->set('readingForm.tds', 200)
         ->set('readingForm.water_quality', WaterQualityTypeEnum::FAIR->value)
         ->set('readingForm.created_at', '2026-07-07T09:25')
@@ -73,7 +74,7 @@ it('allows setting reading created_at when user has manage_created_at permission
 
     $this->assertDatabaseHas('water_readings', [
         'water_filter_id' => $filter->id,
-        'technician_name' => 'Created At Tech',
+        'technician_id' => $this->technician->id,
         'created_at' => '2026-07-07 09:25:00',
     ]);
 });
@@ -92,7 +93,7 @@ it('ignores reading created_at when user lacks manage_created_at permission', fu
 
     Livewire::test('filters.filter-view', ['filter' => $filter])
         ->assertDontSeeHtml('name="readingForm.created_at"')
-        ->set('readingForm.technician_name', 'No Permission Tech')
+        ->set('readingForm.technician_id', $this->technician->id)
         ->set('readingForm.tds', 180)
         ->set('readingForm.water_quality', WaterQualityTypeEnum::GOOD->value)
         ->set('readingForm.created_at', '2020-01-01T00:00')
@@ -115,12 +116,12 @@ it('validates required water reading fields', function () {
     ]);
 
     Livewire::test('filters.filter-view', ['filter' => $filter])
-        ->set('readingForm.technician_name', '')
+        ->set('readingForm.technician_id', '')
         ->set('readingForm.tds', null)
         ->set('readingForm.water_quality', null)
         ->call('createReading')
         ->assertHasErrors([
-            'readingForm.technician_name' => 'required',
+            'readingForm.technician_id' => 'required',
             'readingForm.tds' => 'required',
             'readingForm.water_quality' => 'required',
         ]);
@@ -159,7 +160,7 @@ it('saves maintenance with multiple changed candles and installed products', fun
 
     Livewire::test('filters.filter-view', ['filter' => $filter])
         ->set('maintenanceForm.selected_candles', ['candle_1', 'candle_4'])
-        ->set('maintenanceForm.technician_name', 'Mahmoud')
+        ->set('maintenanceForm.technician_id', $this->technician->id)
         ->set('maintenanceForm.replaced_at', '2026-03-12T10:15')
         ->set('maintenanceForm.cost', '150')
         ->set('maintenanceForm.description', 'Full maintenance visit')
@@ -172,7 +173,7 @@ it('saves maintenance with multiple changed candles and installed products', fun
 
     expect($maintenance)->not->toBeNull();
     expect((float) $maintenance->cost)->toBe(150.0);
-    expect($maintenance->technician_name)->toBe('Mahmoud');
+    expect($maintenance->technician_id)->toBe($this->technician->id);
 
     $this->assertDatabaseHas('maintenance_items', [
         'maintenance_id' => $maintenance->id,
@@ -253,7 +254,7 @@ it('validates maintenance product quantity against remaining purchased quantity'
 
     Livewire::test('filters.filter-view', ['filter' => $filter])
         ->set('maintenanceForm.selected_candles', ['candle_5'])
-        ->set('maintenanceForm.technician_name', 'New Tech')
+        ->set('maintenanceForm.technician_id', $this->technician->id)
         ->set('maintenanceForm.replaced_at', '2026-03-12T10:15')
         ->set('maintenanceForm.cost', '80')
         ->set('maintenanceForm.items.'.$maintenanceProduct->id, 2)
@@ -300,7 +301,7 @@ it('uses current time for replaced_at when user lacks manage_created_at permissi
 
     Livewire::test('filters.filter-view', ['filter' => $filter])
         ->set('maintenanceForm.selected_candles', ['candle_6'])
-        ->set('maintenanceForm.technician_name', 'No Permission Tech')
+        ->set('maintenanceForm.technician_id', $this->technician->id)
         ->set('maintenanceForm.replaced_at', '2026-01-01T08:00')
         ->set('maintenanceForm.cost', '90')
         ->set('maintenanceForm.items.'.$maintenanceProduct->id, 1)
@@ -347,7 +348,7 @@ it('allows editing replaced_at when user has manage_created_at permission', func
 
     Livewire::test('filters.filter-view', ['filter' => $filter])
         ->set('maintenanceForm.selected_candles', ['candle_7'])
-        ->set('maintenanceForm.technician_name', 'Permission Tech')
+        ->set('maintenanceForm.technician_id', $this->technician->id)
         ->set('maintenanceForm.replaced_at', '2026-04-15T14:45')
         ->set('maintenanceForm.cost', '120')
         ->set('maintenanceForm.items.'.$maintenanceProduct->id, 1)
@@ -359,4 +360,17 @@ it('allows editing replaced_at when user has manage_created_at permission', func
         'candle_key' => 'candle_7',
         'replaced_at' => '2026-04-15 14:45:00',
     ]);
+});
+
+it('displays the faucet type on the filter view page when set', function () {
+    $customer = Customer::factory()->create();
+    $filter = WaterFilter::create([
+        'filter_model' => 'Model Faucet Display',
+        'address' => 'Address Faucet',
+        'customer_id' => $customer->id,
+        'faucet_type' => \App\Enums\WaterFilterFaucetTypeEnum::TAP,
+    ]);
+
+    Livewire::test('filters.filter-view', ['filter' => $filter])
+        ->assertSee('حنفية'); // The Arabic label of TAP faucet type
 });

@@ -75,6 +75,16 @@
         <div class="w-full sm:w-64">
             <x-multi-select name="selectedPlaces" :placeholder="__('keywords.filter_by_place')" :options="$this->placeOptions" wire:model.live="selectedPlaces" />
         </div>
+
+        <div class="w-full sm:w-48">
+            <select wire:model.live="selectedFaucetType"
+                class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                <option value="">{{ __('keywords.faucet_type') }} ({{ __('keywords.view_all') }})</option>
+                @foreach (\App\Enums\WaterFilterFaucetTypeEnum::options() as $val => $lbl)
+                    <option value="{{ $val }}">{{ $lbl }}</option>
+                @endforeach
+            </select>
+        </div>
     </x-search-toolbar>
 
     <div class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -115,7 +125,12 @@
         @forelse ($this->filters as $filter)
             <tr class="hover:bg-gray-50 transition-colors">
                 <td class="whitespace-nowrap px-4 py-3">
-                    <span class="text-sm font-medium text-gray-900">{{ $filter->filter_model }}</span>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-medium text-gray-900">{{ $filter->filter_model }}</span>
+                        @if ($filter->faucet_type)
+                            <span class="text-xs text-emerald-600 font-semibold">{{ $filter->faucet_type->label() }}</span>
+                        @endif
+                    </div>
                 </td>
                 <td class="whitespace-nowrap px-4 py-3">
                     <span class="text-sm text-gray-700">{{ $filter->address }}</span>
@@ -187,6 +202,22 @@
 
                     <x-input name="form.address" label="{{ __('keywords.address') }}"
                         placeholder="{{ __('keywords.enter_address') }}" wire:model.blur="form.address" required />
+
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                            {{ __('keywords.faucet_type') }}
+                        </label>
+                        <select wire:model.blur="form.faucet_type"
+                            class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <option value="">{{ __('keywords.select_faucet_type') }}</option>
+                            @foreach (\App\Enums\WaterFilterFaucetTypeEnum::options() as $val => $lbl)
+                                <option value="{{ $val }}">{{ $lbl }}</option>
+                            @endforeach
+                        </select>
+                        @error('form.faucet_type')
+                            <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
 
                     <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
                         <input type="checkbox" wire:model.live="form.is_installed"
@@ -284,6 +315,22 @@
 
                     <x-input name="form.address" label="{{ __('keywords.address') }}"
                         placeholder="{{ __('keywords.enter_address') }}" wire:model.blur="form.address" required />
+
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                            {{ __('keywords.faucet_type') }}
+                        </label>
+                        <select wire:model.blur="form.faucet_type"
+                            class="block w-full rounded-lg border border-gray-300 bg-white py-2.5 px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <option value="">{{ __('keywords.select_faucet_type') }}</option>
+                            @foreach (\App\Enums\WaterFilterFaucetTypeEnum::options() as $val => $lbl)
+                                <option value="{{ $val }}">{{ $lbl }}</option>
+                            @endforeach
+                        </select>
+                        @error('form.faucet_type')
+                            <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
 
                     <label class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
                         <input type="checkbox" wire:model.live="form.is_installed"

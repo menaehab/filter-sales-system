@@ -197,3 +197,58 @@ it('paginates filters using per page selection', function () {
 
     $this->assertCount(5, $component->get('filters'));
 });
+
+it('creates a filter with a faucet type', function () {
+    $customer = Customer::factory()->create();
+
+    Livewire::test('filters.filter-management')
+        ->set('form.filter_model', 'Faucet Model A')
+        ->set('form.address', '456 Faucet St')
+        ->set('form.customer_id', $customer->id)
+        ->set('form.faucet_type', 'tap')
+        ->call('create')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('water_filters', [
+        'filter_model' => 'Faucet Model A',
+        'faucet_type' => 'tap',
+    ]);
+});
+
+it('validates allowed faucet types', function () {
+    $customer = Customer::factory()->create();
+
+    Livewire::test('filters.filter-management')
+        ->set('form.filter_model', 'Faucet Model B')
+        ->set('form.address', '456 Faucet St')
+        ->set('form.customer_id', $customer->id)
+        ->set('form.faucet_type', 'invalid_faucet_type')
+        ->call('create')
+        ->assertHasErrors(['form.faucet_type']);
+});
+
+it('filters by selected faucet type', function () {
+    $customer = Customer::factory()->create();
+
+    WaterFilter::create([
+        'filter_model' => 'Filter Tap',
+        'address' => 'Addr 1',
+        'customer_id' => Customer::factory()->create()->id,
+        'faucet_type' => \App\Enums\WaterFilterFaucetTypeEnum::TAP,
+    ]);
+
+    WaterFilter::create([
+        'filter_model' => 'Filter Easy',
+        'address' => 'Addr 2',
+        'customer_id' => Customer::factory()->create()->id,
+        'faucet_type' => \App\Enums\WaterFilterFaucetTypeEnum::EASY,
+    ]);
+
+    $component = Livewire::test('filters.filter-management')
+        ->set('selectedFaucetType', 'tap');
+
+    $filters = $component->get('filters');
+
+    $this->assertSame(1, $filters->total());
+    $this->assertSame(['Filter Tap'], collect($filters->items())->pluck('filter_model')->all());
+});
