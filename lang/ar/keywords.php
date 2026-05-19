@@ -770,4 +770,9 @@ return [
     'view_filter' => 'عرض الفلتر',
     'replacement_date_from' => 'تاريخ الاستبدال من',
     'replacement_date_to' => 'تاريخ الاستبدال إلى',
+    'tap' => 'حنفية',
+    'easy' => 'ايزي',
+    'mixer' => 'خلاط',
+    'faucet_type' => 'نوع النترة',
+    'select_faucet_type' => 'اختر نوع النترة',
 ];

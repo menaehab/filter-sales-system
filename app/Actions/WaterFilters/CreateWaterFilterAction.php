@@ -30,6 +30,7 @@ final class CreateWaterFilterAction
             'technician_id' => $isInstalled ? ($data['technician_id'] ?? null) : null,
             'technician_name' => $isInstalled ? $technician?->name : null,
             'customer_id' => $customerId,
+            'faucet_type' => blank($data['faucet_type'] ?? null) ? null : $data['faucet_type'],
         ]);
     }
 }

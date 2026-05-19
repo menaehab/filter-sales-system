@@ -82,6 +82,7 @@ class SaleCreate extends Component
                 'is_installed' => false,
                 'installed_at' => null,
                 'technician_id' => '',
+                'faucet_type' => '',
             ];
             $this->waterReading = [
                 'technician_id' => '',
@@ -251,6 +252,7 @@ class SaleCreate extends Component
             'is_installed' => false,
             'installed_at' => null,
             'technician_id' => '',
+            'faucet_type' => '',
         ];
 
         $this->dispatch('open-modal-create-filter-inline');
@@ -271,6 +273,7 @@ class SaleCreate extends Component
             'newFilter.is_installed' => ['required', 'boolean'],
             'newFilter.installed_at' => ['nullable', 'date', 'required_if:newFilter.is_installed,1'],
             'newFilter.technician_id' => ['nullable', 'exists:technicians,id'],
+            'newFilter.faucet_type' => ['nullable', 'string', Rule::in(array_keys(\App\Enums\WaterFilterFaucetTypeEnum::options()))],
         ], [], [
             'customer_id' => __('keywords.customer'),
             'newFilter.filter_model' => __('keywords.filter_model'),
@@ -278,6 +281,7 @@ class SaleCreate extends Component
             'newFilter.is_installed' => __('keywords.is_installed'),
             'newFilter.installed_at' => __('keywords.installed_at'),
             'newFilter.technician_id' => __('keywords.technician_name'),
+            'newFilter.faucet_type' => __('keywords.faucet_type'),
         ]);
 
         $isInstalled = (bool) $validated['newFilter']['is_installed'];
@@ -291,6 +295,7 @@ class SaleCreate extends Component
             'technician_id' => $isInstalled ? ($validated['newFilter']['technician_id'] ?? null) : null,
             'technician_name' => $isInstalled ? $technician?->name : null,
             'customer_id' => (int) $this->customer_id,
+            'faucet_type' => blank($validated['newFilter']['faucet_type'] ?? null) ? null : $validated['newFilter']['faucet_type'],
         ]);
 
         $this->newFilter = [
@@ -299,6 +304,7 @@ class SaleCreate extends Component
             'is_installed' => false,
             'installed_at' => null,
             'technician_id' => '',
+            'faucet_type' => '',
         ];
 
         $this->selectFilter($filter->id, $filter->filter_model.' - '.$filter->address);
