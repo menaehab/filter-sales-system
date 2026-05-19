@@ -119,7 +119,7 @@ it('creates an installment sale with down payment and next installment date', fu
     $this->assertEquals(150.0, (float) $sale->installment_amount);
     $this->assertEquals(3, $sale->installment_months);
     $this->assertEquals('2026-04-11', $sale->next_installment_date?->toDateString());
-    $this->assertEquals('2026-03-11', $sale->installment_start_date?->toDateString());
+    $this->assertEquals('2026-04-11', $sale->installment_start_date?->toDateString());
 
     $this->assertDatabaseHas('customer_payments', [
         'customer_id' => $customer->id,
@@ -172,7 +172,7 @@ it('uses the filter installed date for installment sales when enabled', function
 
     $sale = Sale::sole();
 
-    expect($sale->installment_start_date?->toDateString())->toBe('2026-02-14');
+    expect($sale->installment_start_date?->toDateString())->toBe('2026-03-14');
 
     Carbon::setTestNow();
 });
@@ -460,11 +460,14 @@ it('creates a sale and stores water reading when enabled', function () {
         'quantity' => 6,
     ]);
 
+    $technician = \App\Models\Technician::create(['name' => 'Technician A']);
+
     Livewire::test('sales.sale-create')
         ->set('customer_id', $customer->id)
         ->set('payment_type', 'cash')
         ->set('includeWaterReading', true)
         ->set('water_filter_id', $filter->id)
+        ->set('waterReading.technician_id', $technician->id)
         ->set('waterReading.technician_name', 'Technician A')
         ->set('waterReading.tds', '145')
         ->set('waterReading.water_quality', 'fair')
@@ -508,16 +511,21 @@ it('creates before and after installation readings when requested', function () 
         'quantity' => 4,
     ]);
 
+    $technicianBefore = \App\Models\Technician::create(['name' => 'Technician Before']);
+    $technicianAfter = \App\Models\Technician::create(['name' => 'Technician After']);
+
     Livewire::test('sales.sale-create')
         ->set('customer_id', $customer->id)
         ->set('payment_type', 'cash')
         ->set('includeWaterReading', true)
         ->set('water_filter_id', $filter->id)
+        ->set('waterReading.technician_id', $technicianBefore->id)
         ->set('waterReading.technician_name', 'Technician Before')
         ->set('waterReading.tds', '130')
         ->set('waterReading.water_quality', 'fair')
         ->set('waterReading.before_installment', true)
         ->set('includeAfterInstallationReading', true)
+        ->set('afterWaterReading.technician_id', $technicianAfter->id)
         ->set('afterWaterReading.technician_name', 'Technician After')
         ->set('afterWaterReading.tds', '95')
         ->set('afterWaterReading.water_quality', 'good')

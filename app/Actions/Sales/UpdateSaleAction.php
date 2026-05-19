@@ -122,11 +122,14 @@ final class UpdateSaleAction
                 ]);
             }
 
-            // If requested, propagate installed_at to previous installment sales for this customer
+            // If requested, propagate installed_at (plus 1 month) to previous installment sales for this customer
             if ($isInstallment && ! empty($data['useFilterInstalledDate']) && ! empty($filterInstalledAt)) {
+                $installmentStartDate = $filterInstalledAt instanceof \Illuminate\Support\Carbon
+                    ? $filterInstalledAt->copy()->addMonth()->format('Y-m-d')
+                    : \Illuminate\Support\Carbon::parse($filterInstalledAt)->addMonth()->format('Y-m-d');
                 Sale::where('customer_id', $customer->id)
                     ->where('payment_type', 'installment')
-                    ->update(['installment_start_date' => $filterInstalledAt instanceof \Illuminate\Support\Carbon ? $filterInstalledAt->format('Y-m-d') : (string) $filterInstalledAt]);
+                    ->update(['installment_start_date' => $installmentStartDate]);
             }
 
             $this->updatePayments($sale, $customer, $prices['down_payment'], $prices['applied_credit'], $isInstallment, $createdAt);
@@ -141,7 +144,7 @@ final class UpdateSaleAction
         float $downPayment,
         float $appliedCredit,
         bool $isInstallment,
-        Carbon $createdAt
+        CarbonInterface $createdAt
     ): void {
         // Handle Down Payment (Initial Payment)
         $downPaymentAllocation = $sale->paymentAllocations()->where('is_down_payment', true)->first();

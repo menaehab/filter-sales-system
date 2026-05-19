@@ -20,7 +20,7 @@ class WaterFilterObserver
             return;
         }
 
-        $installmentStartDate = $waterFilter->installed_at->format('Y-m-d');
+        $installmentStartDate = $waterFilter->installed_at->copy()->addMonth()->format('Y-m-d');
 
         Sale::query()
             ->where('customer_id', $waterFilter->customer_id)

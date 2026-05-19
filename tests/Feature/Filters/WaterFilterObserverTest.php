@@ -99,7 +99,7 @@ it('backfills installment sales when a filter installation date is set', functio
     $placeholderStartSale->refresh();
     $manualStartSale->refresh();
 
-    expect($missingStartSale->installment_start_date?->toDateString())->toBe('2026-04-10');
-    expect($placeholderStartSale->installment_start_date?->toDateString())->toBe('2026-04-10');
+    expect($missingStartSale->installment_start_date?->toDateString())->toBe('2026-05-10');
+    expect($placeholderStartSale->installment_start_date?->toDateString())->toBe('2026-05-10');
     expect($manualStartSale->installment_start_date?->toDateString())->toBe('2026-01-15');
 });
