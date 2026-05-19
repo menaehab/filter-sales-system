@@ -51,7 +51,7 @@ it('syncs installment start dates from the customer filter installation date', f
 
     $sale->refresh();
 
-    expect($sale->installment_start_date?->toDateString())->toBe('2026-02-14');
+    expect($sale->installment_start_date?->toDateString())->toBe('2026-03-14');
 });
 
 it('keeps sales unchanged during a dry run', function () {

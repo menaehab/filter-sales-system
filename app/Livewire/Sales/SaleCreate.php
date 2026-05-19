@@ -174,6 +174,26 @@ class SaleCreate extends Component
         }
     }
 
+    private function parseInstalledAtDate(string $dateStr): ?\Illuminate\Support\Carbon
+    {
+        try {
+            $trimmed = trim($dateStr);
+            if (str_contains($trimmed, '/')) {
+                if (strlen($trimmed) <= 10) {
+                    return \Illuminate\Support\Carbon::createFromFormat('Y/m/d', $trimmed);
+                }
+                return \Illuminate\Support\Carbon::createFromFormat('Y/m/d H:i', $trimmed);
+            }
+            return \Illuminate\Support\Carbon::parse($trimmed);
+        } catch (\Throwable $e) {
+            try {
+                return \Illuminate\Support\Carbon::parse(str_replace('/', '-', $dateStr));
+            } catch (\Throwable $ex) {
+                return null;
+            }
+        }
+    }
+
     public function updatedUseFilterInstalledDate(bool $value): void
     {
         if (! $value) {
@@ -189,12 +209,10 @@ class SaleCreate extends Component
 
         if (! empty($this->newFilter['is_installed'] ?? false) && ! empty($this->newFilter['installed_at'])) {
             $dateStr = (string) $this->newFilter['installed_at'];
-            if (str_contains($dateStr, '/')) {
-                $date = \Illuminate\Support\Carbon::createFromFormat('Y/m/d H:i', $dateStr);
-            } else {
-                $date = \Illuminate\Support\Carbon::parse($dateStr);
+            $date = $this->parseInstalledAtDate($dateStr);
+            if ($date) {
+                $this->installment_start_date = $date->addMonth()->format('Y-m-d');
             }
-            $this->installment_start_date = $date->addMonth()->format('Y-m-d');
         }
     }
 
@@ -206,12 +224,10 @@ class SaleCreate extends Component
 
         if (! empty($value)) {
             $dateStr = (string) $value;
-            if (str_contains($dateStr, '/')) {
-                $date = \Illuminate\Support\Carbon::createFromFormat('Y/m/d H:i', $dateStr);
-            } else {
-                $date = \Illuminate\Support\Carbon::parse($dateStr);
+            $date = $this->parseInstalledAtDate($dateStr);
+            if ($date) {
+                $this->installment_start_date = $date->addMonth()->format('Y-m-d');
             }
-            $this->installment_start_date = $date->addMonth()->format('Y-m-d');
         }
     }
 

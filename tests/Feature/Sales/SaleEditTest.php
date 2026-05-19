@@ -292,7 +292,7 @@ it('uses the customer filter installed date when editing an installment sale', f
     $sale->refresh();
 
     expect($sale->payment_type)->toBe('installment');
-    expect($sale->installment_start_date?->toDateString())->toBe('2026-02-14');
+    expect($sale->installment_start_date?->toDateString())->toBe('2026-03-14');
 
     Carbon::setTestNow();
 });

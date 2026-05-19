@@ -117,11 +117,14 @@ final class CreateSaleAction
                 $this->createWaterReading($data, $customer);
             }
 
-            // If requested, propagate installed_at to previous installment sales for this customer
+            // If requested, propagate installed_at (plus 1 month) to previous installment sales for this customer
             if ($isInstallment && ! empty($data['useFilterInstalledDate']) && ! empty($filterInstalledAt)) {
+                $installmentStartDate = $filterInstalledAt instanceof \Illuminate\Support\Carbon
+                    ? $filterInstalledAt->copy()->addMonth()->format('Y-m-d')
+                    : \Illuminate\Support\Carbon::parse($filterInstalledAt)->addMonth()->format('Y-m-d');
                 Sale::where('customer_id', $customer->id)
                     ->where('payment_type', 'installment')
-                    ->update(['installment_start_date' => $filterInstalledAt instanceof \Illuminate\Support\Carbon ? $filterInstalledAt->format('Y-m-d') : (string) $filterInstalledAt]);
+                    ->update(['installment_start_date' => $installmentStartDate]);
             }
 
             return $sale;
