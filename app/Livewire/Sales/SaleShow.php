@@ -14,6 +14,8 @@ class SaleShow extends Component
 
     public ?int $paySaleId = null;
 
+    public ?int $payTechnicianId = null;
+
     public ?int $editPaymentId = null;
 
     public ?int $deletePaymentId = null;
@@ -55,6 +57,7 @@ class SaleShow extends Component
 
         $this->payAmount = (string) $sale->remaining_amount;
 
+        $this->payTechnicianId = null;
         $this->payMethod = 'cash';
         $this->payNote = '';
         $this->payCreatedAt = now()->format('Y/m/d H:i');
@@ -72,6 +75,7 @@ class SaleShow extends Component
             'amount' => $this->payAmount,
             'payment_method' => $this->payMethod,
             'note' => $this->payNote,
+            'technician_id' => $this->payTechnicianId,
             'created_at' => $this->payCreatedAt,
         ];
 
@@ -94,6 +98,7 @@ class SaleShow extends Component
             'amount' => $validated['amount'],
             'payment_method' => $validated['payment_method'],
             'note' => $this->payNote ?: null,
+            'technician_id' => $validated['technician_id'] ?? null,
             'created_at' => $validated['created_at'] ?? null,
         ]);
 
@@ -121,6 +126,7 @@ class SaleShow extends Component
     public function resetPayForm(): void
     {
         $this->paySaleId = null;
+        $this->payTechnicianId = null;
         $this->payFromSaleId = null;
         $this->payAmount = '';
         $this->payMethod = 'cash';
@@ -140,6 +146,7 @@ class SaleShow extends Component
         $this->editPaymentId = $payment->id;
         $this->payAmount = (string) $payment->amount;
         $this->payMethod = $payment->payment_method;
+        $this->payTechnicianId = $payment->technician_id;
         $this->payNote = $payment->note ?? '';
         $this->payCreatedAt = $payment->created_at?->format('Y-m-d\TH:i') ?? '';
 
@@ -158,6 +165,7 @@ class SaleShow extends Component
             'amount' => $this->payAmount,
             'payment_method' => $this->payMethod,
             'note' => $this->payNote,
+            'technician_id' => $this->payTechnicianId,
             'created_at' => $this->payCreatedAt,
         ];
 
@@ -174,6 +182,7 @@ class SaleShow extends Component
             'amount' => $validated['amount'],
             'payment_method' => $validated['payment_method'],
             'note' => $this->payNote ?: null,
+            'technician_id' => $validated['technician_id'] ?? null,
             'created_at' => $validated['created_at'] ?? null,
         ]);
 
@@ -205,6 +214,12 @@ class SaleShow extends Component
     public function getCanManageCreatedAtProperty(): bool
     {
         return (bool) auth()->user()?->can('manage_created_at');
+    }
+
+    #[\Livewire\Attributes\Computed]
+    public function technicians()
+    {
+        return \App\Models\Technician::orderBy('name')->get();
     }
 
     protected function authorizePaySales(): void

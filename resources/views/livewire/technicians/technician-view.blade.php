@@ -8,10 +8,23 @@
         </x-slot:actions>
     </x-page-header>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <x-stat-card :label="__('keywords.maintenances_count')" :value="$technician->maintenances()->count()" color="emerald" iconClass="fas fa-wrench" />
         <x-stat-card :label="__('keywords.service_visits_count')" :value="$technician->serviceVisits()->count()" color="blue" iconClass="fas fa-calendar-check" />
         <x-stat-card :label="__('keywords.water_readings_count')" :value="$technician->waterReadings()->count()" color="purple" iconClass="fas fa-flask" />
+        
+        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500">{{ __('keywords.collected_payments') }}</p>
+                <div class="mt-1 flex items-baseline gap-2">
+                    <p class="text-2xl font-bold text-gray-900">{{ $collectedPaymentsStats['count'] }}</p>
+                    <p class="text-sm text-gray-500">({{ number_format($collectedPaymentsStats['total'], 2) }} {{ __('keywords.currency') }})</p>
+                </div>
+            </div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+                <i class="fas fa-money-bill-wave text-xl"></i>
+            </div>
+        </div>
     </div>
 
     {{-- Filters --}}
@@ -48,6 +61,9 @@
                 </x-button>
                 <x-button :variant="$activeTab === 'installed_filters' ? 'primary' : 'ghost'" wire:click="setActiveTab('installed_filters')" size="sm">
                     الفلاتر التي تم تركيبها ({{ $installedFilters->total() }})
+                </x-button>
+                <x-button :variant="$activeTab === 'customer_payments' ? 'primary' : 'ghost'" wire:click="setActiveTab('customer_payments')" size="sm">
+                    {{ __('keywords.collected_payments') }} ({{ $customerPayments->total() }})
                 </x-button>
             </div>
         </div>
@@ -283,6 +299,40 @@
                     @endforelse
                 </x-data-table>
                 <x-pagination-info :paginator="$installedFilters" />
+            @elseif ($activeTab === 'customer_payments')
+                <x-data-table :searchable="false" :paginated="false" :headers="[
+                    ['key' => 'customer', 'label' => __('keywords.customer')],
+                    ['key' => 'date', 'label' => __('keywords.date')],
+                    ['key' => 'amount', 'label' => __('keywords.amount')],
+                    ['key' => 'method', 'label' => __('keywords.payment_method')],
+                    ['key' => 'note', 'label' => __('keywords.note')],
+                ]">
+                    @forelse ($customerPayments as $payment)
+                        <tr wire:key="payment-{{ $payment->id }}" class="hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-gray-900">{{ $payment->customer?->name ?? '—' }}</span>
+                                    <span class="text-xs text-gray-500">{{ $payment->allocations->pluck('sale.number')->filter()->join(', ') ?: '—' }}</span>
+                                </div>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                                {{ $payment->created_at->format('Y/m/d H:i') }}
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm font-bold text-emerald-600">
+                                {{ number_format($payment->amount, 2) }} {{ __('keywords.currency') }}
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                                {{ __('keywords.' . $payment->payment_method) }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-500">
+                                {{ $payment->note ?: '—' }}
+                            </td>
+                        </tr>
+                    @empty
+                        <x-empty-state :title="__('keywords.no_data_found')" :colspan="5" />
+                    @endforelse
+                </x-data-table>
+                <x-pagination-info :paginator="$customerPayments" />
             @endif
         </div>
     </div>

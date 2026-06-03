@@ -68,6 +68,28 @@ class TechnicianView extends Component
             ->paginate($this->perPage);
     }
 
+    public function getCustomerPaymentsProperty()
+    {
+        return \App\Models\CustomerPayment::where('technician_id', $this->technician->id)
+            ->with(['customer', 'allocations.sale'])
+            ->when($this->dateFrom, fn($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn($q) => $q->whereDate('created_at', '<=', $this->dateTo))
+            ->orderBy('created_at', 'desc')
+            ->paginate($this->perPage);
+    }
+
+    public function getCollectedPaymentsStatsProperty()
+    {
+        $query = \App\Models\CustomerPayment::where('technician_id', $this->technician->id)
+            ->when($this->dateFrom, fn($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn($q) => $q->whereDate('created_at', '<=', $this->dateTo));
+        
+        return [
+            'count' => (clone $query)->count(),
+            'total' => (clone $query)->sum('amount'),
+        ];
+    }
+
     public function render()
     {
         return view('livewire.technicians.technician-view', [
@@ -75,6 +97,8 @@ class TechnicianView extends Component
             'serviceVisits' => $this->serviceVisits,
             'waterReadings' => $this->waterReadings,
             'installedFilters' => $this->installedFilters,
+            'customerPayments' => $this->customerPayments,
+            'collectedPaymentsStats' => $this->collectedPaymentsStats,
         ]);
     }
 }

@@ -36,6 +36,7 @@ final class CreateCustomerPaymentAction
                 'note' => $data['note'] ?? null,
                 'customer_id' => $sale->customer_id,
                 'user_id' => auth()->id(),
+                'technician_id' => $data['technician_id'] ?? null,
                 'created_at' => $this->resolveCreatedAt(data_get($data, 'created_at')),
             ]);
 

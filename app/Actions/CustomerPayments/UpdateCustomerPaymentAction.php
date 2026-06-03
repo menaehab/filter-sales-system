@@ -35,6 +35,7 @@ final class UpdateCustomerPaymentAction
                 'is_down_payment' => (bool) ($data['is_down_payment'] ?? false),
                 'payment_method' => $data['payment_method'],
                 'note' => filled($data['note'] ?? null) ? $data['note'] : null,
+                'technician_id' => $data['technician_id'] ?? null,
             ];
 
             if (auth()->user()?->can('manage_created_at') && filled($data['created_at'] ?? null)) {

@@ -34,6 +34,7 @@ class CustomerPaymentManagement extends Component
             'is_down_payment' => false,
             'payment_method' => '',
             'note' => '',
+            'technician_id' => '',
             'created_at' => now()->format('Y-m-d\TH:i'),
         ];
     }
@@ -55,12 +56,12 @@ class CustomerPaymentManagement extends Component
 
     protected function getSearchableFields(): array
     {
-        return ['customer.name', 'user.name', 'payment_method', 'note', 'allocations.sale.number'];
+        return ['customer.name', 'user.name', 'technician.name', 'payment_method', 'note', 'allocations.sale.number'];
     }
 
     protected function getWithRelations(): array
     {
-        return ['customer', 'user', 'allocations.sale'];
+        return ['customer', 'user', 'technician', 'allocations.sale'];
     }
 
     protected function applyAdditionalFilters($query): void
@@ -88,6 +89,12 @@ class CustomerPaymentManagement extends Component
             ->toArray();
     }
 
+    #[Computed]
+    public function technicians()
+    {
+        return \App\Models\Technician::orderBy('name')->get();
+    }
+
     public function openEdit(int $id): void
     {
         $this->authorizeManageCustomerPayments();
@@ -101,6 +108,7 @@ class CustomerPaymentManagement extends Component
             'is_down_payment' => $payment->is_down_payment,
             'payment_method' => $payment->payment_method,
             'note' => $payment->note,
+            'technician_id' => $payment->technician_id ?? '',
             'created_at' => $payment->created_at->format('Y-m-d\TH:i'),
         ];
     }

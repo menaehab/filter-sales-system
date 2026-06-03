@@ -56,6 +56,7 @@
                     <th class="border border-black px-1 py-0.5 text-start">{{ __('keywords.remaining_amount') }}</th>
                     <th class="border border-black px-1 py-0.5 text-start">{{ __('keywords.next_installment') }}</th>
                     <th class="border border-black px-1 py-0.5 text-start">{{ __('keywords.overdue_since') }}</th>
+                    <th class="border border-black px-1 py-0.5 text-start">{{ __('keywords.technician_name') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -96,6 +97,7 @@
                         <td class="border border-black px-1 py-0.5 align-top text-red-600 font-semibold">
                             {{ __('keywords.overdue_days', ['days' => $daysPastDue]) }}
                         </td>
+                        <td class="border border-black px-1 py-0.5 align-top"></td>
                     </tr>
                 @endforeach
             </tbody>

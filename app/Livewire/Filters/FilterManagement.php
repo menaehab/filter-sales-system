@@ -377,9 +377,9 @@ class FilterManagement extends Component
             'candle_1' => $this->applyCandle1NeedsReplacementFilter($query),
             'candle_2_3' => $this->applyDateBasedCandleNeedsReplacementFilter($query, 'candle_2_3_replaced_at', 5),
             'candle_4' => $this->applyCandle4NeedsReplacementFilter($query),
-            'candle_5' => $this->applyDateBasedCandleNeedsReplacementFilter($query, 'candle_5_replaced_at', 6),
-            'candle_6' => $this->applyDateBasedCandleNeedsReplacementFilter($query, 'candle_6_replaced_at', 8),
-            'candle_7' => $this->applyDateBasedCandleNeedsReplacementFilter($query, 'candle_7_replaced_at', 10),
+            'candle_5' => $this->applyDateBasedCandleNeedsReplacementFilter($query, 'candle_5_replaced_at', 8),
+            'candle_6' => $this->applyDateBasedCandleNeedsReplacementFilter($query, 'candle_6_replaced_at', 10),
+            'candle_7' => $this->applyDateBasedCandleNeedsReplacementFilter($query, 'candle_7_replaced_at', 12),
             default => null,
         };
     }

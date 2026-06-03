@@ -97,7 +97,7 @@ class FilterView extends Component
                 'status' => $status['candle_5'],
                 'next_date' => $this->filter->candle_5_next_date,
                 'replaced_at' => $this->filter->candle_5_replaced_at,
-                'interval' => '6-8 '.__('keywords.months'),
+                'interval' => '8 '.__('keywords.months'),
             ],
             [
                 'key' => 'candle_6',
@@ -105,7 +105,7 @@ class FilterView extends Component
                 'status' => $status['candle_6'],
                 'next_date' => $this->filter->candle_6_next_date,
                 'replaced_at' => $this->filter->candle_6_replaced_at,
-                'interval' => '8-10 '.__('keywords.months'),
+                'interval' => '10 '.__('keywords.months'),
             ],
             [
                 'key' => 'candle_7',
@@ -113,7 +113,7 @@ class FilterView extends Component
                 'status' => $status['candle_7'],
                 'next_date' => $this->filter->candle_7_next_date,
                 'replaced_at' => $this->filter->candle_7_replaced_at,
-                'interval' => '10-12 '.__('keywords.months'),
+                'interval' => '12 '.__('keywords.months'),
             ],
         ];
     }

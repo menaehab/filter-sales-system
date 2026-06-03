@@ -43,6 +43,9 @@
                             {{ implode(' - ', $payment->customer->phone_numbers) }}</p>
                     @endif
 
+                    <p class="mb-2"><strong>{{ __('keywords.technician_name') }}:</strong>
+                        {{ $payment->technician?->name ?? '—' }}</p>
+
                     <p class="mb-2"><strong>{{ __('keywords.payment_method') }}:</strong>
                         @switch($payment->payment_method)
                             @case('cash')

@@ -148,7 +148,7 @@ class WaterFilter extends Model
 
         $baseDate = $this->candle_5_replaced_at ?? $this->installed_at;
 
-        return Carbon::parse($baseDate)->addMonths(6);
+        return Carbon::parse($baseDate)->addMonths(8);
     }
 
     public function getCandle6NextDateAttribute(): ?Carbon
@@ -159,7 +159,7 @@ class WaterFilter extends Model
 
         $baseDate = $this->candle_6_replaced_at ?? $this->installed_at;
 
-        return Carbon::parse($baseDate)->addMonths(8);
+        return Carbon::parse($baseDate)->addMonths(10);
     }
 
     public function getCandle7NextDateAttribute(): ?Carbon
@@ -170,7 +170,7 @@ class WaterFilter extends Model
 
         $baseDate = $this->candle_7_replaced_at ?? $this->installed_at;
 
-        return Carbon::parse($baseDate)->addMonths(10);
+        return Carbon::parse($baseDate)->addMonths(12);
     }
 
     public function getCandleStatusAttribute(): array
@@ -182,9 +182,9 @@ class WaterFilter extends Model
             'candle_1' => $this->getCandleStatus($this->candle_1_next_date, $now),
             'candle_2_3' => $this->getCandleStatus($this->candle_2_3_next_date, $now),
             'candle_4' => ! $isInstalled ? 'unknown' : ($this->candle_4_needs_replacement ? 'danger' : 'success'),
-            'candle_5' => $this->getCandleStatus($this->candle_5_next_date, $now),
-            'candle_6' => $this->getCandleStatus($this->candle_6_next_date, $now),
-            'candle_7' => $this->getCandleStatus($this->candle_7_next_date, $now),
+            'candle_5' => $this->getCandleStatus($this->candle_5_next_date, $now, false),
+            'candle_6' => $this->getCandleStatus($this->candle_6_next_date, $now, false),
+            'candle_7' => $this->getCandleStatus($this->candle_7_next_date, $now, false),
         ];
     }
 
@@ -193,7 +193,7 @@ class WaterFilter extends Model
         return (bool) $this->is_installed && $this->installed_at !== null;
     }
 
-    protected function getCandleStatus(?Carbon $nextDate, ?CarbonInterface $now): string
+    protected function getCandleStatus(?Carbon $nextDate, ?CarbonInterface $now, bool $withWarning = true): string
     {
         if (! $nextDate) {
             return 'unknown';
@@ -203,7 +203,7 @@ class WaterFilter extends Model
             return 'danger';
         }
 
-        if ($nextDate->lte($now->copy()->addDays(14))) {
+        if ($withWarning && $nextDate->lte($now->copy()->addDays(14))) {
             return 'warning';
         }
 

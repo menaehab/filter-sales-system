@@ -101,20 +101,20 @@ class SendFilterCandleReminders extends Command
             $candles[] = ['name' => __('keywords.candle_4_high_tds'), 'due_date' => null];
         }
 
-        // Candle 5: 6 months warning, 8 months urgent
-        $candle5Due = $this->getCandleDueDate($filter, 'candle_5_replaced_at', 6);
+        // Candle 5: 8 months
+        $candle5Due = $this->getCandleDueDate($filter, 'candle_5_replaced_at', 8);
         if ($candle5Due && $this->isDueWithinWarningPeriod($candle5Due, $now, $warningDays)) {
             $candles[] = ['name' => __('keywords.candle_5'), 'due_date' => $candle5Due->toDateString()];
         }
 
-        // Candle 6: 8 months warning, 10 months urgent
-        $candle6Due = $this->getCandleDueDate($filter, 'candle_6_replaced_at', 8);
+        // Candle 6: 10 months
+        $candle6Due = $this->getCandleDueDate($filter, 'candle_6_replaced_at', 10);
         if ($candle6Due && $this->isDueWithinWarningPeriod($candle6Due, $now, $warningDays)) {
             $candles[] = ['name' => __('keywords.candle_6'), 'due_date' => $candle6Due->toDateString()];
         }
 
-        // Candle 7: 10 months warning, 12 months urgent
-        $candle7Due = $this->getCandleDueDate($filter, 'candle_7_replaced_at', 10);
+        // Candle 7: 12 months
+        $candle7Due = $this->getCandleDueDate($filter, 'candle_7_replaced_at', 12);
         if ($candle7Due && $this->isDueWithinWarningPeriod($candle7Due, $now, $warningDays)) {
             $candles[] = ['name' => __('keywords.candle_7'), 'due_date' => $candle7Due->toDateString()];
         }
