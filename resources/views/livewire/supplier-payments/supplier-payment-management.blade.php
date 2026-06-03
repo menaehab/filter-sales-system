@@ -3,7 +3,6 @@
     </x-page-header>
 
     <x-search-toolbar>
-        <x-input name="search" wire:model.live="search" placeholder="{{ __('keywords.search') }}" class="min-w-37.5" />
         <x-input type="date" name="dateFrom" wire:model.live="dateFrom" class="w-full sm:w-auto"
             placeholder="{{ __('keywords.from_date') }}" />
         <x-input type="date" name="dateTo" wire:model.live="dateTo" class="w-full sm:w-auto"

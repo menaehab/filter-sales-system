@@ -17,6 +17,7 @@ class CustomerPayment extends Model
         'note',
         'customer_id',
         'user_id',
+        'technician_id',
         'created_at',
     ];
 
@@ -37,5 +38,10 @@ class CustomerPayment extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function technician()
+    {
+        return $this->belongsTo(Technician::class);
     }
 }

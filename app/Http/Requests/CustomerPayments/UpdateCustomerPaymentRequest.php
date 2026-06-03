@@ -18,6 +18,7 @@ class UpdateCustomerPaymentRequest extends FormRequest
             'amount' => ['required', 'numeric', 'min:0.01'],
             'payment_method' => ['required', 'in:'.implode(',', array_map(fn (PaymentMethodEnum $method) => $method->value, PaymentMethodEnum::customerMethods()))],
             'note' => ['nullable', 'string', 'max:255'],
+            'technician_id' => ['nullable', 'exists:technicians,id'],
             'created_at' => ['nullable', 'date'],
         ];
     }

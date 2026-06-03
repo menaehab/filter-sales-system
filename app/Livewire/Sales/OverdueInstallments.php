@@ -21,6 +21,8 @@ class OverdueInstallments extends Component
     #[Locked]
     public ?int $paySaleId = null;
 
+    public ?int $payTechnicianId = null;
+
     public array $selectedSales = [];
 
     public string $payAmount = '';
@@ -132,6 +134,7 @@ class OverdueInstallments extends Component
         }
 
         $this->paySaleId = $sale->id;
+        $this->payTechnicianId = null;
         $this->payAmount = (string) $sale->installment_amount;
         $this->payMethod = 'cash';
         $this->payNote = '';
@@ -150,6 +153,7 @@ class OverdueInstallments extends Component
             'amount'         => $this->payAmount,
             'payment_method' => $this->payMethod,
             'note'           => $this->payNote,
+            'technician_id'  => $this->payTechnicianId,
             'created_at'     => $this->payCreatedAt,
         ];
 
@@ -172,6 +176,7 @@ class OverdueInstallments extends Component
             'amount'         => $validated['amount'],
             'payment_method' => $validated['payment_method'],
             'note'           => $this->payNote ?: null,
+            'technician_id'  => $validated['technician_id'] ?? null,
             'created_at'     => $validated['created_at'] ?? null,
         ]);
 
@@ -196,6 +201,7 @@ class OverdueInstallments extends Component
     public function resetPayForm(): void
     {
         $this->paySaleId        = null;
+        $this->payTechnicianId  = null;
         $this->payAmount        = '';
         $this->payMethod        = 'cash';
         $this->payNote          = '';
@@ -206,6 +212,12 @@ class OverdueInstallments extends Component
     public function getCanManageCreatedAtProperty(): bool
     {
         return (bool) auth()->user()?->can('manage_created_at');
+    }
+
+    #[Computed]
+    public function technicians()
+    {
+        return \App\Models\Technician::orderBy('name')->get();
     }
 
     protected function authorizePaySales(): void

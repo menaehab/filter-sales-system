@@ -3,7 +3,6 @@
     </x-page-header>
 
     <x-search-toolbar>
-        <x-input name="search" wire:model.live="search" placeholder="{{ __('keywords.search') }}" class="min-w-37.5" />
         <x-input type="date" name="dateFrom" wire:model.live="dateFrom" class="w-full sm:w-auto"
             placeholder="{{ __('keywords.from_date') }}" />
         <x-input type="date" name="dateTo" wire:model.live="dateTo" class="w-full sm:w-auto"
@@ -16,6 +15,7 @@
         ['key' => 'purchase', 'label' => __('keywords.sale')],
         ['key' => 'is_down_payment', 'label' => __('keywords.down_payment')],
         ['key' => 'method', 'label' => __('keywords.payment_method')],
+        ['key' => 'technician', 'label' => __('keywords.technician_name')],
         ['key' => 'amount', 'label' => __('keywords.amount')],
         ['key' => 'actions', 'label' => __('keywords.actions'), 'align' => 'right'],
     ]">
@@ -46,6 +46,9 @@
                     <span
                         class="text-sm text-gray-700">{{ $payment->payment_method === 'customer_credit' ? __('keywords.applied_customer_credit') : __('keywords.' . $payment->payment_method) }}</span>
                 </td>
+                <td class="whitespace-nowrap px-4 py-3">
+                    <span class="text-sm text-gray-900">{{ $payment->technician?->name ?? '—' }}</span>
+                </td>
                 <td class="whitespace-nowrap px-4 py-3 text-sm text-emerald-600 font-medium">
                     {{ number_format($payment->amount, 2) }} {{ __('keywords.currency') }}
                 </td>
@@ -71,6 +74,9 @@
 
                     <x-select name="form.payment_method" label="{{ __('keywords.payment_method') }}"
                         wire:model.blur="form.payment_method" :options="$this->paymentMethodOptions" :placeholder="__('keywords.select_payment_method')" required />
+
+                    <x-select name="form.technician_id" label="{{ __('keywords.technician_name') }}"
+                        wire:model.blur="form.technician_id" :options="$this->technicians->pluck('name', 'id')->toArray()" :placeholder="__('keywords.select_technician')" />
 
                     <div class="flex items-center gap-2">
                         <input type="checkbox" id="is_down_payment" wire:model.blur="form.is_down_payment" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">

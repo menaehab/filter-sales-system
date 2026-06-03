@@ -257,6 +257,9 @@
                 <x-select name="payMethod" label="{{ __('keywords.payment_method') }}" :options="['cash' => __('keywords.cash'), 'bank_transfer' => __('keywords.bank_transfer')]"
                     wire:model="payMethod" :placeholder="__('keywords.select_payment_method')" />
 
+                <x-select name="payTechnicianId" label="{{ __('keywords.technician_name') }}" :options="$this->technicians->pluck('name', 'id')->toArray()"
+                    wire:model="payTechnicianId" :placeholder="__('keywords.select_technician')" />
+
                 <x-textarea name="payNote" label="{{ __('keywords.note') }}"
                     placeholder="{{ __('keywords.enter_note') }}" wire:model="payNote" />
 

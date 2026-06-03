@@ -690,6 +690,7 @@ return [
     'time' => 'الوقت',
     'product_deleted' => 'منتج محذوف',
     'customer_credit' => 'رصيد العميل',
+    'collected_payments' => 'المدفوعات المحصلة',
     'good_morning' => 'صباح الخير',
     'view_techicians' => 'عرض الفنيين',
     'manage_technicians' => 'إدارة الفنيين',

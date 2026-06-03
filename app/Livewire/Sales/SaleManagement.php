@@ -35,6 +35,8 @@ class SaleManagement extends Component
     #[Locked]
     public ?int $paySaleId = null;
 
+    public ?int $payTechnicianId = null;
+
     public string $payAmount = '';
 
     public string $payMethod = 'cash';
@@ -166,6 +168,7 @@ class SaleManagement extends Component
 
         $this->payAmount = (string) $sale->remaining_amount;
 
+        $this->payTechnicianId = null;
         $this->payMethod = 'cash';
         $this->payNote = '';
         $this->payCreatedAt = now()->format('Y/m/d H:i');
@@ -183,6 +186,7 @@ class SaleManagement extends Component
             'amount' => $this->payAmount,
             'payment_method' => $this->payMethod,
             'note' => $this->payNote,
+            'technician_id' => $this->payTechnicianId,
             'created_at' => $this->payCreatedAt,
         ];
 
@@ -205,6 +209,7 @@ class SaleManagement extends Component
             'amount' => $validated['amount'],
             'payment_method' => $validated['payment_method'],
             'note' => $this->payNote ?: null,
+            'technician_id' => $validated['technician_id'] ?? null,
             'created_at' => $validated['created_at'] ?? null,
         ]);
 
@@ -226,6 +231,7 @@ class SaleManagement extends Component
     public function resetPayForm(): void
     {
         $this->paySaleId = null;
+        $this->payTechnicianId = null;
         $this->payFromSaleId = null;
         $this->payAmount = '';
         $this->payMethod = 'cash';
@@ -237,6 +243,12 @@ class SaleManagement extends Component
     public function getCanManageCreatedAtProperty(): bool
     {
         return (bool) auth()->user()?->can('manage_created_at');
+    }
+
+    #[Computed]
+    public function technicians()
+    {
+        return \App\Models\Technician::orderBy('name')->get();
     }
 
     // ==========================================
