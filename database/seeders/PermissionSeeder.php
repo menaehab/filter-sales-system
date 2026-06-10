@@ -62,7 +62,8 @@ class PermissionSeeder extends Seeder
             'receive_filter_candle_notifications',
             'view_overdue_installments',
             'manage_technicians',
-            'view_technicians'
+            'view_technicians',
+            'download_backup',
         ];
 
         foreach ($permissions as $permission) {
