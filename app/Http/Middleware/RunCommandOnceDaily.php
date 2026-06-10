@@ -23,7 +23,7 @@ class RunCommandOnceDaily
             Artisan::call('products:low-stock-alert');
             Artisan::call('filters:candle-remind');
             Artisan::call('suppliers:installments-remind');
-
+            Artisan::call('app:backup');
             // Set cache to prevent running again for 24 hours
             Cache::put($cacheKey, true, now()->addDay());
         }

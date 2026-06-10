@@ -1,9 +1,10 @@
 <?php
 
-use App\Models\ServiceVisit;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\NotificationController;
-use Illuminate\Support\Facades\Route;
+use App\Models\ServiceVisit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
 
@@ -320,4 +321,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::delete('/notifications/{id}', [NotificationController::class, 'delete'])
         ->name('notifications.delete');
+
+    Route::get('/backup/download', [BackupController::class, 'index'])
+        ->name('backup.download')
+        ->middleware('can:download_backup');
 });

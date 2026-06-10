@@ -40,6 +40,11 @@
                 @endif
             </div>
         </div>
+        @can('download_backup')
+            <x-button href="{{ route('backup.download') }}" variant="success" size="sm" icon="fas fa-download" class="mt-4">
+                {{ __('keywords.download_backup') }}
+            </x-button>
+        @endcan
     </div>
 
     {{-- ─── Financial KPIs ───────────────────────────────────── --}}

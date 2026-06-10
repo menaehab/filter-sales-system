@@ -33,6 +33,7 @@ return [
     'showing' => 'عرض',
     'loading' => 'جار التحميل...',
     'add' => 'إضافة',
+    'backup' => 'نسخ إحتياطي',
     'cancel' => 'إلغاء',
     'to' => 'إلى',
     'create_user' => 'إنشاء مستخدم',
@@ -776,4 +777,5 @@ return [
     'mixer' => 'خلاط',
     'faucet_type' => 'نوع النترة',
     'select_faucet_type' => 'اختر نوع النترة',
+    'download_backup' => 'تحميل النسخة الاحتياطية',
 ];
