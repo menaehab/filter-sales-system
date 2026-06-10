@@ -108,6 +108,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('customers.view')
         ->middleware('permission:view_customers|manage_customers');
 
+    Route::livewire('/customers/print', 'customers.customer-print')
+        ->name('customers.print')
+        ->middleware('permission:view_customers|manage_customers');
+
     /*
     |--------------------------------------------------------------------------
     | Purchases

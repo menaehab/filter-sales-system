@@ -1,10 +1,10 @@
-﻿@props(['title' => 'dashboard'])
+@props(['title' => 'dashboard'])
 
 @php
     $isRtl = in_array(app()->getLocale(), ['ar', 'he', 'fa', 'ur']);
     $authUser = auth()->user();
     $unreadNotificationsCount = $authUser?->unreadNotifications()?->count() ?? 0;
-    $latestNotifications = $authUser?->notifications()?->latest()->limit(8)->get() ?? collect();
+    $latestNotifications = $authUser?->notifications()?->latest()?->paginate(8, ['*'], 'notifPage');
 @endphp
 
 <!DOCTYPE html>

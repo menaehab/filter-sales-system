@@ -1,13 +1,17 @@
 <div x-on:confirmed-delete-customer.window="$wire.delete()">
     <x-page-header :title="__('keywords.customers')" :description="__('keywords.customers_management')">
-        @can('manage_customers')
-            <x-slot:actions>
+        <x-slot:actions>
+            <x-button variant="secondary" href="{{ route('customers.print', array_filter(['search' => $this->search, 'places' => implode(',', $this->selectedPlaces)])) }}" target="_blank">
+                <i class="fas fa-print text-xs"></i>
+                {{ __('keywords.print') }}
+            </x-button>
+            @can('manage_customers')
                 <x-button variant="primary" @click="$dispatch('open-modal-create-customer')">
                     <i class="fas fa-plus text-xs"></i>
                     {{ __('keywords.add_customer') }}
                 </x-button>
-            </x-slot:actions>
-        @endcan
+            @endcan
+        </x-slot:actions>
     </x-page-header>
 
     <x-search-toolbar>

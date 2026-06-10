@@ -756,6 +756,8 @@ return [
     'view_overdue_installments' => 'عرض الأقساط المتأخرة',
     'technicians' => 'الفنيين',
     'technician' => 'الفني',
+    'next' => 'التالي',
+    'previous' => 'السابق',
     'technician_details' => 'تفاصيل الفني',
     'back_to_technicians' => 'العودة إلى الفنيين',
     'maintenances_count' => 'عدد عمليات الصيانة',
