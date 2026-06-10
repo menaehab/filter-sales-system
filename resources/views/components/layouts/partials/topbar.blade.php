@@ -39,23 +39,27 @@
             @endif
         </button>
 
-        <div x-show="open" @click.outside="open = false" x-transition:enter="transition ease-out duration-100"
+        <div x-show="open" x-transition:enter="transition ease-out duration-100"
             x-transition:enter-start="transform opacity-0 scale-95"
             x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="transform opacity-100 scale-100"
             x-transition:leave-end="transform opacity-0 scale-95"
-            class="absolute left-0 top-full mt-3 w-88 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl ring-1 ring-black/5 sm:w-96 z-40">
+            class="absolute left-0 top-full mt-3 w-88 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl ring-1 ring-black/5 sm:w-96 z-40">>
 
             {{-- Header with actions --}}
             <div class="flex items-center justify-between border-b border-gray-100 px-5 py-3.5">
-                <p class="text-sm font-semibold text-gray-800">{{ __('keywords.notifications') }}</p>
-
-                @if ($unreadNotificationsCount > 0)
-                    <button @click="markAllAsRead()"
-                        class="text-xs font-semibold text-emerald-600 transition-colors hover:text-emerald-700">
-                        {{ __('keywords.mark_all_as_read') }}
-                    </button>
-                @endif
+                <div class="flex items-center gap-3">
+                    <p class="text-sm font-semibold text-gray-800">{{ __('keywords.notifications') }}</p>
+                    @if ($unreadNotificationsCount > 0)
+                        <button @click="markAllAsRead()"
+                            class="text-xs font-semibold text-emerald-600 transition-colors hover:text-emerald-700">
+                            {{ __('keywords.mark_all_as_read') }}
+                        </button>
+                    @endif
+                </div>
+                <button @click="open = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
             </div>
 
             {{-- Notifications list --}}
@@ -122,6 +126,19 @@
                 @endforelse
             </div>
 
+            {{-- Pagination --}}
+            @if($latestNotifications->hasPages())
+                <div class="flex justify-between px-5 py-3 border-t border-gray-100 bg-gray-50">
+                    @if (!$latestNotifications->onFirstPage())
+                        <a href="{{ $latestNotifications->previousPageUrl() }}" class="text-sm text-emerald-600 hover:underline">{{ __('keywords.previous') }}</a>
+                    @else
+                        <span></span>
+                    @endif
+                    @if ($latestNotifications->hasMorePages())
+                        <a href="{{ $latestNotifications->nextPageUrl() }}" class="text-sm text-emerald-600 hover:underline">{{ __('keywords.next') }}</a>
+                    @endif
+                </div>
+            @endif
             {{-- Footer with clear actions --}}
             @if ($latestNotifications->isNotEmpty())
                 <div class="flex gap-2 border-t border-gray-100 bg-gray-50 px-4 py-2.5">
@@ -142,7 +159,7 @@
     <script>
         function notificationPanel() {
             return {
-                open: false,
+                open: new URLSearchParams(window.location.search).has('notifPage'),
                 confirmMessage: '',
                 confirmAction: null,
                 setConfirm(message, action) {
